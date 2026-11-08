@@ -31,6 +31,24 @@ function parseKcal(rawKcal) {
   return isNaN(n) ? s : n;
 }
 
+// Helper: bỏ dấu tiếng Việt để tìm kiếm không phân biệt dấu
+function removeAccents(str) {
+  if (!str) return '';
+  return str.toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+}
+
+// Helper: chuẩn hóa số điện thoại (xử lý scientific notation 3.795E8 và bỏ số 0 đầu)
+function cleanPhone(val) {
+  if (val === null || val === undefined || val === '') return '';
+  try {
+    const n = Number(val);
+    const s = (!isNaN(n) && val !== '') ? n.toLocaleString('fullwide', { useGrouping: false }) : val.toString();
+    return s.replace(/\D/g, '').replace(/^0+/, '');
+  } catch (e) {
+    return val.toString().replace(/\D/g, '').replace(/^0+/, '');
+  }
+}
+
 // Helper: trả về JSON chuẩn cho GitHub Pages fetch API
 function jsonResponse(obj) {
   return ContentService
@@ -193,24 +211,6 @@ function searchOrders(rawQuery) {
     let statusCol = headers.indexOf('status');
     if (statusCol < 0) statusCol = 9;
     const ITEMS_COL = 6; // Raw_JSON_Items (cột G)
-
-    // Helper bỏ dấu tiếng Việt để tìm kiếm không phân biệt dấu
-    const removeAccents = (str) => {
-      if (!str) return '';
-      return str.toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
-    };
-
-    // Helper chuẩn hóa số điện thoại: xử lý cả scientific notation (3.795E8) và bỏ số 0 đầu
-    const cleanPhone = (val) => {
-      if (val === null || val === undefined || val === '') return '';
-      try {
-        const n = Number(val);
-        const s = (!isNaN(n) && val !== '') ? n.toLocaleString('fullwide', { useGrouping: false }) : val.toString();
-        return s.replace(/\D/g, '').replace(/^0+/, '');
-      } catch (e) {
-        return val.toString().replace(/\D/g, '').replace(/^0+/, '');
-      }
-    };
 
     const qClean = q.toLowerCase();
     const qNorm = removeAccents(q);
@@ -516,7 +516,9 @@ function sendDailyKitchenReport() {
       const dishId = (rows[i][3] || '').toString().trim();
       const qty = Number(rows[i][4]) || 0;
       const custName = (rows[i][5] || '').toString().trim();
-      const custPhone = (rows[i][6] || '').toString().trim();
+      const rawPhone = rows[i][6];
+      const pClean = cleanPhone(rawPhone);
+      const custPhone = pClean ? ('0' + pClean) : (rawPhone || '').toString().trim();
 
       if (deliveryDate.indexOf(dateDash) !== -1 || deliveryDate.indexOf(dateSlash) !== -1) {
         if (!summaryByDish[dishName]) {

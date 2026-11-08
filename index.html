@@ -556,9 +556,27 @@
                                         <p v-else class="text-sm text-gray-400 italic py-10">Chưa có mã QR</p>
                                     </div>
                                     <div class="text-sm space-y-2 bg-brand-bone rounded-xl p-4">
-                                        <p class="flex justify-between gap-3"><span class="text-gray-500">MoMo</span><b class="text-brand-dark">{{ paymentInfo.momo || '—' }}</b></p>
-                                        <p v-if="paymentInfo.vcb && paymentInfo.vcb.toLowerCase() !== 'updating'" class="flex justify-between gap-3"><span class="text-gray-500">Vietcombank</span><b class="text-brand-dark">{{ paymentInfo.vcb }}</b></p>
-                                        <p class="flex justify-between gap-3"><span class="text-gray-500">Số tiền</span><b class="text-brand-green">{{ formatPrice(totalPrice) }}</b></p>
+                                        <p class="flex justify-between items-center gap-3">
+                                            <span class="text-gray-500">MoMo</span>
+                                            <span class="flex items-center gap-2">
+                                                <b class="text-brand-dark">{{ paymentInfo.momo || '—' }}</b>
+                                                <button v-if="paymentInfo.momo" @click="copyText(paymentInfo.momo, 'Số MoMo')" type="button" class="text-xs px-2 py-0.5 rounded-lg bg-brand-green/10 text-brand-green font-semibold hover:bg-brand-green hover:text-white transition-colors active:scale-95">Copy</button>
+                                            </span>
+                                        </p>
+                                        <p v-if="paymentInfo.vcb && paymentInfo.vcb.toLowerCase() !== 'updating'" class="flex justify-between items-center gap-3">
+                                            <span class="text-gray-500">Vietcombank</span>
+                                            <span class="flex items-center gap-2">
+                                                <b class="text-brand-dark">{{ paymentInfo.vcb }}</b>
+                                                <button @click="copyText(paymentInfo.vcb, 'Số TK VCB')" type="button" class="text-xs px-2 py-0.5 rounded-lg bg-brand-green/10 text-brand-green font-semibold hover:bg-brand-green hover:text-white transition-colors active:scale-95">Copy</button>
+                                            </span>
+                                        </p>
+                                        <p class="flex justify-between items-center gap-3">
+                                            <span class="text-gray-500">Số tiền</span>
+                                            <span class="flex items-center gap-2">
+                                                <b class="text-brand-green">{{ formatPrice(totalPrice) }}</b>
+                                                <button @click="copyText(totalPrice, 'Số tiền')" type="button" class="text-xs px-2 py-0.5 rounded-lg bg-brand-green/10 text-brand-green font-semibold hover:bg-brand-green hover:text-white transition-colors active:scale-95">Copy</button>
+                                            </span>
+                                        </p>
                                     </div>
                                 </div>
                                 <p v-else class="text-sm text-gray-400 italic">Đang tải thông tin thanh toán...</p>
@@ -753,6 +771,14 @@
                 };
 
                 onMounted(() => {
+                    // Lắng nghe phím Escape để đóng nhanh Sidebar hoặc Giỏ hàng
+                    window.addEventListener('keydown', (e) => {
+                        if (e.key === 'Escape') {
+                            if (showCheckout.value) showCheckout.value = false;
+                            if (isSidebarOpen.value) isSidebarOpen.value = false;
+                        }
+                    });
+
                     // 1. Hiển thị ngay thực đơn từ FALLBACK_MENU trong 0.1s để khách không phải chờ
                     if (cfg.FALLBACK_MENU && cfg.FALLBACK_MENU.length > 0) {
                         populateMenu(cfg.FALLBACK_MENU);
@@ -874,16 +900,51 @@
 
                 const toggleCheckout = () => { showCheckout.value = !showCheckout.value; };
 
+                const copyText = (val, label) => {
+                    if (!val) return;
+                    const str = val.toString().trim();
+                    try {
+                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                            navigator.clipboard.writeText(str).then(() => {
+                                showToast(`Đã sao chép ${label || ''}: ${str} 📋`);
+                            }).catch(() => {
+                                fallbackCopy(str, label);
+                            });
+                        } else {
+                            fallbackCopy(str, label);
+                        }
+                    } catch (e) {
+                        fallbackCopy(str, label);
+                    }
+                };
+
+                const fallbackCopy = (str, label) => {
+                    const ta = document.createElement('textarea');
+                    ta.value = str;
+                    ta.style.position = 'fixed';
+                    ta.style.opacity = '0';
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(ta);
+                    showToast(`Đã sao chép ${label || ''}: ${str} 📋`);
+                };
+
                 const submitOrder = () => {
                     if (cart.value.length === 0) return;
+                    const phoneDigits = (form.value.phone || '').replace(/\D/g, '');
+                    if (phoneDigits.length < 9 || phoneDigits.length > 11) {
+                        showToast('Vui lòng kiểm tra lại số điện thoại (từ 9 đến 11 số) nhé!');
+                        return;
+                    }
                     isSubmitting.value = true;
 
                     const orderData = {
-                        name: form.value.name,
-                        phone: form.value.phone,
-                        email: form.value.email,
-                        address: form.value.address,
-                        note: form.value.note,
+                        name: form.value.name.trim(),
+                        phone: form.value.phone.trim(),
+                        email: (form.value.email || '').trim(),
+                        address: form.value.address.trim(),
+                        note: (form.value.note || '').trim(),
                         items: cart.value,
                         total: totalPrice.value,
                         promoApplied: false,
@@ -1065,7 +1126,7 @@
                     weeklyBanner, relaxVideoEmbedUrl, onLogoError,
                     addToCart, increaseItem, decreaseItem, toggleCheckout, submitOrder, searchOrder,
                     totalItems, totalPrice, formatPrice, cartGroupedByDay,
-                    getImageUrl, handleImageFallback
+                    getImageUrl, handleImageFallback, copyText
                 }
             }
         }).mount('#app');
