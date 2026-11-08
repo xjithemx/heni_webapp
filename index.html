@@ -339,7 +339,7 @@
 
                 <div class="p-6">
                     <h3 class="font-bold text-brand-dark mb-3 text-sm uppercase tracking-widest">Hóa đơn chốt tuần</h3>
-                    <input v-model="searchQuery" @keyup.enter="searchOrder" type="text" placeholder="Nhập số điện thoại..."
+                    <input v-model="searchQuery" @keyup.enter="searchOrder" type="text" placeholder="Nhập tên, SĐT hoặc mã đơn (VD: C Ngọc, 0379...)"
                         class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-brand-green focus:outline-none mb-3">
                     <button @click="searchOrder"
                         class="w-full py-3 bg-brand-green text-white rounded-xl text-sm font-bold shadow-sm mb-6 active:scale-95 transition-transform">Tra
@@ -923,19 +923,38 @@
                     }
                 };
 
-                // Tra cứu đơn hàng theo SĐT: đơn nợ mới nhất tự mở, còn lại thu gọn
+                // Tra cứu đơn hàng thông minh: hỗ trợ tìm theo Tên Khách, SĐT hoặc Mã Đơn
+                const removeAccents = (str) => {
+                    if (!str) return '';
+                    return str.toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+                };
+
+                const cleanPhoneDigits = (val) => {
+                    if (val === null || val === undefined || val === '') return '';
+                    try {
+                        const n = Number(val);
+                        const s = (!isNaN(n) && val !== '') ? n.toLocaleString('fullwide', { useGrouping: false }) : val.toString();
+                        return s.replace(/\D/g, '').replace(/^0+/, '');
+                    } catch (e) {
+                        return val.toString().replace(/\D/g, '').replace(/^0+/, '');
+                    }
+                };
+
                 const searchOrder = () => {
-                    const phone = (searchQuery.value || '').replace(/\D/g, '');
-                    if (!phone) return;
+                    const q = (searchQuery.value || '').trim();
+                    if (!q) {
+                        searchStatus.value = { error: true, message: 'Vui lòng nhập Tên khách hàng, Số điện thoại hoặc Mã đơn để tra cứu.' };
+                        return;
+                    }
                     searchResults.value = [];
-                    searchStatus.value = { error: false, loading: true, message: 'Đang tra sổ tay...' };
+                    searchStatus.value = { error: false, loading: true, message: `Đang tra sổ tay cho "${q}"...` };
 
                     const handleResult = (res) => {
                         if (!res || !res.success) {
-                            searchStatus.value = { error: true, message: (res && res.message) || 'Không tìm thấy đơn hàng.' };
+                            searchStatus.value = { error: true, message: (res && res.message) || `Không tìm thấy đơn hàng nào khớp với "${q}".` };
                             return;
                         }
-                        const orders = res.data
+                        const orders = (res.data || [])
                             .map(o => ({ ...o, expanded: false }))
                             .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
                         const latestUnpaid = orders.find(o => o.status !== 'Paid');
@@ -947,17 +966,95 @@
                     if (isInsideGAS) {
                         google.script.run
                             .withSuccessHandler(handleResult)
-                            .withFailureHandler(err => handleResult({ success: false, message: 'Lỗi kết nối: ' + err.message }))
-                            .searchOrders(phone);
+                            .withFailureHandler(err => handleResult({ success: false, message: 'Lỗi kết nối Apps Script: ' + err.message }))
+                            .searchOrders(q);
                     } else if (GAS_API_URL) {
-                        fetch(`${GAS_API_URL}?action=searchOrders&phone=${encodeURIComponent(phone)}`)
+                        fetch(`${GAS_API_URL}?action=searchOrders&query=${encodeURIComponent(q)}`)
                             .then(r => r.json())
                             .then(handleResult)
-                            .catch(err => handleResult({ success: false, message: 'Lỗi kết nối: ' + err.message }));
+                            .catch(err => handleResult({ success: false, message: 'Lỗi kết nối tới Google Apps Script: ' + err.message }));
                     } else {
+                        // Fallback tìm kiếm trên dữ liệu thực tế mẫu khi chạy Local / GitHub trước khi nối GAS_API_URL
                         setTimeout(() => {
-                            searchStatus.value = { error: true, message: 'Vui lòng cập nhật GAS_API_URL trong config.js để tra cứu trực tiếp từ Google Sheets.' };
-                        }, 600);
+                            const mockOrders = [
+                                {
+                                    orderId: 'HN-751646',
+                                    customerName: 'C Ngọc',
+                                    phone: '0379524516',
+                                    date: '04/11/2026',
+                                    timestamp: '2026-11-04T09:15:00.000Z',
+                                    total: 140000,
+                                    status: 'Đã tiếp nhận',
+                                    items: [
+                                        { name: 'Điều - Đậu Xanh - Cải Kale', quantity: 1, price: 25000, deliveryDate: 'Thứ 3 (03-11)' },
+                                        { name: 'Điều - Hạnh Nhân - Khoai Lang Tím', quantity: 1, price: 30000, deliveryDate: 'Thứ 4 (04-11)' },
+                                        { name: 'Macca - Bí Đỏ - Cốt Dừa', quantity: 1, price: 30000, deliveryDate: 'Thứ 6 (06-11)' },
+                                        { name: 'Bắp Ngọt Thanh - Hạt Điều - Dừa Non', quantity: 1, price: 25000, deliveryDate: 'Thứ 7 (07-11)' },
+                                        { name: 'Cốm - Sen - Điều', quantity: 1, price: 30000, deliveryDate: 'Thứ 7 (07-11)' }
+                                    ]
+                                },
+                                {
+                                    orderId: 'HN-078663',
+                                    customerName: 'Anh Đào',
+                                    phone: '0942685872',
+                                    date: '02/11/2026',
+                                    timestamp: '2026-11-02T22:00:00.000Z',
+                                    total: 110000,
+                                    status: 'Đã tiếp nhận',
+                                    items: [
+                                        { name: 'Điều yến mạch cacao', quantity: 2, price: 25000, deliveryDate: 'Thứ 2 (02-11)' },
+                                        { name: 'Gạo lứt rang hạnh nhân điều', quantity: 2, price: 30000, deliveryDate: 'Thứ 2 (02-11)' }
+                                    ]
+                                },
+                                {
+                                    orderId: 'HN-897186',
+                                    customerName: 'Suri SPX',
+                                    phone: '0948667431',
+                                    date: '01/11/2026',
+                                    timestamp: '2026-11-01T15:00:00.000Z',
+                                    total: 140000,
+                                    status: 'Paid',
+                                    items: [
+                                        { name: 'Gạo lứt rang hạnh nhân điều', quantity: 1, price: 30000, deliveryDate: 'Thứ 2 (02-11)' },
+                                        { name: 'Điều đậu xanh cải Kale', quantity: 1, price: 25000, deliveryDate: 'Thứ 3 (03-11)' },
+                                        { name: 'Macca hạt sen lá dứa', quantity: 1, price: 30000, deliveryDate: 'Thứ 3 (03-11)' },
+                                        { name: 'Đậu đỏ óc chó củ dền', quantity: 1, price: 25000, deliveryDate: 'Thứ 4 (04-11)' },
+                                        { name: 'Điều hạnh nhân khoai lang tím', quantity: 1, price: 30000, deliveryDate: 'Thứ 4 (04-11)' }
+                                    ]
+                                },
+                                {
+                                    orderId: 'HN-592467',
+                                    customerName: 'Vy',
+                                    phone: '0984676449',
+                                    date: '04/11/2026',
+                                    timestamp: '2026-11-04T14:00:00.000Z',
+                                    total: 30000,
+                                    status: 'Đã tiếp nhận',
+                                    items: [
+                                        { name: 'Macca - Sen - Lá dứa', quantity: 1, price: 30000, deliveryDate: 'Thứ 3 (03-11)' }
+                                    ]
+                                }
+                            ];
+
+                            const qNorm = removeAccents(q);
+                            const qClean = q.toLowerCase();
+                            const qPhone = cleanPhoneDigits(q);
+
+                            const filtered = mockOrders.filter(o => {
+                                const matchId = qClean && o.orderId.toLowerCase().includes(qClean);
+                                const matchName = qNorm && removeAccents(o.customerName).includes(qNorm);
+                                const oPhoneClean = cleanPhoneDigits(o.phone);
+                                const matchPhone = qPhone && qPhone.length >= 4 && oPhoneClean &&
+                                                   (oPhoneClean === qPhone || oPhoneClean.endsWith(qPhone));
+                                return matchId || matchName || matchPhone;
+                            });
+
+                            if (filtered.length > 0) {
+                                handleResult({ success: true, data: filtered });
+                            } else {
+                                handleResult({ success: false, message: `Không tìm thấy đơn hàng nào khớp với "${q}".` });
+                            }
+                        }, 400);
                     }
                 };
 

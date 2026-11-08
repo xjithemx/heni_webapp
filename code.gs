@@ -54,7 +54,8 @@ function doGet(e) {
   }
 
   if (action === 'searchOrders') {
-    return jsonResponse(searchOrders(e.parameter.phone || ''));
+    const q = (e && e.parameter && (e.parameter.query || e.parameter.q || e.parameter.phone)) || '';
+    return jsonResponse(searchOrders(q));
   }
 
   if (action === 'sendKitchenReport') {
@@ -175,52 +176,96 @@ function getAppConfig() {
   }
 }
 
-// 4. Tra cứu đơn hàng theo SĐT
-function searchOrders(phone) {
+// 4. Tra cứu đơn hàng theo Tên Khách, SĐT, hoặc Mã Đơn
+function searchOrders(rawQuery) {
   try {
-    const sheet = SpreadsheetApp.openById(CONFIG.SHEET_ID).getSheetByName('Orders_Master');
+    const q = (rawQuery || '').toString().trim();
+    if (!q) return { success: false, message: 'Vui lòng nhập Tên, Số điện thoại hoặc Mã đơn hàng.' };
+
+    const ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
+    const sheet = ss.getSheetByName('Orders_Master');
     if (!sheet) return { success: false, message: 'Hệ thống đang bảo trì tính năng tra cứu.' };
 
-    const target = (phone || '').toString().replace(/\D/g, '');
-    if (!target) return { success: false, message: 'Vui lòng nhập số điện thoại.' };
-
     const data = sheet.getDataRange().getValues();
-    const headers = data[0].map(h => h.toString().trim().toLowerCase());
+    if (data.length <= 1) return { success: false, message: 'Chưa có dữ liệu đơn hàng.' };
+
+    const headers = data[0].map(h => (h || '').toString().trim().toLowerCase());
     let statusCol = headers.indexOf('status');
     if (statusCol < 0) statusCol = 9;
     const ITEMS_COL = 6; // Raw_JSON_Items (cột G)
 
+    // Helper bỏ dấu tiếng Việt để tìm kiếm không phân biệt dấu
+    const removeAccents = (str) => {
+      if (!str) return '';
+      return str.toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    };
+
+    // Helper chuẩn hóa số điện thoại: xử lý cả scientific notation (3.795E8) và bỏ số 0 đầu
+    const cleanPhone = (val) => {
+      if (val === null || val === undefined || val === '') return '';
+      try {
+        const n = Number(val);
+        const s = (!isNaN(n) && val !== '') ? n.toLocaleString('fullwide', { useGrouping: false }) : val.toString();
+        return s.replace(/\D/g, '').replace(/^0+/, '');
+      } catch (e) {
+        return val.toString().replace(/\D/g, '').replace(/^0+/, '');
+      }
+    };
+
+    const qClean = q.toLowerCase();
+    const qNorm = removeAccents(q);
+    const qPhone = cleanPhone(q);
+
     const orders = [];
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
-      const rowPhone = (row[3] || '').toString().replace(/\D/g, '');
-      // Khớp chính xác hoặc bỏ số 0 đầu (do Google Sheet đôi khi lưu SĐT mất số 0 đầu)
-      if (!rowPhone || (rowPhone !== target && '0' + rowPhone !== target && rowPhone !== '0' + target)) continue;
+      const orderId = (row[0] || '').toString().trim();
+      if (!orderId) continue;
+
+      const custName = (row[2] || '').toString().trim();
+      const custPhone = row[3];
+      const custPhoneClean = cleanPhone(custPhone);
+      const custNameNorm = removeAccents(custName);
+
+      // 1. Khớp mã đơn
+      const matchId = qClean && orderId.toLowerCase().indexOf(qClean) !== -1;
+      // 2. Khớp tên khách hàng (không phân biệt hoa thường và dấu tiếng Việt)
+      const matchName = qNorm && custNameNorm.indexOf(qNorm) !== -1;
+      // 3. Khớp số điện thoại (từ 4 số trở lên, khớp chính xác hoặc khớp đuôi)
+      const matchPhone = (qPhone && qPhone.length >= 4 && custPhoneClean) &&
+                         (custPhoneClean === qPhone || custPhoneClean.endsWith(qPhone));
+
+      if (!matchId && !matchName && !matchPhone) continue;
 
       let items = [];
       try { items = JSON.parse(row[ITEMS_COL]) || []; } catch (e) { items = []; }
 
       const ts = row[1] instanceof Date ? row[1] : new Date(row[1]);
-      const rawStatus = (row[statusCol] || '').toString().trim();
-      const isPaid = rawStatus.toLowerCase() === 'đã thanh toán' || rawStatus.toLowerCase() === 'paid';
+      const statusJ = (row[9] || '').toString().trim();
+      const statusK = (row[10] || '').toString().trim();
+      const statusHeader = (row[statusCol] || '').toString().trim();
+      const combinedStatus = `${statusJ} ${statusK} ${statusHeader}`.toLowerCase();
+      const isPaid = combinedStatus.indexOf('paid') !== -1 || combinedStatus.indexOf('đã thanh toán') !== -1;
 
       orders.push({
-        orderId: row[0].toString(),
-        date: Utilities.formatDate(ts, Session.getScriptTimeZone(), 'dd/MM/yyyy'),
+        orderId: orderId,
+        customerName: custName,
+        phone: custPhoneClean ? ('0' + custPhoneClean) : '',
+        date: Utilities.formatDate(ts, Session.getScriptTimeZone() || 'Asia/Ho_Chi_Minh', 'dd/MM/yyyy'),
         timestamp: ts.toISOString(),
         total: Number(row[7]) || 0,
         items: items.map(it => ({
-          name: it.name,
+          name: it.name || '',
           quantity: Number(it.quantity) || 0,
           price: Number(it.price) || 0,
           deliveryDate: it.deliveryDate || ''
         })),
-        status: isPaid ? 'Paid' : rawStatus
+        status: isPaid ? 'Paid' : (statusJ || statusHeader || 'Chưa thanh toán')
       });
     }
 
     if (orders.length === 0) {
-      return { success: false, message: 'Không tìm thấy đơn hàng nào khớp với số điện thoại này.' };
+      return { success: false, message: `Không tìm thấy đơn hàng nào khớp với "${q}".` };
     }
     return { success: true, data: orders };
   } catch (error) {
@@ -231,23 +276,32 @@ function searchOrders(phone) {
 // 4b. Thông tin thanh toán (tab payment_method)
 function getPaymentInfo(skipDriveBase64) {
   try {
-    const sheet = SpreadsheetApp.openById(CONFIG.SHEET_ID).getSheetByName('payment_method');
+    const ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
+    const sheet = ss.getSheetByName('payment_method');
     if (!sheet) return { success: false, message: 'Thiếu tab payment_method' };
 
     const rows = sheet.getDataRange().getValues();
-    const info = { momo: '', vcb: '', momoQr: '', vcbQr: '' };
+    const info = { momo: '0834983524', vcb: 'Updating', momoQr: '', vcbQr: '' };
     for (let i = 1; i < rows.length; i++) {
       const type = (rows[i][0] || '').toString().trim().toLowerCase();
       if (type !== 'momo' && type !== 'vcb') continue;
       info[type] = (rows[i][1] || '').toString().trim();
 
+      // Chỉ đọc ảnh từ Drive nếu không bật cờ skipDriveBase64
       if (!skipDriveBase64) {
-        const cell = sheet.getRange(i + 1, 3);
-        const rich = cell.getRichTextValue();
-        const link = (rich && rich.getLinkUrl()) || cell.getValue().toString();
-        let qr = getDriveImageBase64(link);
-        if (!qr && type === 'momo') qr = getDriveImageBase64(CONFIG.PAYMENT_QR_MOMO_ID);
-        info[type + 'Qr'] = qr;
+        try {
+          const cell = sheet.getRange(i + 1, 3);
+          const rich = cell.getRichTextValue();
+          const rawVal = cell.getValue();
+          const link = (rich && rich.getLinkUrl()) || (rawVal !== null && rawVal !== undefined ? rawVal.toString() : '');
+          let qr = getDriveImageBase64(link);
+          if (!qr && type === 'momo' && CONFIG.PAYMENT_QR_MOMO_ID) {
+            qr = getDriveImageBase64(CONFIG.PAYMENT_QR_MOMO_ID);
+          }
+          info[type + 'Qr'] = qr;
+        } catch (cellErr) {
+          // Bỏ qua lỗi ô riêng lẻ để luôn trả về thông tin MoMo an toàn
+        }
       }
     }
     return { success: true, data: info };
