@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Góc Bếp Nhà Hení</title>
+    <link rel="icon" type="image/jpeg" href="./images/logo-only.jpg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="./config.js"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=DM+Sans:wght@400;500;600&display=swap"
+        rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            bone: '#F9F8F6',
+                            green: '#4F6B4A',
+                            gold: '#C49A45',
+                            dark: '#2C3D29'
+                        }
+                    },
+                    fontFamily: {
+                        serif: ['"Playfair Display"', 'serif'],
+                        sans: ['"DM Sans"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: #F9F8F6;
+            color: #2C3D29;
+        }
+
+        h1,
+        h2,
+        h3,
+        .font-serif {
+            font-family: 'Playfair Display', serif;
+        }
+
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Animations từ v1 & v2 */
+        .fade-enter-active,
+        .fade-leave-active {
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        .fade-enter-from,
+        .fade-leave-to {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        .list-enter-active,
+        .list-leave-active {
+            transition: all 0.3s ease;
+        }
+
+        .list-enter-from,
+        .list-leave-to {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+
+        .slide-enter-active,
+        .slide-leave-active {
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .slide-enter-from,
+        .slide-leave-to {
+            transform: translateX(100%);
+        }
+
+        /* Skeleton Loading v2 */
+        .skeleton-text {
+            background: #e2e8f0;
+            border-radius: 4px;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+    </style>
+</head>
+
+<body class="antialiased min-h-screen relative pb-32">
+    <div id="app" class="max-w-3xl mx-auto px-4 py-8">
+
+        <!-- Hero Header -->
+        <header class="text-center mb-8">
+            <div
+                class="w-28 h-28 mx-auto bg-brand-bone rounded-full flex items-center justify-center text-brand-green mb-4 shadow-sm overflow-hidden border border-brand-green/10 relative">
+                <img v-if="storeImages['logo-only']" :src="storeImages['logo-only']" @error="onLogoError" class="w-full h-full object-cover"
+                    alt="Hení Logo">
+                <span v-else-if="!imageError" class="animate-pulse font-serif text-sm">Đang tải...</span>
+                <span v-else class="font-serif text-3xl italic">Hení</span>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-serif font-bold text-brand-dark tracking-tight mb-3">Góc Bếp Nhà Hení
+            </h1>
+            <p class="text-brand-gold italic font-serif text-lg md:text-xl">~ Đong Đầy Yêu Thương ~</p>
+
+            <div v-if="imageError"
+                class="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl max-w-md mx-auto">
+                {{ imageError }}
+            </div>
+        </header>
+
+        <!-- Trust Badges -->
+        <div class="flex flex-wrap justify-center gap-3 mb-10">
+            <div
+                class="bg-white px-4 py-2 rounded-full shadow-sm text-sm text-brand-dark font-medium border border-gray-100 flex items-center gap-2">
+                <span class="text-brand-green">🌱</span> Không chất bảo quản
+            </div>
+            <div
+                class="bg-white px-4 py-2 rounded-full shadow-sm text-sm text-brand-dark font-medium border border-gray-100 flex items-center gap-2">
+                <span class="text-brand-green">🍯</span> Ngọt dịu chà là, thốt nốt
+            </div>
+            <div
+                class="bg-white px-4 py-2 rounded-full shadow-sm text-sm text-brand-dark font-medium border border-gray-100 flex items-center gap-2">
+                <span class="text-brand-green">🎨</span> 100% màu tự nhiên
+            </div>
+        </div>
+
+        <!-- Hero Image -->
+        <transition name="fade">
+            <div v-if="storeImages['base']"
+                class="w-full h-[30vh] md:h-[45vh] rounded-3xl mb-12 overflow-hidden shadow-md relative bg-brand-dark">
+                <img :src="storeImages['base']" class="w-full h-full object-cover" alt="Sữa hạt Hení">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                <div class="absolute bottom-6 left-6 text-white">
+                    <p class="font-serif italic text-xl md:text-2xl drop-shadow-md">Mộc mạc, lành sạch mỗi ngày</p>
+                </div>
+            </div>
+        </transition>
+
+        <!-- Weekly Content / Thank You Section (Dễ dàng cập nhật từ Sheet Dim_Config hoặc config.js) -->
+        <section v-if="weeklyBanner.enabled && weeklyBanner.title"
+            class="mb-14 bg-white rounded-3xl p-6 md:p-10 shadow-sm border border-brand-green/20 relative overflow-hidden">
+            <div
+                class="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-brand-green/5 rounded-full blur-3xl pointer-events-none">
+            </div>
+            <div
+                class="absolute bottom-0 left-0 -mb-10 -ml-10 w-32 h-32 bg-brand-gold/5 rounded-full blur-2xl pointer-events-none">
+            </div>
+
+            <div class="relative z-10 text-center">
+                <span v-if="weeklyBanner.badge"
+                    class="uppercase tracking-widest text-xs font-bold text-brand-gold bg-brand-bone px-4 py-1.5 rounded-full inline-block mb-4">{{ weeklyBanner.badge }}</span>
+                <h2 class="text-3xl font-serif font-bold text-brand-dark mb-4">{{ weeklyBanner.title }}</h2>
+                <p class="text-gray-600 leading-relaxed max-w-xl mx-auto mb-6 text-base md:text-lg" v-html="weeklyBanner.content">
+                </p>
+                <div v-if="weeklyBanner.footer"
+                    class="inline-flex items-center gap-2 text-sm font-semibold text-brand-green bg-brand-green/10 px-5 py-2.5 rounded-xl">
+                    <span class="text-xl">💌</span> {{ weeklyBanner.footer }}
+                </div>
+            </div>
+        </section>
+
+        <!-- Menu Sáng Mai -->
+        <section v-if="nextDeliveryDate" class="mb-14">
+            <div
+                class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-gray-200 pb-4">
+                <div>
+                    <h2 class="text-3xl font-serif font-bold text-brand-dark mb-1">Menu Sáng Mai</h2>
+                    <p class="text-sm text-brand-green font-medium">Giao hàng: {{ nextDeliveryDate.label }}</p>
+                </div>
+                <div class="text-xs text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full inline-block w-fit">
+                    Nhận order trước 20h00
+                </div>
+            </div>
+
+            <!-- Loading Skeleton -->
+            <div v-if="isLoadingMenu" class="space-y-4">
+                <div v-for="i in 2" :key="'skel-menu-'+i" class="bg-white p-5 rounded-2xl h-32 skeleton-text"></div>
+            </div>
+
+            <div v-else class="space-y-8">
+                <div v-if="fullMenu[nextDeliveryDate.dayOfWeek].standard.length > 0">
+                    <h3
+                        class="text-sm uppercase tracking-widest font-bold text-brand-green mb-4 border-b border-brand-green/20 pb-2">
+                        Dòng Tiêu Chuẩn</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div v-for="item in fullMenu[nextDeliveryDate.dayOfWeek].standard" :key="item.id"
+                            class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col hover:border-brand-green/30 transition-colors">
+                            <img :src="getImageUrl(item)" @error="handleImageFallback($event, item)" loading="lazy"
+                                class="w-full h-40 object-cover bg-gray-100">
+                            <div class="p-4 flex flex-col flex-1">
+                                <div class="flex items-start justify-between gap-2 mb-1">
+                                    <h4 class="font-bold text-brand-dark">{{ item.name }}</h4>
+                                    <span v-if="item.kcal"
+                                        class="shrink-0 text-[11px] font-semibold bg-orange-50 text-orange-700 px-2 py-0.5 rounded-full whitespace-nowrap">🔥 {{ item.kcal }} kcal</span>
+                                </div>
+                                <p class="text-xs text-gray-500 whitespace-pre-line">{{ item.desc }}</p>
+                                <p class="font-semibold text-brand-green text-sm mt-2 mb-4">{{ formatPrice(item.price) }}</p>
+                                <button @click="addToCart(item, nextDeliveryDate)"
+                                    class="mt-auto w-full py-2.5 rounded-xl bg-brand-bone text-brand-green font-semibold text-sm hover:bg-brand-green hover:text-white transition-colors active:scale-[0.98]">
+                                    Thêm vào giỏ
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-if="fullMenu[nextDeliveryDate.dayOfWeek].premium.length > 0">
+                    <h3
+                        class="text-sm uppercase tracking-widest font-bold text-brand-gold mb-4 border-b border-brand-gold/20 pb-2">
+                        Dòng Cao Cấp</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div v-for="item in fullMenu[nextDeliveryDate.dayOfWeek].premium" :key="item.id"
+                            class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col hover:border-brand-gold/30 transition-colors">
+                            <img :src="getImageUrl(item)" @error="handleImageFallback($event, item)" loading="lazy"
+                                class="w-full h-40 object-cover bg-gray-100">
+                            <div class="p-4 flex flex-col flex-1">
+                                <div class="flex items-start justify-between gap-2 mb-1">
+                                    <h4 class="font-bold text-brand-dark">{{ item.name }}</h4>
+                                    <span v-if="item.kcal"
+                                        class="shrink-0 text-[11px] font-semibold bg-orange-50 text-orange-700 px-2 py-0.5 rounded-full whitespace-nowrap">🔥 {{ item.kcal }} kcal</span>
+                                </div>
+                                <p class="text-xs text-gray-500 whitespace-pre-line">{{ item.desc }}</p>
+                                <p class="font-semibold text-brand-gold text-sm mt-2 mb-4">{{ formatPrice(item.price) }}</p>
+                                <button @click="addToCart(item, nextDeliveryDate)"
+                                    class="mt-auto w-full py-2.5 rounded-xl bg-brand-bone text-brand-gold font-semibold text-sm hover:bg-brand-gold hover:text-white transition-colors active:scale-[0.98]">
+                                    Thêm vào giỏ
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Lịch Pre-order Cả Tuần -->
+        <section v-if="preOrderDates.length > 0" class="mb-12 bg-brand-bone p-6 md:p-8 rounded-3xl">
+            <div class="mb-6 text-center">
+                <h2 class="text-3xl font-serif font-bold text-brand-dark mb-2">Lịch Đặt Trước Cả Tuần</h2>
+                <p class="text-sm text-gray-600 max-w-md mx-auto">Sắp xếp lịch uống sữa dinh dưỡng cho cả tuần. Tiệm nấu
+                    mới mỗi sáng theo đơn đặt trước.</p>
+            </div>
+
+            <div class="flex overflow-x-auto snap-x hide-scrollbar gap-3 mb-8 pb-2 px-1">
+                <button v-for="dateObj in preOrderDates" :key="dateObj.id" @click="activePreOrder = dateObj"
+                    :class="['flex flex-col items-center justify-center min-w-[105px] snap-start px-4 py-3 rounded-2xl transition-all border',
+                   activePreOrder.id === dateObj.id ? 'bg-brand-dark text-white border-brand-dark shadow-md scale-105' : 'bg-white text-brand-dark border-transparent hover:border-brand-green/30 shadow-sm']">
+                    <span class="font-bold text-base mb-1">{{ dateObj.dayName }}</span>
+                    <span class="text-[11px] mb-1 font-medium opacity-90">{{ dateObj.dateStr }}</span>
+                    <span class="text-[10px] uppercase tracking-widest opacity-70">{{ fullMenu[dateObj.dayOfWeek]?.theme
+                        }}</span>
+                </button>
+            </div>
+
+            <!-- Loading Skeleton for Pre-order -->
+            <div v-if="isLoadingMenu" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div v-for="i in 2" :key="'skel-pre-'+i" class="bg-white p-5 rounded-2xl h-32 skeleton-text"></div>
+            </div>
+
+            <transition v-else name="fade" mode="out-in">
+                <div :key="activePreOrder.id" class="space-y-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div v-for="item in [...fullMenu[activePreOrder.dayOfWeek].standard, ...fullMenu[activePreOrder.dayOfWeek].premium]"
+                            :key="item.id"
+                            class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between hover:border-brand-green/30 transition-colors">
+                                <div class="flex gap-4 mb-3">
+                                    <img :src="getImageUrl(item)" @error="handleImageFallback($event, item)"
+                                        class="w-20 h-20 rounded-xl object-cover bg-gray-100" loading="lazy">
+                                    <div>
+                                        <h4 class="font-bold text-brand-dark mb-1">{{ item.name }}</h4>
+                                        <p class="text-xs text-gray-500 whitespace-pre-line">{{ item.desc }}</p>
+                                        <div class="flex flex-wrap items-center gap-2 mt-1">
+                                            <p class="font-semibold text-sm"
+                                                :class="item.category === 'premium' ? 'text-brand-gold' : 'text-brand-green'">
+                                                {{ formatPrice(item.price) }}
+                                            </p>
+                                            <span v-if="item.kcal"
+                                                class="text-[11px] font-semibold bg-orange-50 text-orange-700 px-2 py-0.5 rounded-full whitespace-nowrap">🔥 {{ item.kcal }} kcal</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            <button @click="addToCart(item, activePreOrder)"
+                                class="w-full py-2.5 rounded-xl bg-gray-50 text-brand-dark font-semibold text-sm hover:bg-brand-dark hover:text-white transition-colors active:scale-[0.98]">
+                                Đặt cho {{ activePreOrder.dayName }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </transition>
+        </section>
+
+        <!-- FAB Kích hoạt Sidebar -->
+        <button @click="isSidebarOpen = true"
+            class="fixed bottom-24 right-6 z-40 bg-white border border-brand-green text-brand-green p-4 rounded-full shadow-lg hover:bg-brand-green hover:text-white transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+        </button>
+
+        <!-- Sidebar Trượt -->
+        <transition name="fade">
+            <div v-if="isSidebarOpen" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
+                @click="isSidebarOpen = false"></div>
+        </transition>
+
+        <transition name="slide">
+            <div v-if="isSidebarOpen"
+                class="fixed inset-y-0 right-0 z-50 w-full max-w-sm bg-brand-bone shadow-2xl flex flex-col overflow-y-auto">
+                <div class="p-5 border-b border-gray-200 flex justify-between items-center bg-white sticky top-0 z-10">
+                    <h2 class="text-xl font-serif font-bold text-brand-dark">Tra cứu & Giải trí</h2>
+                    <button @click="isSidebarOpen = false"
+                        class="text-gray-500 hover:text-brand-dark text-2xl">&times;</button>
+                </div>
+
+                <div class="p-6">
+                    <h3 class="font-bold text-brand-dark mb-3 text-sm uppercase tracking-widest">Hóa đơn chốt tuần</h3>
+                    <input v-model="searchQuery" @keyup.enter="searchOrder" type="text" placeholder="Nhập số điện thoại..."
+                        class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-brand-green focus:outline-none mb-3">
+                    <button @click="searchOrder"
+                        class="w-full py-3 bg-brand-green text-white rounded-xl text-sm font-bold shadow-sm mb-6 active:scale-95 transition-transform">Tra
+                        cứu đơn</button>
+
+                    <div v-if="searchStatus" class="mb-6">
+                        <p v-if="searchStatus.error" class="text-sm text-red-500 bg-white rounded-xl p-4 shadow-sm">{{ searchStatus.message }}</p>
+                        <p v-else-if="searchStatus.loading" class="text-sm text-gray-500">{{ searchStatus.message }}</p>
+                        <div v-else class="space-y-6">
+                            <div v-for="group in groupedResults" :key="group.label">
+                                <h4 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">{{ group.label }}</h4>
+                                <div class="space-y-3">
+                                    <div v-for="order in group.orders" :key="order.orderId"
+                                        class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                                        <button @click="order.expanded = !order.expanded"
+                                            class="w-full p-4 flex items-center justify-between gap-3 text-left">
+                                            <div>
+                                                <p class="text-xs text-gray-500">#{{ order.orderId }} · {{ order.date }}</p>
+                                                <p class="font-bold text-brand-dark">{{ formatPrice(order.total) }}</p>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <span
+                                                    :class="order.status === 'Paid' ? 'bg-brand-green/10 text-brand-green' : 'bg-orange-100 text-orange-700'"
+                                                    class="text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap">
+                                                    {{ order.status === 'Paid' ? 'Đã thanh toán' : 'Chưa thanh toán' }}
+                                                </span>
+                                                <svg :class="{ 'rotate-180': order.expanded }"
+                                                    class="w-4 h-4 text-gray-400 transition-transform" fill="none"
+                                                    viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </div>
+                                        </button>
+                                        <transition name="fade">
+                                            <div v-if="order.expanded"
+                                                class="px-4 pb-4 pt-3 border-t border-dashed border-gray-200 space-y-3">
+                                                <div v-for="(it, idx) in order.items" :key="idx"
+                                                    class="flex justify-between gap-3 text-xs text-gray-600">
+                                                    <div>
+                                                        <p class="font-semibold text-brand-dark text-sm">{{ it.name }}</p>
+                                                        <p>Giao: {{ it.deliveryDate }}</p>
+                                                    </div>
+                                                    <div class="text-right whitespace-nowrap">
+                                                        <p>SL: {{ it.quantity }}</p>
+                                                        <p class="font-semibold text-brand-green">{{ formatPrice(it.price * it.quantity) }}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </transition>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 class="font-bold text-brand-dark mb-3 text-sm uppercase tracking-widest mt-8">Góc Thư Giãn</h3>
+                    <div class="bg-white rounded-xl p-2 shadow-sm border border-gray-100">
+                        <!-- Khu vực nhúng Video Content -->
+                        <div v-if="relaxVideoEmbedUrl" class="aspect-video bg-gray-900 rounded-lg overflow-hidden">
+                            <iframe :src="relaxVideoEmbedUrl" class="w-full h-full border-0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                        </div>
+                        <div v-else
+                            class="aspect-video bg-gray-200 rounded-lg flex items-center justify-center text-gray-500 text-sm italic">
+                            [Video nấu sữa Góc Bếp Nhà Hení]
+                        </div>
+                        <p class="text-xs text-gray-500 mt-3 px-2 text-center">Câu chuyện đằng sau những chai sữa mộc
+                            mạc không chất bảo quản.</p>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
+        <!-- Floating Cart Bar -->
+        <transition name="fade">
+            <div v-if="totalItems > 0" class="fixed bottom-6 left-0 right-0 px-4 z-40">
+                <div
+                    class="max-w-3xl mx-auto bg-brand-dark text-white rounded-2xl px-6 py-4 shadow-2xl flex items-center justify-between border border-white/10">
+                    <div class="flex items-center gap-4">
+                        <div
+                            class="bg-brand-green w-10 h-10 flex items-center justify-center rounded-full font-bold text-lg shadow-inner">
+                            {{ totalItems }}
+                        </div>
+                        <div>
+                            <p class="font-bold text-lg leading-tight">{{ formatPrice(totalPrice) }}</p>
+                        </div>
+                    </div>
+                    <button @click="toggleCheckout"
+                        class="bg-white text-brand-dark px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-gray-100 transition-transform active:scale-95 shadow-sm">
+                        Xem giỏ hàng
+                    </button>
+                </div>
+            </div>
+        </transition>
+
+        <!-- Checkout Modal -->
+        <transition name="fade">
+            <div v-if="showCheckout"
+                class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center">
+                <div
+                    class="bg-brand-bone w-full max-w-4xl rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[90vh] overflow-y-auto flex flex-col">
+                    <div
+                        class="p-6 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-brand-bone z-10">
+                        <h2 class="text-2xl font-serif font-bold text-brand-dark">Giỏ hàng của bạn</h2>
+                        <button @click="toggleCheckout"
+                            class="w-8 h-8 flex items-center justify-center bg-gray-200 text-gray-600 rounded-full hover:bg-gray-300 transition-colors">✕</button>
+                    </div>
+
+                    <div class="p-6 flex-1 grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                        <div>
+                        <div class="mb-8">
+                            <transition-group name="list">
+                                <div v-for="(items, deliveryLabel) in cartGroupedByDay" :key="deliveryLabel"
+                                    class="mb-5 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                                    <div class="flex items-center gap-2 mb-3 border-b border-gray-100 pb-2">
+                                        <span class="w-2 h-2 rounded-full bg-brand-green"></span>
+                                        <h4 class="text-xs font-bold text-brand-dark uppercase tracking-widest">Giao
+                                            Sáng {{ deliveryLabel }}</h4>
+                                    </div>
+
+                                    <div class="space-y-3">
+                                        <div v-for="item in items" :key="item.uniqueId"
+                                            class="flex justify-between items-center">
+                                            <div class="flex-1 pr-3">
+                                                <p class="font-bold text-brand-dark text-sm mb-0.5">{{ item.name }}</p>
+                                                <p class="text-xs text-gray-500">{{ formatPrice(item.price) }}</p>
+                                            </div>
+                                            <div class="flex items-center gap-3 bg-brand-bone rounded-full px-2 py-1">
+                                                <button @click="decreaseItem(item)"
+                                                    class="w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center text-brand-dark font-medium active:scale-95">-</button>
+                                                <span class="text-sm font-bold w-4 text-center text-brand-dark">{{
+                                                    item.quantity }}</span>
+                                                <button @click="increaseItem(item)"
+                                                    class="w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center text-brand-dark font-medium active:scale-95">+</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </transition-group>
+                        </div>
+
+                        <!-- Form -->
+                        <form @submit.prevent="submitOrder" class="space-y-5">
+                            <div>
+                                <label class="block text-sm font-semibold text-brand-dark mb-1.5">Tên của bạn</label>
+                                <input v-model="form.name" type="text" required
+                                    class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 focus:outline-none focus:border-brand-green focus:ring-1 focus:ring-brand-green text-sm transition-shadow">
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div>
+                                    <label class="block text-sm font-semibold text-brand-dark mb-1.5">Số điện thoại /
+                                        Zalo</label>
+                                    <input v-model="form.phone" type="tel" required
+                                        class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 focus:outline-none focus:border-brand-green focus:ring-1 focus:ring-brand-green text-sm transition-shadow">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-brand-dark mb-1.5">Email (Nhận bill
+                                        đơn hàng)</label>
+                                    <input v-model="form.email" type="email" required placeholder="vidu@gmail.com"
+                                        class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 focus:outline-none focus:border-brand-green focus:ring-1 focus:ring-brand-green text-sm transition-shadow">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-brand-dark mb-1.5">Địa chỉ nhận
+                                    hàng</label>
+                                <textarea v-model="form.address" required rows="2"
+                                    placeholder="Freeship Bcons City & Bán kính dưới 3km"
+                                    class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 focus:outline-none focus:border-brand-green focus:ring-1 focus:ring-brand-green text-sm resize-none transition-shadow"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-brand-dark mb-1.5">Lời nhắn cho Hení
+                                    (Không bắt buộc)</label>
+                                <input v-model="form.note" type="text" placeholder="Ghi chú thêm về đơn hàng..."
+                                    class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 focus:outline-none focus:border-brand-green focus:ring-1 focus:ring-brand-green text-sm transition-shadow">
+                            </div>
+
+                            <div class="border-t border-gray-200 pt-6 mt-8">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-gray-600 font-medium">Tổng đơn hàng</span>
+                                    <span class="font-bold text-xl text-brand-dark">{{ formatPrice(totalPrice) }}</span>
+                                </div>
+                                <div class="flex justify-between items-center mb-6">
+                                    <span class="text-gray-500 text-sm">Phí giao hàng</span>
+                                    <span class="text-xs text-right text-gray-400">Shop sẽ báo sau nếu > 3km
+                                        (5k/km)</span>
+                                </div>
+                                <button type="submit" :disabled="isSubmitting"
+                                    class="w-full py-4 rounded-2xl bg-brand-green text-white font-bold text-lg hover:bg-brand-dark transition-colors disabled:opacity-50 flex justify-center items-center shadow-md active:scale-[0.98]">
+                                    <span v-if="!isSubmitting">Xác nhận đơn hàng</span>
+                                    <span v-else class="flex items-center gap-2">
+                                        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg"
+                                            fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                                stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor"
+                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                            </path>
+                                        </svg>
+                                        Đang gửi...
+                                    </span>
+                                </button>
+                            </div>
+                        </form>
+                        </div>
+
+                        <aside class="space-y-4 md:sticky md:top-4 self-start">
+                            <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+                                <h3 class="font-serif font-bold text-lg text-brand-dark mb-1">Hướng dẫn thanh toán</h3>
+                                <p class="text-xs text-gray-500 mb-4">Quét mã MoMo và kiểm tra đúng số tiền trước khi xác nhận.</p>
+                                <div v-if="paymentInfo" class="space-y-4">
+                                    <div class="flex justify-center">
+                                        <img v-if="paymentInfo.momoQr" :src="paymentInfo.momoQr"
+                                            alt="Mã QR MoMo" class="w-48 h-48 rounded-xl border border-gray-100 object-contain bg-white">
+                                        <p v-else class="text-sm text-gray-400 italic py-10">Chưa có mã QR</p>
+                                    </div>
+                                    <div class="text-sm space-y-2 bg-brand-bone rounded-xl p-4">
+                                        <p class="flex justify-between gap-3"><span class="text-gray-500">MoMo</span><b class="text-brand-dark">{{ paymentInfo.momo || '—' }}</b></p>
+                                        <p v-if="paymentInfo.vcb && paymentInfo.vcb.toLowerCase() !== 'updating'" class="flex justify-between gap-3"><span class="text-gray-500">Vietcombank</span><b class="text-brand-dark">{{ paymentInfo.vcb }}</b></p>
+                                        <p class="flex justify-between gap-3"><span class="text-gray-500">Số tiền</span><b class="text-brand-green">{{ formatPrice(totalPrice) }}</b></p>
+                                    </div>
+                                </div>
+                                <p v-else class="text-sm text-gray-400 italic">Đang tải thông tin thanh toán...</p>
+                            </div>
+                        </aside>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
+        <!-- Toast Message -->
+        <transition name="fade">
+            <div v-if="toast.show"
+                class="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-brand-dark text-white px-6 py-3.5 rounded-full shadow-xl text-sm font-medium whitespace-nowrap">
+                {{ toast.message }}
+            </div>
+        </transition>
+
+    </div>
+
+    <script>
+        const { createApp, ref, computed, onMounted } = Vue;
+
+        createApp({
+            setup() {
+                const cfg = window.HENI_CONFIG || {};
+                const IMAGE_BASE_URL = cfg.IMAGE_BASE_URL || "./images/";
+                const GAS_API_URL = (cfg.GAS_API_URL || "").trim();
+                const isInsideGAS = typeof google !== 'undefined' && google.script && google.script.run;
+
+                // Khởi tạo menu rỗng để nhận data động từ v2, nhưng vẫn giữ themes của v1
+                const fullMenu = ref({
+                    1: { dayName: 'Thứ 2', theme: 'Năng lượng', standard: [], premium: [] },
+                    2: { dayName: 'Thứ 3', theme: 'Thanh mát', standard: [], premium: [] },
+                    3: { dayName: 'Thứ 4', theme: 'Dưỡng nhan', standard: [], premium: [] },
+                    4: { dayName: 'Thứ 5', theme: 'Dưỡng chất', standard: [], premium: [] },
+                    5: { dayName: 'Thứ 6', theme: 'Ấm bụng', standard: [], premium: [] },
+                    6: { dayName: 'Thứ 7', theme: 'Thảnh thơi', standard: [], premium: [] }
+                });
+
+                // State cho UI
+                const isLoadingMenu = ref(true);
+                const isSidebarOpen = ref(false);
+                const searchQuery = ref('');
+                const searchStatus = ref(null);
+                const searchResults = ref([]);
+                const paymentInfo = ref(cfg.PAYMENT_DEFAULT || {
+                    momo: '0834983524',
+                    vcb: 'Updating',
+                    momoQr: `${IMAGE_BASE_URL}momo.jpg`,
+                    vcbQr: ''
+                });
+
+                // State cho Weekly Banner & Video Thư Giãn (Cập nhật động từ Sheet Dim_Config hoặc config.js)
+                const weeklyBanner = ref(cfg.WEEKLY_BANNER || {
+                    enabled: true,
+                    badge: 'Tổng kết tuần lễ ra mắt',
+                    title: 'Chân Thành Cảm Ơn 💚',
+                    content: 'Chương trình ưu đãi ra mắt đã chính thức khép lại với <b>17 phần quà</b> được trao tận tay các "thượng đế". Góc Bếp Nhà Hení vô cùng biết ơn sự ủng hộ và yêu thương của mọi người. Hẹn gặp lại cả nhà ở những chương trình ưu đãi tiếp theo nhé!',
+                    footer: 'Sữa hạt vẫn luôn được nấu tươi mới mỗi sáng'
+                });
+                const relaxVideoId = ref(cfg.RELAX_VIDEO_ID || '1S7qneg966XvP_X_OZikjMoR3aWH77jkn');
+
+                const relaxVideoEmbedUrl = computed(() => {
+                    const raw = (relaxVideoId.value || '').trim();
+                    if (!raw) return '';
+                    if (/^https?:\/\//i.test(raw)) return raw;
+                    return `https://drive.google.com/file/d/${raw}/preview`;
+                });
+
+                // Ảnh tĩnh khởi tạo tức thì từ GitHub CDN (không phải chờ tải Base64 từ Drive)
+                const storeImages = ref({
+                    'logo-only': `${IMAGE_BASE_URL}logo-only.jpg`,
+                    'base': `${IMAGE_BASE_URL}base.jpg`,
+                    'program': `${IMAGE_BASE_URL}program.jpg`,
+                    'menu': `${IMAGE_BASE_URL}menu.jpg`
+                });
+                const imageError = ref('');
+
+                const onLogoError = () => {
+                    // Fallback nếu chạy môi trường không có thư mục ./images/
+                    if (isInsideGAS) {
+                        google.script.run
+                            .withSuccessHandler((res) => {
+                                if (res && res.success) storeImages.value = res.data;
+                            })
+                            .getStoreImages();
+                    }
+                };
+
+                // Nhóm đơn theo tuần (Thứ 2 - Chủ nhật)
+                const weekLabel = (iso) => {
+                    const d = new Date(iso);
+                    const offset = (d.getDay() + 6) % 7;
+                    const mon = new Date(d); mon.setDate(d.getDate() - offset);
+                    const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+                    const f = x => x.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+                    return `Tuần ${f(mon)} – ${f(sun)}`;
+                };
+                const groupedResults = computed(() => {
+                    const groups = [];
+                    const map = {};
+                    searchResults.value.forEach(o => {
+                        const label = weekLabel(o.timestamp);
+                        if (!map[label]) { map[label] = { label, orders: [] }; groups.push(map[label]); }
+                        map[label].orders.push(o);
+                    });
+                    return groups;
+                });
+
+                // Hàm nạp danh sách món vào fullMenu
+                const populateMenu = (items) => {
+                    for (let d = 1; d <= 6; d++) {
+                        fullMenu.value[d].standard = [];
+                        fullMenu.value[d].premium = [];
+                    }
+                    (items || []).forEach(item => {
+                        if (fullMenu.value[item.dayOfWeek]) {
+                            if (item.category === 'premium') fullMenu.value[item.dayOfWeek].premium.push(item);
+                            else fullMenu.value[item.dayOfWeek].standard.push(item);
+                        }
+                    });
+                    isLoadingMenu.value = false;
+                };
+
+                // Hàm áp dụng cấu hình từ tab Dim_Config trên Google Sheet
+                const applySheetConfig = (conf) => {
+                    if (!conf) return;
+                    if (conf.video_thu_gian) relaxVideoId.value = conf.video_thu_gian;
+                    if (conf.weekly_title !== undefined) {
+                        weeklyBanner.value = {
+                            enabled: String(conf.weekly_title).trim() !== '',
+                            badge: conf.weekly_badge !== undefined ? conf.weekly_badge : weeklyBanner.value.badge,
+                            title: conf.weekly_title,
+                            content: conf.weekly_content !== undefined ? conf.weekly_content : weeklyBanner.value.content,
+                            footer: conf.weekly_footer !== undefined ? conf.weekly_footer : weeklyBanner.value.footer
+                        };
+                    }
+                };
+
+                // Xử lý ngày tháng từ v1
+                const now = new Date();
+                const currentHour = now.getHours();
+                const cutOffPassed = currentHour >= 20;
+
+                let availableDates = [];
+                let daysAdded = 0;
+                let dayOffset = cutOffPassed ? 2 : 1;
+
+                while (daysAdded < 6) {
+                    const d = new Date(now);
+                    d.setDate(now.getDate() + dayOffset);
+                    const dayOfWeek = d.getDay();
+
+                    if (dayOfWeek !== 0) { // Bỏ qua chủ nhật
+                        const dateStr = d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+                        availableDates.push({
+                            id: `${dayOfWeek}_${dateStr}`,
+                            dateObj: d,
+                            dayOfWeek: dayOfWeek,
+                            dayName: fullMenu.value[dayOfWeek].dayName,
+                            dateStr: dateStr,
+                            label: `${fullMenu.value[dayOfWeek].dayName} (${dateStr})`
+                        });
+                        daysAdded++;
+                    }
+                    dayOffset++;
+                }
+
+                const nextDeliveryDate = ref(availableDates[0]);
+                const preOrderDates = ref(availableDates.slice(1));
+                const activePreOrder = ref(preOrderDates.value[0]);
+
+                // Trạng thái giỏ hàng & Checkout v1 (Không lưu localStorage để đảm bảo quyền riêng tư khách hàng)
+                const cart = ref([]);
+                const showCheckout = ref(false);
+                const isSubmitting = ref(false);
+                const form = ref({ name: '', phone: '', email: '', address: '', note: '' });
+                const toast = ref({ show: false, message: '' });
+
+                // Gửi log tracking nhẹ nhàng
+                const sendTracking = (action, details) => {
+                    if (isInsideGAS) {
+                        google.script.run.logTracking({ action, details });
+                    } else if (GAS_API_URL) {
+                        fetch(GAS_API_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                            body: JSON.stringify({ action: 'logTracking', payload: { action, details } })
+                        }).catch(() => {});
+                    }
+                };
+
+                onMounted(() => {
+                    // 1. Hiển thị ngay thực đơn từ FALLBACK_MENU trong 0.1s để khách không phải chờ
+                    if (cfg.FALLBACK_MENU && cfg.FALLBACK_MENU.length > 0) {
+                        populateMenu(cfg.FALLBACK_MENU);
+                    }
+
+                    // 2. Đồng bộ dữ liệu mới nhất từ Google Sheets (nếu chạy trong GAS hoặc đã cấu hình GAS_API_URL)
+                    if (isInsideGAS) {
+                        google.script.run
+                            .withSuccessHandler(res => {
+                                if (res && res.success && res.data) {
+                                    paymentInfo.value = {
+                                        momo: res.data.momo || paymentInfo.value.momo,
+                                        vcb: res.data.vcb || paymentInfo.value.vcb,
+                                        momoQr: res.data.momoQr || paymentInfo.value.momoQr,
+                                        vcbQr: res.data.vcbQr || paymentInfo.value.vcbQr
+                                    };
+                                }
+                            })
+                            .getPaymentInfo();
+
+                        google.script.run
+                            .withSuccessHandler((items) => {
+                                if (items && items.length > 0) populateMenu(items);
+                            })
+                            .getDynamicMenu();
+
+                        google.script.run
+                            .withSuccessHandler((conf) => {
+                                applySheetConfig(conf);
+                            })
+                            .getAppConfig();
+                    } else if (GAS_API_URL) {
+                        fetch(`${GAS_API_URL}?action=init`)
+                            .then(r => r.json())
+                            .then(res => {
+                                if (res && res.success) {
+                                    if (res.menu && res.menu.length > 0) populateMenu(res.menu);
+                                    if (res.payment) {
+                                        paymentInfo.value = {
+                                            momo: res.payment.momo || paymentInfo.value.momo,
+                                            vcb: res.payment.vcb || paymentInfo.value.vcb,
+                                            momoQr: res.payment.momoQr || paymentInfo.value.momoQr,
+                                            vcbQr: res.payment.vcbQr || paymentInfo.value.vcbQr
+                                        };
+                                    }
+                                    if (res.config) applySheetConfig(res.config);
+                                }
+                            })
+                            .catch(() => {});
+                    }
+                });
+
+                // Hàm xử lý ảnh Thumbnail ưu tiên GitHub CDN siêu tốc
+                const getImageUrl = (item) => {
+                    if (item.imageUrl) return item.imageUrl;
+                    const key = (item.imageKey || item.id || '').toString().trim();
+                    const imgs = storeImages.value || {};
+                    if (imgs[key]) return imgs[key];
+                    if (key) return `${IMAGE_BASE_URL}${key}.png`;
+                    return storeImages.value['logo-only'] || '';
+                };
+
+                const handleImageFallback = (e, item) => {
+                    const src = e.target.src || '';
+                    const key = item ? (item.imageKey || item.id || '').toString().trim() : '';
+                    // Nếu thử .png không có thì thử .jpg trên GitHub CDN trước khi về logo
+                    if (key && src.endsWith(`${key}.png`)) {
+                        e.target.src = `${IMAGE_BASE_URL}${key}.jpg`;
+                        return;
+                    }
+                    const fallbackLogo = `${IMAGE_BASE_URL}logo-only.jpg`;
+                    if (!src.endsWith('logo-only.jpg')) {
+                        e.target.src = fallbackLogo;
+                    }
+                };
+
+                // Hàm tiện ích từ v1
+                const showToast = (msg, duration = 3000) => {
+                    toast.value = { show: true, message: msg };
+                    setTimeout(() => { toast.value.show = false }, duration);
+                };
+                const formatPrice = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
+
+                // Xử lý giỏ hàng từ v1
+                const addToCart = (item, dateObj) => {
+                    const uniqueId = item.id + '_' + dateObj.id;
+                    const existing = cart.value.find(i => i.uniqueId === uniqueId);
+                    if (existing) {
+                        existing.quantity++;
+                    } else {
+                        cart.value.push({
+                            ...item,
+                            uniqueId,
+                            deliveryDate: dateObj.label,
+                            quantity: 1
+                        });
+                    }
+                    showToast(`Đã thêm order giao ${dateObj.label} 🌿`);
+                    sendTracking('add_to_cart', `${dateObj.label} - ${item.name}`);
+                };
+
+                const increaseItem = (item) => { item.quantity++; };
+                const decreaseItem = (item) => {
+                    item.quantity--;
+                    if (item.quantity === 0) cart.value = cart.value.filter(i => i.uniqueId !== item.uniqueId);
+                };
+
+                const totalItems = computed(() => cart.value.reduce((acc, item) => acc + item.quantity, 0));
+                const totalPrice = computed(() => cart.value.reduce((acc, item) => acc + (item.price * item.quantity), 0));
+
+                const cartGroupedByDay = computed(() => {
+                    const grouped = {};
+                    cart.value.forEach(item => {
+                        if (!grouped[item.deliveryDate]) grouped[item.deliveryDate] = [];
+                        grouped[item.deliveryDate].push(item);
+                    });
+                    return grouped;
+                });
+
+                const toggleCheckout = () => { showCheckout.value = !showCheckout.value; };
+
+                const submitOrder = () => {
+                    if (cart.value.length === 0) return;
+                    isSubmitting.value = true;
+
+                    const orderData = {
+                        name: form.value.name,
+                        phone: form.value.phone,
+                        email: form.value.email,
+                        address: form.value.address,
+                        note: form.value.note,
+                        items: cart.value,
+                        total: totalPrice.value,
+                        promoApplied: false,
+                        kitchenReportEmails: cfg.KITCHEN_REPORT_EMAILS || ['ll.huyhoang.1412@gmail.com']
+                    };
+
+                    const onOrderSuccess = (response) => {
+                        isSubmitting.value = false;
+                        if (response && response.success) {
+                            cart.value = [];
+                            showCheckout.value = false;
+                            form.value = { name: '', phone: '', email: '', address: '', note: '' };
+                            showToast('Hení đã nhận đơn, hóa đơn sẽ được gửi qua email của bạn nhé 🥰', 5000);
+                        } else {
+                            showToast('Có lỗi xảy ra: ' + (response ? response.message : 'Không xác định'));
+                        }
+                    };
+
+                    if (isInsideGAS) {
+                        google.script.run
+                            .withSuccessHandler(onOrderSuccess)
+                            .withFailureHandler(err => onOrderSuccess({ success: false, message: err.message }))
+                            .processOrder(orderData);
+                    } else if (GAS_API_URL) {
+                        fetch(GAS_API_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                            body: JSON.stringify({ action: 'processOrder', payload: orderData })
+                        })
+                            .then(r => r.json())
+                            .then(onOrderSuccess)
+                            .catch(err => onOrderSuccess({ success: false, message: err.message }));
+                    } else {
+                        setTimeout(() => {
+                            onOrderSuccess({ success: true });
+                        }, 800);
+                    }
+                };
+
+                // Tra cứu đơn hàng theo SĐT: đơn nợ mới nhất tự mở, còn lại thu gọn
+                const searchOrder = () => {
+                    const phone = (searchQuery.value || '').replace(/\D/g, '');
+                    if (!phone) return;
+                    searchResults.value = [];
+                    searchStatus.value = { error: false, loading: true, message: 'Đang tra sổ tay...' };
+
+                    const handleResult = (res) => {
+                        if (!res || !res.success) {
+                            searchStatus.value = { error: true, message: (res && res.message) || 'Không tìm thấy đơn hàng.' };
+                            return;
+                        }
+                        const orders = res.data
+                            .map(o => ({ ...o, expanded: false }))
+                            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                        const latestUnpaid = orders.find(o => o.status !== 'Paid');
+                        if (latestUnpaid) latestUnpaid.expanded = true;
+                        searchResults.value = orders;
+                        searchStatus.value = { error: false, loading: false, message: '' };
+                    };
+
+                    if (isInsideGAS) {
+                        google.script.run
+                            .withSuccessHandler(handleResult)
+                            .withFailureHandler(err => handleResult({ success: false, message: 'Lỗi kết nối: ' + err.message }))
+                            .searchOrders(phone);
+                    } else if (GAS_API_URL) {
+                        fetch(`${GAS_API_URL}?action=searchOrders&phone=${encodeURIComponent(phone)}`)
+                            .then(r => r.json())
+                            .then(handleResult)
+                            .catch(err => handleResult({ success: false, message: 'Lỗi kết nối: ' + err.message }));
+                    } else {
+                        setTimeout(() => {
+                            searchStatus.value = { error: true, message: 'Vui lòng cập nhật GAS_API_URL trong config.js để tra cứu trực tiếp từ Google Sheets.' };
+                        }, 600);
+                    }
+                };
+
+                return {
+                    fullMenu, nextDeliveryDate, preOrderDates, activePreOrder, isLoadingMenu,
+                    cart, storeImages, imageError, showCheckout, isSubmitting, form, toast,
+                    isSidebarOpen, searchQuery, searchStatus, searchResults, groupedResults, paymentInfo,
+                    weeklyBanner, relaxVideoEmbedUrl, onLogoError,
+                    addToCart, increaseItem, decreaseItem, toggleCheckout, submitOrder, searchOrder,
+                    totalItems, totalPrice, formatPrice, cartGroupedByDay,
+                    getImageUrl, handleImageFallback
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+
+</html>
