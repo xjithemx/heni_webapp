@@ -8,7 +8,7 @@
     <link rel="icon" type="image/jpeg" href="./images/logo-only.jpg">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <script src="./config.js"></script>
+    <script src="./config.js?v=2.4.0"></script>
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=DM+Sans:wght@400;500;600&display=swap"
         rel="stylesheet">
@@ -362,9 +362,9 @@
                                             </div>
                                             <div class="flex items-center gap-2">
                                                 <span
-                                                    :class="order.status === 'Paid' ? 'bg-brand-green/10 text-brand-green' : 'bg-orange-100 text-orange-700'"
+                                                    :class="order.status === 'Paid' ? 'bg-brand-green/10 text-brand-green' : (order.status === 'Cancelled' ? 'bg-gray-200 text-gray-600' : 'bg-orange-100 text-orange-700')"
                                                     class="text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap">
-                                                    {{ order.status === 'Paid' ? 'Đã thanh toán' : 'Chưa thanh toán' }}
+                                                    {{ order.status === 'Paid' ? 'Đã thanh toán' : (order.status === 'Cancelled' ? 'Đã hủy' : 'Chưa thanh toán') }}
                                                 </span>
                                                 <svg :class="{ 'rotate-180': order.expanded }"
                                                     class="w-4 h-4 text-gray-400 transition-transform" fill="none"
@@ -985,6 +985,8 @@
                 };
 
                 // Tra cứu đơn hàng thông minh: hỗ trợ tìm theo Tên Khách, SĐT hoặc Mã Đơn
+                const SHEET_ID = cfg.SHEET_ID || '1sjkxZS37_g-R3JowKI99AkaNTCb_HjhcAgrDAInrgb8';
+
                 const removeAccents = (str) => {
                     if (!str) return '';
                     return str.toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
@@ -993,12 +995,554 @@
                 const cleanPhoneDigits = (val) => {
                     if (val === null || val === undefined || val === '') return '';
                     try {
-                        const n = Number(val);
-                        const s = (!isNaN(n) && val !== '') ? n.toLocaleString('fullwide', { useGrouping: false }) : val.toString();
+                        const s = val.toString().trim();
+                        if (s.toLowerCase().includes('e')) {
+                            const n = Number(s);
+                            if (!isNaN(n)) return Math.round(n).toString().replace(/\D/g, '').replace(/^0+/, '');
+                        }
                         return s.replace(/\D/g, '').replace(/^0+/, '');
                     } catch (e) {
                         return val.toString().replace(/\D/g, '').replace(/^0+/, '');
                     }
+                };
+
+                // Chuẩn hóa trạng thái đơn hàng: Ưu tiên tuyệt đối Cột K (Status) trên Google Sheets
+                const normalizeOrderStatus = (colK, colJ) => {
+                    const k = (colK !== undefined && colK !== null ? colK : '').toString().trim().toLowerCase();
+                    const j = (colJ !== undefined && colJ !== null ? colJ : '').toString().trim().toLowerCase();
+                    const primary = k || j;
+                    if (primary.includes('paid') || primary.includes('đã thanh toán') || primary.includes('da thanh toan')) {
+                        return 'Paid';
+                    }
+                    if (primary.includes('cancel') || primary.includes('hủy') || primary.includes('huỷ') || primary.includes('da huy')) {
+                        return 'Cancelled';
+                    }
+                    if (!k && (j.includes('paid') || j.includes('đã thanh toán'))) {
+                        return 'Paid';
+                    }
+                    return 'Chưa thanh toán';
+                };
+
+                // Đọc trực tiếp dữ liệu thời gian thực từ Google Sheets (GViz JSONP) khi chạy trên GitHub Pages
+                const fetchLiveOrdersFromSheet = () => {
+                    return new Promise((resolve) => {
+                        if (!SHEET_ID || typeof document === 'undefined') {
+                            resolve(null);
+                            return;
+                        }
+                        const cbName = '__heniGvizOrders_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+                        let settled = false;
+                        const script = document.createElement('script');
+
+                        const cleanup = () => {
+                            try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
+                            if (script.parentNode) script.parentNode.removeChild(script);
+                        };
+
+                        const timer = setTimeout(() => {
+                            if (!settled) {
+                                settled = true;
+                                cleanup();
+                                resolve(null);
+                            }
+                        }, 1800);
+
+                        window[cbName] = (resp) => {
+                            if (settled) return;
+                            settled = true;
+                            clearTimeout(timer);
+                            cleanup();
+                            try {
+                                if (!resp || resp.status !== 'ok' || !resp.table || !Array.isArray(resp.table.rows)) {
+                                    resolve(null);
+                                    return;
+                                }
+                                const parsed = [];
+                                for (const r of resp.table.rows) {
+                                    const c = r && r.c ? r.c : [];
+                                    const getVal = (idx) => (c[idx] && c[idx].v !== undefined && c[idx].v !== null) ? c[idx].v : (c[idx] && c[idx].f ? c[idx].f : '');
+                                    const orderId = getVal(0).toString().trim();
+                                    if (!orderId || orderId.toLowerCase() === 'mã đơn') continue;
+
+                                    // Parse timestamp (Col B - index 1)
+                                    let dt = new Date();
+                                    const rawTs = c[1] ? (c[1].v !== undefined && c[1].v !== null ? c[1].v : c[1].f) : '';
+                                    if (rawTs instanceof Date) {
+                                        dt = rawTs;
+                                    } else if (typeof rawTs === 'string' && rawTs.startsWith('Date(')) {
+                                        const parts = rawTs.slice(5, -1).split(',').map(Number);
+                                        dt = new Date(parts[0], parts[1] || 0, parts[2] || 1, parts[3] || 0, parts[4] || 0, parts[5] || 0);
+                                    } else if (rawTs) {
+                                        const parsedDt = new Date(rawTs);
+                                        if (!isNaN(parsedDt.getTime())) dt = parsedDt;
+                                    }
+                                    const dd = String(dt.getDate()).padStart(2, '0');
+                                    const mm = String(dt.getMonth() + 1).padStart(2, '0');
+                                    const yyyy = dt.getFullYear();
+
+                                    const custName = getVal(2).toString().trim();
+                                    const phoneDigits = cleanPhoneDigits(getVal(3));
+                                    let items = [];
+                                    try {
+                                        items = JSON.parse(getVal(6).toString()) || [];
+                                    } catch (e) {
+                                        items = [];
+                                    }
+                                    const rawTotal = (c[7] && (c[7].v !== undefined && c[7].v !== null ? c[7].v : c[7].f)) || 0;
+                                    const total = Number(rawTotal.toString().replace(/[^\d.-]/g, '')) || 0;
+                                    const statusJ = getVal(9).toString().trim();
+                                    const statusK = getVal(10).toString().trim();
+
+                                    parsed.push({
+                                        orderId,
+                                        customerName: custName,
+                                        phone: phoneDigits ? ('0' + phoneDigits) : '',
+                                        date: `${dd}/${mm}/${yyyy}`,
+                                        timestamp: dt.toISOString(),
+                                        total,
+                                        status: normalizeOrderStatus(statusK, statusJ),
+                                        items: items.map(it => ({
+                                            name: it.name || '',
+                                            quantity: Number(it.quantity) || 0,
+                                            price: Number(it.price) || 0,
+                                            deliveryDate: it.deliveryDate || ''
+                                        }))
+                                    });
+                                }
+                                resolve(parsed.length > 0 ? parsed : null);
+                            } catch (err) {
+                                resolve(null);
+                            }
+                        };
+
+                        script.onerror = () => {
+                            if (!settled) {
+                                settled = true;
+                                clearTimeout(timer);
+                                cleanup();
+                                resolve(null);
+                            }
+                        };
+
+                        script.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=Orders_Master&headers=1&tqx=responseHandler:${cbName}&_=${Date.now()}`;
+                        document.head.appendChild(script);
+                    });
+                };
+
+                const defaultFallbackOrders = [
+                                {
+                                    "orderId": "HN-509264",
+                                    "customerName": "Ngoc Nguyen",
+                                    "phone": "0938728073",
+                                    "date": "07/11/2026",
+                                    "timestamp": "2026-11-07T22:48:29+07:00",
+                                    "total": 110000,
+                                    "status": "Chưa thanh toán",
+                                    "items": [
+                                        {
+                                            "name": "Điều - Yến Mạch - Cacao",
+                                            "quantity": 1,
+                                            "price": 25000,
+                                            "deliveryDate": "Thứ 2 (09-11)"
+                                        },
+                                        {
+                                            "name": "Gạo Lứt - Hạnh Nhân - Táo Đỏ",
+                                            "quantity": 1,
+                                            "price": 30000,
+                                            "deliveryDate": "Thứ 2 (09-11)"
+                                        },
+                                        {
+                                            "name": "Macca - Sen - Lá dứa",
+                                            "quantity": 1,
+                                            "price": 30000,
+                                            "deliveryDate": "Thứ 3 (10-11)"
+                                        },
+                                        {
+                                            "name": "Điều - Đậu Xanh -  Cải Kale",
+                                            "quantity": 1,
+                                            "price": 25000,
+                                            "deliveryDate": "Thứ 3 (10-11)"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "orderId": "HN-658487",
+                                    "customerName": "Suri",
+                                    "phone": "0948667431",
+                                    "date": "04/11/2026",
+                                    "timestamp": "2026-11-04T10:24:18+07:00",
+                                    "total": 25000,
+                                    "status": "Paid",
+                                    "items": [
+                                        {
+                                            "name": "Bí đỏ - Sen - Điều",
+                                            "quantity": 1,
+                                            "price": 25000,
+                                            "deliveryDate": "Thứ 5 (05-11)"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "orderId": "HN-425216",
+                                    "customerName": "Sang Nguyễn",
+                                    "phone": "0898361274",
+                                    "date": "03/11/2026",
+                                    "timestamp": "2026-11-03T13:30:25+07:00",
+                                    "total": 50000,
+                                    "status": "Paid",
+                                    "items": [
+                                        {
+                                            "name": "Đậu Đỏ - Yến Mạch - Củ Dền",
+                                            "quantity": 1,
+                                            "price": 25000,
+                                            "deliveryDate": "Thứ 4 (04-11)"
+                                        },
+                                        {
+                                            "name": "Yến Mạch - Hoa Đậu Biếc - Hạt Chia",
+                                            "quantity": 1,
+                                            "price": 25000,
+                                            "deliveryDate": "Thứ 4 (04-11)"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "orderId": "HN-452620",
+                                    "customerName": "Anh Đào",
+                                    "phone": "0942685872",
+                                    "date": "03/11/2026",
+                                    "timestamp": "2026-11-03T10:10:52+07:00",
+                                    "total": 80000,
+                                    "status": "Paid",
+                                    "items": [
+                                        {
+                                            "name": "Yến Mạch - Hoa Đậu Biếc - Hạt Chia",
+                                            "quantity": 1,
+                                            "price": 25000,
+                                            "deliveryDate": "Thứ 4 (04-11)"
+                                        },
+                                        {
+                                            "name": "Đậu Đỏ - Yến Mạch - Củ Dền",
+                                            "quantity": 1,
+                                            "price": 25000,
+                                            "deliveryDate": "Thứ 4 (04-11)"
+                                        },
+                                        {
+                                            "name": "Điều - Hạnh Nhân - Khoai Lang Tím",
+                                            "quantity": 1,
+                                            "price": 30000,
+                                            "deliveryDate": "Thứ 4 (04-11)"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "orderId": "HN-905051",
+                                    "customerName": "Phạm Tiến Đạt",
+                                    "phone": "0962766627",
+                                    "date": "03/11/2026",
+                                    "timestamp": "2026-11-03T09:11:45+07:00",
+                                    "total": 50000,
+                                    "status": "Paid",
+                                    "items": [
+                                        {
+                                            "name": "Điều - Yến Mạch - Cacao",
+                                            "quantity": 2,
+                                            "price": 25000,
+                                            "deliveryDate": "Thứ 2 (09-11)"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "orderId": "HN-607612",
+                                    "customerName": "C Hayley",
+                                    "phone": "0379524516",
+                                    "date": "02/11/2026",
+                                    "timestamp": "2026-11-02T23:06:47+07:00",
+                                    "total": 165000,
+                                    "status": "Paid",
+                                    "items": [
+                                        {
+                                            "name": "Điều - Đậu Xanh -  Cải Kale",
+                                            "quantity": 1,
+                                            "price": 25000,
+                                            "deliveryDate": "Thứ 3 (10-11)"
+                                        },
+                                        {
+                                            "name": "Macca - Sen - Lá dứa",
+                                            "quantity": 1,
+                                            "price": 30000,
+                                            "deliveryDate": "Thứ 3 (10-11)"
+                                        },
+                                        {
+                                            "name": "Đậu Đỏ - Yến Mạch - Củ Dền",
+                                            "quantity": 1,
+                                            "price": 25000,
+                                            "deliveryDate": "Thứ 4 (04-11)"
+                                        },
+                                        {
+                                            "name": "Điều - Hạnh Nhân - Khoai Lang Tím",
+                                            "quantity": 1,
+                                            "price": 30000,
+                                            "deliveryDate": "Thứ 4 (04-11)"
+                                        },
+                                        {
+                                            "name": "Bí đỏ - Sen - Điều",
+                                            "quantity": 1,
+                                            "price": 25000,
+                                            "deliveryDate": "Thứ 5 (05-11)"
+                                        },
+                                        {
+                                            "name": "Macca - Bí Đỏ - Cốt Dừa",
+                                            "quantity": 1,
+                                            "price": 30000,
+                                            "deliveryDate": "Thứ 6 (06-11)"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "orderId": "HN-624495",
+                                    "customerName": "Sang Nguyễn",
+                                    "phone": "0898361274",
+                                    "date": "02/11/2026",
+                                    "timestamp": "2026-11-02T14:13:44+07:00",
+                                    "total": 55000,
+                                    "status": "Paid",
+                                    "items": [
+                                        {
+                                            "name": "Điều - Đậu Xanh -  Cải Kale",
+                                            "quantity": 1,
+                                            "price": 25000,
+                                            "deliveryDate": "Thứ 3 (03-11)"
+                                        },
+                                        {
+                                            "name": "Macca - Sen - Lá dứa",
+                                            "quantity": 1,
+                                            "price": 30000,
+                                            "deliveryDate": "Thứ 3 (03-11)"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "orderId": "HN-592467",
+                                    "customerName": "Vy",
+                                    "phone": "0984676449",
+                                    "date": "02/11/2026",
+                                    "timestamp": "2026-11-02T14:13:12+07:00",
+                                    "total": 30000,
+                                    "status": "Paid",
+                                    "items": [
+                                        {
+                                            "name": "Macca - Sen - Lá dứa",
+                                            "quantity": 1,
+                                            "price": 30000,
+                                            "deliveryDate": "Thứ 3 (03-11)"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "orderId": "HN-751646",
+                                    "customerName": "C Ngọc",
+                                    "phone": "0379524516",
+                                    "date": "02/11/2026",
+                                    "timestamp": "2026-11-02T09:15:51+07:00",
+                                    "total": 140000,
+                                    "status": "Paid",
+                                    "items": [
+                                        {
+                                            "name": "Điều - Đậu Xanh -  Cải Kale",
+                                            "quantity": 1,
+                                            "price": 25000,
+                                            "deliveryDate": "Thứ 3 (03-11)"
+                                        },
+                                        {
+                                            "name": "Điều - Hạnh Nhân - Khoai Lang Tím",
+                                            "quantity": 1,
+                                            "price": 30000,
+                                            "deliveryDate": "Thứ 4 (04-11)"
+                                        },
+                                        {
+                                            "name": "Macca - Bí Đỏ - Cốt Dừa",
+                                            "quantity": 1,
+                                            "price": 30000,
+                                            "deliveryDate": "Thứ 6 (06-11)"
+                                        },
+                                        {
+                                            "name": "Bắp Ngọt Thanh -  Hạt Điều - Dừa Non",
+                                            "quantity": 1,
+                                            "price": 25000,
+                                            "deliveryDate": "Thứ 7 (07-11)"
+                                        },
+                                        {
+                                            "name": "Cốm - Sen - Điều",
+                                            "quantity": 1,
+                                            "price": 30000,
+                                            "deliveryDate": "Thứ 7 (07-11)"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "orderId": "HN-078663",
+                                    "customerName": "Anh Đào",
+                                    "phone": "0942685872",
+                                    "date": "31/10/2026",
+                                    "timestamp": "2026-10-31T22:04:38+07:00",
+                                    "total": 110000,
+                                    "status": "Paid",
+                                    "items": [
+                                        {
+                                            "name": "Điều yến mạch cacao",
+                                            "quantity": 2,
+                                            "price": 25000,
+                                            "deliveryDate": "Thứ 2 (02-11)"
+                                        },
+                                        {
+                                            "name": "Gạo lứt rang hạnh nhân điều",
+                                            "quantity": 2,
+                                            "price": 30000,
+                                            "deliveryDate": "Thứ 2 (02-11)"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "orderId": "HN-897186",
+                                    "customerName": "Suri SPX",
+                                    "phone": "0948667431",
+                                    "date": "30/10/2026",
+                                    "timestamp": "2026-10-30T15:28:17+07:00",
+                                    "total": 140000,
+                                    "status": "Paid",
+                                    "items": [
+                                        {
+                                            "name": "Gạo lứt rang hạnh nhân điều",
+                                            "quantity": 1,
+                                            "price": 30000,
+                                            "deliveryDate": "Thứ 2 (02-11)"
+                                        },
+                                        {
+                                            "name": "Điều đậu xanh cải Kale",
+                                            "quantity": 1,
+                                            "price": 25000,
+                                            "deliveryDate": "Thứ 3 (03-11)"
+                                        },
+                                        {
+                                            "name": "Macca hạt sen lá dứa",
+                                            "quantity": 1,
+                                            "price": 30000,
+                                            "deliveryDate": "Thứ 3 (03-11)"
+                                        },
+                                        {
+                                            "name": "Đậu đỏ óc chó củ dền",
+                                            "quantity": 1,
+                                            "price": 25000,
+                                            "deliveryDate": "Thứ 4 (04-11)"
+                                        },
+                                        {
+                                            "name": "Điều hạnh nhân khoai lang tím",
+                                            "quantity": 1,
+                                            "price": 30000,
+                                            "deliveryDate": "Thứ 4 (04-11)"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "orderId": "HN-807053",
+                                    "customerName": "Nic",
+                                    "phone": "0796600161",
+                                    "date": "30/10/2026",
+                                    "timestamp": "2026-10-30T12:56:47+07:00",
+                                    "total": 90000,
+                                    "status": "Paid",
+                                    "items": [
+                                        {
+                                            "name": "Macca hạt sen lá dứa",
+                                            "quantity": 3,
+                                            "price": 30000,
+                                            "deliveryDate": "Thứ 3 (03-11)"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "orderId": "HN-229629",
+                                    "customerName": "uyên",
+                                    "phone": "0388948533",
+                                    "date": "29/10/2026",
+                                    "timestamp": "2026-10-29T16:47:09+07:00",
+                                    "total": 25000,
+                                    "status": "Paid",
+                                    "items": [
+                                        {
+                                            "name": "Đậu phộng mè đen điều",
+                                            "quantity": 1,
+                                            "price": 25000,
+                                            "deliveryDate": "Thứ 6 (30-10)"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "orderId": "HN-066384",
+                                    "customerName": "Vy",
+                                    "phone": "0984676449",
+                                    "date": "29/10/2026",
+                                    "timestamp": "2026-10-29T16:44:26+07:00",
+                                    "total": 25000,
+                                    "status": "Paid",
+                                    "items": [
+                                        {
+                                            "name": "Bắp ngọt thanh hạt điều",
+                                            "quantity": 1,
+                                            "price": 25000,
+                                            "deliveryDate": "Thứ 7 (31-10)"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "orderId": "HN-139779",
+                                    "customerName": "Thanh Tâm",
+                                    "phone": "0764392747",
+                                    "date": "29/10/2026",
+                                    "timestamp": "2026-10-29T13:42:19+07:00",
+                                    "total": 25000,
+                                    "status": "Paid",
+                                    "items": [
+                                        {
+                                            "name": "Đậu phộng mè đen điều",
+                                            "quantity": 1,
+                                            "price": 25000,
+                                            "deliveryDate": "Thứ 6 (30-10)"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "orderId": "HN-429812",
+                                    "customerName": "Ahihi Thắng vip pro",
+                                    "phone": "0398270997",
+                                    "date": "29/10/2026",
+                                    "timestamp": "2026-10-29T08:13:49+07:00",
+                                    "total": 30000,
+                                    "status": "Cancelled",
+                                    "items": [
+                                        {
+                                            "name": "Hạnh nhân yến mạch mè đen",
+                                            "quantity": 1,
+                                            "price": 30000,
+                                            "deliveryDate": "Thứ 6 (30-10)"
+                                        }
+                                    ]
+                                }
+                            ];
+
+                const filterOrdersByQuery = (ordersList, q) => {
+                    const qNorm = removeAccents(q);
+                    const qClean = q.toLowerCase().trim();
+                    const qPhone = cleanPhoneDigits(q);
+
+                    return ordersList.filter(o => {
+                        const matchId = qClean && (o.orderId || '').toLowerCase().includes(qClean);
+                        const matchName = qNorm && removeAccents(o.customerName).includes(qNorm);
+                        const oPhoneClean = cleanPhoneDigits(o.phone);
+                        const matchPhone = qPhone && qPhone.length >= 4 && oPhoneClean &&
+                                           (oPhoneClean === qPhone || oPhoneClean.endsWith(qPhone));
+                        return matchId || matchName || matchPhone;
+                    });
                 };
 
                 const searchOrder = () => {
@@ -1016,10 +1560,18 @@
                             return;
                         }
                         const orders = (res.data || [])
-                            .map(o => ({ ...o, expanded: false }))
+                            .map(o => ({
+                                ...o,
+                                status: normalizeOrderStatus(o.status, ''),
+                                expanded: false
+                            }))
                             .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-                        const latestUnpaid = orders.find(o => o.status !== 'Paid');
-                        if (latestUnpaid) latestUnpaid.expanded = true;
+                        const latestUnpaid = orders.find(o => o.status !== 'Paid' && o.status !== 'Cancelled');
+                        if (latestUnpaid) {
+                            latestUnpaid.expanded = true;
+                        } else if (orders.length > 0) {
+                            orders[0].expanded = true;
+                        }
                         searchResults.value = orders;
                         searchStatus.value = { error: false, loading: false, message: '' };
                     };
@@ -1035,87 +1587,18 @@
                             .then(handleResult)
                             .catch(err => handleResult({ success: false, message: 'Lỗi kết nối tới Google Apps Script: ' + err.message }));
                     } else {
-                        // Fallback tìm kiếm trên dữ liệu thực tế mẫu khi chạy Local / GitHub trước khi nối GAS_API_URL
-                        setTimeout(() => {
-                            const mockOrders = [
-                                {
-                                    orderId: 'HN-751646',
-                                    customerName: 'C Ngọc',
-                                    phone: '0379524516',
-                                    date: '04/11/2026',
-                                    timestamp: '2026-11-04T09:15:00.000Z',
-                                    total: 140000,
-                                    status: 'Đã tiếp nhận',
-                                    items: [
-                                        { name: 'Điều - Đậu Xanh - Cải Kale', quantity: 1, price: 25000, deliveryDate: 'Thứ 3 (03-11)' },
-                                        { name: 'Điều - Hạnh Nhân - Khoai Lang Tím', quantity: 1, price: 30000, deliveryDate: 'Thứ 4 (04-11)' },
-                                        { name: 'Macca - Bí Đỏ - Cốt Dừa', quantity: 1, price: 30000, deliveryDate: 'Thứ 6 (06-11)' },
-                                        { name: 'Bắp Ngọt Thanh - Hạt Điều - Dừa Non', quantity: 1, price: 25000, deliveryDate: 'Thứ 7 (07-11)' },
-                                        { name: 'Cốm - Sen - Điều', quantity: 1, price: 30000, deliveryDate: 'Thứ 7 (07-11)' }
-                                    ]
-                                },
-                                {
-                                    orderId: 'HN-078663',
-                                    customerName: 'Anh Đào',
-                                    phone: '0942685872',
-                                    date: '02/11/2026',
-                                    timestamp: '2026-11-02T22:00:00.000Z',
-                                    total: 110000,
-                                    status: 'Đã tiếp nhận',
-                                    items: [
-                                        { name: 'Điều yến mạch cacao', quantity: 2, price: 25000, deliveryDate: 'Thứ 2 (02-11)' },
-                                        { name: 'Gạo lứt rang hạnh nhân điều', quantity: 2, price: 30000, deliveryDate: 'Thứ 2 (02-11)' }
-                                    ]
-                                },
-                                {
-                                    orderId: 'HN-897186',
-                                    customerName: 'Suri SPX',
-                                    phone: '0948667431',
-                                    date: '01/11/2026',
-                                    timestamp: '2026-11-01T15:00:00.000Z',
-                                    total: 140000,
-                                    status: 'Paid',
-                                    items: [
-                                        { name: 'Gạo lứt rang hạnh nhân điều', quantity: 1, price: 30000, deliveryDate: 'Thứ 2 (02-11)' },
-                                        { name: 'Điều đậu xanh cải Kale', quantity: 1, price: 25000, deliveryDate: 'Thứ 3 (03-11)' },
-                                        { name: 'Macca hạt sen lá dứa', quantity: 1, price: 30000, deliveryDate: 'Thứ 3 (03-11)' },
-                                        { name: 'Đậu đỏ óc chó củ dền', quantity: 1, price: 25000, deliveryDate: 'Thứ 4 (04-11)' },
-                                        { name: 'Điều hạnh nhân khoai lang tím', quantity: 1, price: 30000, deliveryDate: 'Thứ 4 (04-11)' }
-                                    ]
-                                },
-                                {
-                                    orderId: 'HN-592467',
-                                    customerName: 'Vy',
-                                    phone: '0984676449',
-                                    date: '04/11/2026',
-                                    timestamp: '2026-11-04T14:00:00.000Z',
-                                    total: 30000,
-                                    status: 'Đã tiếp nhận',
-                                    items: [
-                                        { name: 'Macca - Sen - Lá dứa', quantity: 1, price: 30000, deliveryDate: 'Thứ 3 (03-11)' }
-                                    ]
-                                }
-                            ];
-
-                            const qNorm = removeAccents(q);
-                            const qClean = q.toLowerCase();
-                            const qPhone = cleanPhoneDigits(q);
-
-                            const filtered = mockOrders.filter(o => {
-                                const matchId = qClean && o.orderId.toLowerCase().includes(qClean);
-                                const matchName = qNorm && removeAccents(o.customerName).includes(qNorm);
-                                const oPhoneClean = cleanPhoneDigits(o.phone);
-                                const matchPhone = qPhone && qPhone.length >= 4 && oPhoneClean &&
-                                                   (oPhoneClean === qPhone || oPhoneClean.endsWith(qPhone));
-                                return matchId || matchName || matchPhone;
-                            });
-
+                        // Thử đồng bộ trực tiếp thời gian thực từ Google Sheets (GViz JSONP), nếu không được thì dùng bản sao đồng bộ trong config.js
+                        fetchLiveOrdersFromSheet().then(liveOrders => {
+                            const sourceOrders = (Array.isArray(liveOrders) && liveOrders.length > 0)
+                                ? liveOrders
+                                : (Array.isArray(cfg.FALLBACK_ORDERS) && cfg.FALLBACK_ORDERS.length > 0 ? cfg.FALLBACK_ORDERS : defaultFallbackOrders);
+                            const filtered = filterOrdersByQuery(sourceOrders, q);
                             if (filtered.length > 0) {
                                 handleResult({ success: true, data: filtered });
                             } else {
                                 handleResult({ success: false, message: `Không tìm thấy đơn hàng nào khớp với "${q}".` });
                             }
-                        }, 400);
+                        });
                     }
                 };
 

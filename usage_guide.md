@@ -72,9 +72,12 @@ Mở file [`config.js`](./config.js) trên GitHub, tìm mục `WEEKLY_BANNER` (d
    - Trên màn hình Thanh toán của khách có sẵn nút **`Copy` 1 chạm** bên cạnh số MoMo, số tài khoản VCB và tổng tiền để khách copy nhanh không sợ gõ nhầm.
 2. **Cập nhật ảnh mã QR MoMo**:
    - Ảnh QR mặc định đang được lưu siêu tốc tại [`images/momo.jpg`](./images/momo.jpg) trên GitHub. Nếu đổi mã QR mới, bạn chỉ cần thay file `images/momo.jpg` trên GitHub (hoặc gắn link Drive vào cột C tab `payment_method`).
-3. **Gạch nợ (Đánh dấu Đã thanh toán)**:
-   - Khi khách chuyển khoản xong, bạn mở tab **`Orders_Master`**, tìm đến dòng đơn hàng của khách và gõ chữ **`Paid`** hoặc **`Đã thanh toán`** vào cột cuối cùng (cột **Status** - Cột J hoặc K).
-   - **Tác động trên Web**: Khi khách tra cứu lại tên hoặc SĐT của mình, đơn hàng đó sẽ tự động chuyển sang huy hiệu màu Xanh Lá **`Đã thanh toán`** và thu gọn gọn gàng vào danh sách Tuần.
+3. **Gạch nợ & Cập nhật Trạng thái Đơn hàng (Cột K — `Status`)**:
+   - Trên tab **`Orders_Master`**, **Cột K (`Status`)** là cột chuẩn để điều khiển trạng thái đơn hàng hiển thị trên Web App:
+     * Gõ **`Paid`** (hoặc `Đã thanh toán`): Đơn hàng hiển thị huy hiệu màu Xanh Lá **`Đã thanh toán`**.
+     * Gõ **`Cancelled`** (hoặc `Đã hủy`): Đơn hàng hiển thị huy hiệu màu Xám **`Đã hủy`**.
+     * Để trống (hoặc `Unpaid`): Đơn hàng hiển thị huy hiệu màu Cam **`Chưa thanh toán`**.
+   - **Cơ chế đồng bộ**: Khi chủ tiệm mở Web App trên trình duyệt đã đăng nhập Google (hoặc khi đã gắn `GAS_API_URL` / bật chia sẻ xem link cho Sheet), Web App tự động đọc trực tiếp Cột K từ Google Sheets theo thời gian thực; đồng thời `config.js` (`FALLBACK_ORDERS`) lưu trữ bản sao đồng bộ toàn bộ 16 đơn hàng thực tế từ `Orders_Master`.
 
 ---
 

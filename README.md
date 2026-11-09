@@ -31,6 +31,18 @@
 
 ## 🕒 3. LỊCH SỬ CẬP NHẬT & NÂNG CẤP CHI TIẾT (DETAILED CHANGELOG)
 
+### [v2.4.0] — 2026-11-08: Sửa lỗi Đồng bộ Cột K (`Status`) trên `Orders_Master`, Bổ sung Live Google Sheets GViz JSONP & Đồng bộ 100% Dữ liệu Thực tế
+* **Nguyên nhân gốc (Root Cause)**:
+  - Khi mở Web App trên GitHub Pages (`https://xjithemx.github.io/heni_webapp/`) trong lúc `GAS_API_URL` trong `config.js` chưa được điền, hàm `searchOrder()` rơi vào nhánh dự phòng (`mockOrders`) vốn chỉ chứa 4 đơn mẫu cố định (trong đó đơn `#HN-592467` của khách `Vy` bị gán cứng ngày `04/11/2026` và trạng thái `Đã tiếp nhận` -> hiển thị `Chưa thanh toán`, đồng thời thiếu đơn `#HN-066384`).
+  - Trong bảng `Orders_Master`, Cột J lưu trạng thái tiếp nhận mặc định (`Đã tiếp nhận`) còn **Cột K (`Status`)** mới là nơi chủ tiệm cập nhật trạng thái thanh toán (`Paid`, `Cancelled`).
+* **Giải pháp đã triển khai (`index.html`, `config.js`, `code.gs`)**:
+  1. **Tích hợp Live Google Sheets GViz JSONP (`fetchLiveOrdersFromSheet`) trong `index.html`**: Tự động truy vấn trực tiếp tab `Orders_Master` của Google Sheet (`1sjkxZS37_g-R3JowKI99AkaNTCb_HjhcAgrDAInrgb8`) theo thời gian thực ngay trên trình duyệt mà không bị chặn CORS khi chủ tiệm đã đăng nhập Google hoặc bật chia sẻ link.
+  2. **Đồng bộ 100% toàn bộ 16 đơn hàng thực tế từ `Orders_Master` vào `config.js` (`FALLBACK_ORDERS`) & `index.html`**: Cập nhật đầy đủ cả 2 đơn của khách `Vy` (`#HN-592467` ngày `02/11/2026` - `30.000đ` - `Paid` và `#HN-066384` ngày `29/10/2026` - `25.000đ` - `Paid`) cùng toàn bộ 14 đơn hàng còn lại đúng 100% với Cột K trên Google Sheets.
+  3. **Ưu tiên tuyệt đối Cột K (`Status`) & Hỗ trợ nhãn `Đã hủy` (`Cancelled`)**: Chuẩn hóa hàm `normalizeOrderStatus(colK, colJ)` trên cả `index.html` và `code.gs`, hiển thị đúng 3 trạng thái: **`Đã thanh toán`** (Xanh lá - `Paid`), **`Đã hủy`** (Xám - `Cancelled`), và **`Chưa thanh toán`** (Cam - trống/chưa trả).
+  4. **Cập nhật `processOrder()` trong `code.gs`**: Ghi đủ 11 cột (`A..K`) khi tạo đơn mới và xử lý an toàn cột `Tổng Tiền` có dấu phẩy ngăn cách hàng nghìn.
+
+---
+
 ### [v2.3.0] — 2026-11-08: Chuẩn hóa Hệ thống Tài liệu Dự án (`prd.md`, `usage_guide.md`, `README.md`, `AGENTS.md`) & Đồng bộ Workspace
 * **Tài liệu hóa toàn diện**:
   - Tạo mới [`prd.md`](./prd.md): Ghi lại đầy đủ kiến trúc Hybrid (GitHub CDN + Google Sheets), cấu trúc 6 bảng dữ liệu (`Dim_Menu`, `Orders_Master`, `Fact_Order_Items`, `payment_method`, `Dim_Config`, `Tracking`) và đặc tả chi tiết mọi luồng tính năng.

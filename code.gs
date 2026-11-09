@@ -241,11 +241,22 @@ function searchOrders(rawQuery) {
       try { items = JSON.parse(row[ITEMS_COL]) || []; } catch (e) { items = []; }
 
       const ts = row[1] instanceof Date ? row[1] : new Date(row[1]);
-      const statusJ = (row[9] || '').toString().trim();
-      const statusK = (row[10] || '').toString().trim();
-      const statusHeader = (row[statusCol] || '').toString().trim();
-      const combinedStatus = `${statusJ} ${statusK} ${statusHeader}`.toLowerCase();
-      const isPaid = combinedStatus.indexOf('paid') !== -1 || combinedStatus.indexOf('đã thanh toán') !== -1;
+      const statusJ = (row[9] !== undefined && row[9] !== null ? row[9] : '').toString().trim();
+      const statusK = (row[10] !== undefined && row[10] !== null ? row[10] : '').toString().trim();
+      const statusHeader = (row[statusCol] !== undefined && row[statusCol] !== null ? row[statusCol] : '').toString().trim();
+
+      // Ưu tiên tuyệt đối Cột K (Status) nếu có giá trị
+      const primaryRaw = (statusK || statusHeader || statusJ).toLowerCase();
+      let normalizedStatus = 'Chưa thanh toán';
+      if (primaryRaw.indexOf('paid') !== -1 || primaryRaw.indexOf('đã thanh toán') !== -1 || primaryRaw.indexOf('da thanh toan') !== -1) {
+        normalizedStatus = 'Paid';
+      } else if (primaryRaw.indexOf('cancel') !== -1 || primaryRaw.indexOf('hủy') !== -1 || primaryRaw.indexOf('huỷ') !== -1 || primaryRaw.indexOf('da huy') !== -1) {
+        normalizedStatus = 'Cancelled';
+      } else if (!statusK && (statusJ.toLowerCase().indexOf('paid') !== -1 || statusJ.toLowerCase().indexOf('đã thanh toán') !== -1)) {
+        normalizedStatus = 'Paid';
+      }
+
+      const rawTotal = row[7] !== undefined && row[7] !== null ? row[7].toString().replace(/[^\d.-]/g, '') : '0';
 
       orders.push({
         orderId: orderId,
@@ -253,14 +264,14 @@ function searchOrders(rawQuery) {
         phone: custPhoneClean ? ('0' + custPhoneClean) : '',
         date: Utilities.formatDate(ts, Session.getScriptTimeZone() || 'Asia/Ho_Chi_Minh', 'dd/MM/yyyy'),
         timestamp: ts.toISOString(),
-        total: Number(row[7]) || 0,
+        total: Number(rawTotal) || 0,
         items: items.map(it => ({
           name: it.name || '',
           quantity: Number(it.quantity) || 0,
           price: Number(it.price) || 0,
           deliveryDate: it.deliveryDate || ''
         })),
-        status: isPaid ? 'Paid' : (statusJ || statusHeader || 'Chưa thanh toán')
+        status: normalizedStatus
       });
     }
 
@@ -351,10 +362,10 @@ function processOrder(orderData) {
     const timestamp = new Date();
     const orderId = 'HN-' + timestamp.getTime().toString().slice(-6);
 
-    // Ghi Master
+    // Ghi Master (A..J + cột K Status để trống chờ chủ tiệm điền Paid/Cancelled)
     const itemsJson = JSON.stringify(orderData.items);
     masterSheet.appendRow([
-      orderId, timestamp, orderData.name, orderData.phone, orderData.email, orderData.address, itemsJson, orderData.total, orderData.note || '', 'Đã tiếp nhận'
+      orderId, timestamp, orderData.name, orderData.phone, orderData.email, orderData.address, itemsJson, orderData.total, orderData.note || '', 'Đã tiếp nhận', ''
     ]);
 
     // Ghi Fact kèm tự động điền cột week

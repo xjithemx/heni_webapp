@@ -89,7 +89,8 @@
 | **G** | `Raw_JSON_Items` | Chuỗi JSON lưu toàn bộ danh sách món và ngày giao trong đơn |
 | **H** | `Tổng Tiền` | Tổng giá trị đơn hàng (VNĐ) |
 | **I** | `Ghi chú` | Lời nhắn của khách cho bếp (VD: ít ngọt, giữ chai...) |
-| **J / K**| `Status` | Mặc định khi mới đặt: `Đã tiếp nhận`. Khi khách trả tiền, chủ tiệm đổi thành `Paid` hoặc `Đã thanh toán` |
+| **J** | `Trạng thái tiếp nhận` | Mặc định khi mới đặt qua web: `Đã tiếp nhận` |
+| **K** | `Status` (**Cột chuẩn gạch nợ**) | Cột ưu tiên số 1 để kiểm tra thanh toán: `Paid` / `Đã thanh toán` (hiển thị nhãn xanh **Đã thanh toán**), `Cancelled` / `Đã hủy` (hiển thị nhãn xám **Đã hủy**), hoặc để trống (hiển thị nhãn cam **Chưa thanh toán**) |
 
 ### 3.3. Tab `Fact_Order_Items` (Bảng Phẳng Chi Tiết Từng Món Để Nấu Sữa)
 * **Cấu trúc cột (A -> I)**: `Mã Đơn` | `Ngày Giao` | `Tên Món` | `ID Món` | `Số Lượng` | `Tên Khách` | `SĐT` | `week` | `Status/Feedback`.
@@ -138,10 +139,15 @@
   1. **Tìm theo Tên khách hàng**: Không phân biệt chữ hoa/thường và không phân biệt dấu tiếng Việt (gõ `C Ngọc`, `c ngoc`, `Ngọc`, `Anh Đào`, `Suri` đều khớp chính xác).
   2. **Tìm theo Số điện thoại**: Tự động xử lý lỗi mất số `0` ở đầu hoặc định dạng số khoa học (`3.79524516E8`) của Google Sheets. Hỗ trợ tìm theo SĐT đầy đủ (`0379524516`) hoặc 4–9 số cuối (`4516`).
   3. **Tìm theo Mã đơn hàng**: Khớp mã `HN-751646` hoặc `751646`.
+* **Cơ chế Đồng bộ 3 Lớp (3-Tier Real-Time & Fallback Sync)**:
+  1. **Lớp 1 (Apps Script Native / Web App API)**: Gọi trực tiếp `google.script.run.searchOrders` hoặc `GAS_API_URL`.
+  2. **Lớp 2 (Live Google Sheets GViz JSONP)**: Khi chạy trên GitHub Pages mà chưa cấu hình `GAS_API_URL`, trình duyệt tự động truy vấn trực tiếp tab `Orders_Master` qua giao thức JSONP (`gviz/tq`) để lấy trạng thái Cột K (`Status`) theo thời gian thực.
+  3. **Lớp 3 (`FALLBACK_ORDERS` trong `config.js`)**: Bản sao đồng bộ toàn bộ 16 đơn hàng thực tế từ `Orders_Master` giúp tra cứu tức thì ngay cả khi thiết bị khách hàng không có quyền truy cập trực tiếp Google Sheets.
 * **Hiển thị kết quả**:
   - Gom nhóm đơn hàng theo từng tuần (`Tuần dd/MM – dd/MM`).
-  - Đơn hàng có trạng thái `Paid` hoặc `Đã thanh toán` sẽ hiển thị huy hiệu xanh lá **`Đã thanh toán`** và thu gọn lại.
-  - Đơn hàng **`Chưa thanh toán`** mới nhất sẽ tự động mở rộng (expand) danh sách món để khách kiểm tra nhanh.
+  - Đơn hàng có Cột K là `Paid` hoặc `Đã thanh toán` hiển thị huy hiệu xanh lá **`Đã thanh toán`**.
+  - Đơn hàng có Cột K là `Cancelled` hoặc `Đã hủy` hiển thị huy hiệu xám **`Đã hủy`**.
+  - Đơn hàng **`Chưa thanh toán`** mới nhất sẽ tự động mở rộng (expand) danh sách món; nếu toàn bộ đơn của khách đều đã thanh toán thì tự động mở rộng đơn mới nhất để khách tiện đối chiếu.
 
 ### 4.5. Tự Động Gửi Báo Cáo Nấu Sữa Lúc 20h00 Hàng Ngày (`sendDailyKitchenReport`)
 * Đúng **20h00 mỗi tối** (qua Time-driven Trigger `setupDaily20hTrigger`), hệ thống tự động:
