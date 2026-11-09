@@ -1,51 +1,88 @@
-# 🌿 Góc Bếp Nhà Hení — Sữa Hạt Thủ Công Mộc Mạc
+# 🌿 Góc Bếp Nhà Hení (`heni_webapp`)
 
-Hệ thống Web App đặt sữa hạt theo ngày & đặt trước cả tuần, tối ưu hóa cho **doanh nghiệp 1 người vận hành**:
-- **Giao diện giữ nguyên 100% nguyên bản**: Ấm cúng, tối giản, dễ đặt món chỉ trong vài chạm.
-- **Tốc độ tải ảnh tức thì (0.1s)**: Toàn bộ hình ảnh món ăn (`images/`) được phục vụ trực tiếp từ GitHub CDN thay vì phải chờ tải Base64 từ Google Drive.
-- **Không lưu thông tin cá nhân trên trình duyệt**: Đảm bảo quyền riêng tư tuyệt đối cho khách hàng.
-- **Tự động gửi Báo cáo Nấu Sữa lúc 20h00 hàng ngày**: Gửi thẳng về email mặc định `ll.huyhoang.1412@gmail.com` (và các email khai báo thêm trong [`config.js`](./config.js)).
+> **Ứng dụng Đặt Sữa Hạt Thủ Công Theo Ngày & Đặt Trước Cả Tuần**  
+> **Live Web App (GitHub Pages CDN):** [https://xjithemx.github.io/heni_webapp/](https://xjithemx.github.io/heni_webapp/)
 
 ---
 
-## 🛠️ HƯỚNG DẪN CẬP NHẬT NHANH CHO CHỦ TIỆM (1 NGƯỜI VẬN HÀNH)
+## 📌 1. TÓM TẮT NHANH DỰ ÁN (PROJECT BRIEF)
 
-### 1. Thêm Email nhận Báo Cáo Nấu Sữa 20h00 trên GitHub
-Mở file [`config.js`](./config.js) ngay trên GitHub và thêm email vào danh sách `KITCHEN_REPORT_EMAILS`:
-```javascript
-KITCHEN_REPORT_EMAILS: [
-  'll.huyhoang.1412@gmail.com',
-  'email-moi-cua-ban@gmail.com'
-],
-```
-*(Hệ thống Google Apps Script sẽ tự động đọc file `config.js` này trên GitHub lúc 20h00 mỗi tối để gửi báo cáo nấu sữa cho ngày hôm sau).*
-
-### 2. Cập nhật Menu, Giá bán, Calo, Bật/Tắt món ăn
-Mở file Google Sheets `heni_webapp` -> Chọn tab **`Dim_Menu`**:
-- **Bật/Tắt món**: Gõ `active` vào cột `status` để hiện món, hoặc đổi sang `inactive` (hoặc xóa trống) để ẩn món trên web.
-- **Đổi giá / tên / mô tả / kcalo**: Sửa trực tiếp trên dòng của món đó, web sẽ tự động cập nhật.
-
-### 3. Cập nhật Thông Báo Hàng Tuần (Khung cảm ơn / Chương trình tuần mới)
-Bạn có **2 cách** cực kỳ đơn giản:
-- **Cách 1 (Sửa ngay trên Google Sheets)**: Mở tab **`Dim_Config`**, thêm hoặc sửa các dòng:
-  - `weekly_badge`: Nhãn nhỏ phía trên (VD: `Ưu đãi tuần mới`)
-  - `weekly_title`: Tiêu đề lớn (VD: `Chân Thành Cảm Ơn 💚` — *Nếu xóa trống ô này, khung thông báo sẽ tự ẩn đi*)
-  - `weekly_content`: Nội dung đoạn văn thông báo
-  - `weekly_footer`: Dòng chữ nhỏ dưới cùng
-- **Cách 2 (Sửa trong [`config.js`](./config.js) trên GitHub)**: Sửa mục `WEEKLY_BANNER` trong file `config.js`.
-
-### 4. Cập nhật Ảnh Món Mới
-Khi có món mới (ví dụ mã món `t2_p2`):
-- Tải file ảnh `t2_p2.png` (hoặc `.jpg`) vào thư mục [`images/`](./images/) trên GitHub để web load siêu nhanh.
+**Góc Bếp Nhà Hení** là hệ thống Web App đặt sữa hạt tươi nấu mới mỗi sáng, được thiết kế chuyên biệt cho **mô hình doanh nghiệp 1 người vận hành (Solo-Founder)** với triết lý:
+* **Giữ nguyên 100% thiết kế nguyên bản**: Giao diện ấm cúng (`#F9F8F6`, `#4F6B4A`, `#C49A45`, `#2C3D29`), cặp font *Playfair Display* & *DM Sans*, bố cục trực quan gồm **Menu Sáng Mai**, **Lịch Đặt Trước Cả Tuần**, **Giỏ Hàng Đa Ngày** và **Sidebar Tra Cứu & Giải Trí**.
+* **Kiến trúc Hybrid Siêu Tốc (GitHub CDN + Google Sheets DB)**:
+  - Toàn bộ giao diện (`index.html`), cấu hình nhanh (`config.js`) và kho 22 hình ảnh (`images/`) được phục vụ trực tiếp trên **GitHub Pages CDN**, giúp mở trang và hiển thị ảnh tức thì trong **0.1 giây**, xóa bỏ hoàn toàn lỗi giới hạn băng thông và độ trễ Base64 của Google Drive.
+  - Dữ liệu thực đơn (`Dim_Menu`), cấu hình thông báo tuần (`Dim_Config`), thanh toán (`payment_method`) và đơn hàng (`Orders_Master`, `Fact_Order_Items`) vẫn đồng bộ 2 chiều với **Google Sheets** qua Google Apps Script (`code.gs`).
+* **Quyền riêng tư tuyệt đối (Privacy-First)**: Không lưu thông tin cá nhân của khách hàng vào trình duyệt (`localStorage`).
+* **Tự động hóa Bếp 20h00 (Daily Kitchen Dispatch)**: Đúng 20h00 mỗi tối, hệ thống tự động tổng hợp số chai cần nấu cho ngày mai + danh sách khách hàng/địa chỉ/ghi chú và gửi báo cáo về email mặc định `ll.huyhoang.1412@gmail.com` (cùng các email trong `config.js`).
 
 ---
 
-## ⚙️ CÀI ĐẶT ĐỒNG BỘ GOOGLE APPS SCRIPT (CHỈ LÀM 1 LẦN)
+## 📚 2. HỆ THỐNG TÀI LIỆU TRONG REPOSITORY
 
-1. Mở Google Apps Script gắn với file Google Sheets `heni_webapp`.
-2. Copy toàn bộ nội dung file [`code.gs`](./code.gs) dán đè vào file `Code.gs` trên Apps Script.
-3. Trên thanh công cụ Apps Script, chọn hàm **`setupDaily20hTrigger`** và bấm **Chạy (Run)** 1 lần duy nhất -> Hệ thống sẽ tự động hẹn giờ gửi email Báo Cáo Nấu Sữa vào **20h00 mỗi tối**.
-4. Bấm **Deploy** -> **New deployment** -> Chọn loại **Web app**:
-   - *Execute as*: **Me**
-   - *Who has access*: **Anyone**
-5. Copy đường link **Web app URL** (`https://script.google.com/macros/s/.../exec`) dán vào mục `GAS_API_URL` trong file [`config.js`](./config.js) trên GitHub.
+| File Tài Liệu | Mục Đích Sử Dụng |
+| :--- | :--- |
+| **[`README.md`](./README.md)** | Tóm tắt nhanh dự án (Project Brief) và lưu trữ **Lịch sử cập nhật chi tiết (Detailed Changelog)** qua từng phiên bản. |
+| **[`prd.md`](./prd.md)** | **Product Requirements Document**: Đặc tả toàn diện kiến trúc kỹ thuật, mô hình dữ liệu Google Sheets, luồng nghiệp vụ và đặc tả từng tính năng. |
+| **[`usage_guide.md`](./usage_guide.md)** | **Hướng dẫn Vận hành & Quản trị**: Sổ tay cầm tay chỉ việc cho chủ tiệm 1 người (cách sửa menu, đổi giá, đổi thông báo tuần, gạch nợ, thêm email báo cáo bếp, cập nhật Apps Script). |
+| **[`AGENTS.md`](./AGENTS.md)** | **Quy chuẩn bắt buộc cho AI Agents / Developers**: Quy định nguyên tắc thiết kế, bảo vệ kiến trúc và **luật bắt buộc cập nhật đồng thời 3 file (`prd.md`, `usage_guide.md`, `README.md`) sau mỗi lần thay đổi**. |
+| **[`config.js`](./config.js)** | File cấu hình nhanh trên GitHub (thêm email nhận báo cáo 20h00, đổi banner thông báo tuần, cấu hình `GAS_API_URL`, thực đơn dự phòng). |
+
+---
+
+## 🕒 3. LỊCH SỬ CẬP NHẬT & NÂNG CẤP CHI TIẾT (DETAILED CHANGELOG)
+
+### [v2.3.0] — 2026-11-08: Chuẩn hóa Hệ thống Tài liệu Dự án (`prd.md`, `usage_guide.md`, `README.md`, `AGENTS.md`) & Đồng bộ Workspace
+* **Tài liệu hóa toàn diện**:
+  - Tạo mới [`prd.md`](./prd.md): Ghi lại đầy đủ kiến trúc Hybrid (GitHub CDN + Google Sheets), cấu trúc 6 bảng dữ liệu (`Dim_Menu`, `Orders_Master`, `Fact_Order_Items`, `payment_method`, `Dim_Config`, `Tracking`) và đặc tả chi tiết mọi luồng tính năng.
+  - Tạo mới [`usage_guide.md`](./usage_guide.md): Hướng dẫn vận hành thực tế từng bước cho chủ tiệm 1 người (quản lý menu, thông báo tuần, thanh toán, báo cáo nấu sữa 20h00 và cách copy `code.gs` sạch không dính lỗi cú pháp).
+  - Tạo mới [`AGENTS.md`](./AGENTS.md): Thiết lập quy tắc bắt buộc cho mọi AI Agent/Developer khi làm việc trên dự án — luôn phải cập nhật đồng bộ `prd.md`, `usage_guide.md` và `README.md` sau mỗi lần nâng cấp hoặc sửa lỗi.
+* **Khắc phục lỗi copy `code.gs` (`Unexpected identifier 'Antigravity'`)**:
+  - Đồng bộ hóa file `code.gs` và `index.html` trên mọi đường dẫn workspace và hướng dẫn copy raw file để tránh copy nhầm tiêu đề giao diện.
+
+---
+
+### [v2.2.0] — 2026-11-08: Sửa dứt điểm Tính năng Tra Cứu Lịch Sử Đơn Hàng, Vá lỗi `getPaymentInfo` & Nâng cấp UX Thanh toán (`1edb17b`, `96d6aa0`)
+* **Debug & Sửa lỗi Tra cứu Lịch sử Đơn hàng (`searchOrder` trong `index.html` & `searchOrders` trong `code.gs`)**:
+  - *Nguyên nhân gốc*: Bản cũ dùng `.replace(/\D/g, '')` xóa sạch toàn bộ chữ cái nên khi nhập tên khách (VD: `"C Ngọc"`) chuỗi bị biến thành rỗng `""` và thoát hàm im lặng; đồng thời SĐT trên Google Sheets bị lưu dạng số mất số `0` đầu (`379524516` / `3.79524516E8`) khiến so sánh tuyệt đối bị trượt.
+  - *Giải pháp đã triển khai*:
+    1. Hỗ trợ **Tra cứu 3-trong-1**: Tìm theo **Tên khách hàng** (không phân biệt hoa/thường và không phân biệt dấu tiếng Việt — gõ `C Ngọc`, `c ngoc`, `Ngọc` đều ra kết quả), tìm theo **Số điện thoại** (tự động xử lý scientific notation và số `0` đầu, hỗ trợ tìm 4–10 số cuối), hoặc tìm theo **Mã đơn** (`HN-751646`).
+    2. Kiểm tra đồng thời cả Cột J và Cột K trên `Orders_Master` để nhận diện chính xác trạng thái `Paid` / `Đã thanh toán`.
+    3. Bổ sung thông báo hướng dẫn rõ ràng khi bấm tra cứu lúc ô tìm kiếm đang trống và tích hợp dữ liệu mẫu dự phòng khi chạy Local/Preview.
+* **Debug & Sửa lỗi `getPaymentInfo` trong `code.gs` (Dòng 232)**:
+  - *Nguyên nhân gốc*: Trong tab `payment_method`, ô QR của dòng VCB (C3) đang để trống nên `cell.getValue()` trả về `null`, gọi `.toString()` gây lỗi `TypeError`.
+  - *Giải pháp đã triển khai*: Kiểm tra `null`/`undefined` an toàn trước khi gọi `.toString()`, bọc `try/catch` từng dòng để luôn trả về thông tin thanh toán ổn định.
+* **Nâng cấp Trải nghiệm Người dùng (UX Polish)**:
+  - Đưa các hàm `removeAccents()` và `cleanPhone()` lên cấp toàn cục (Global Scope) trong `code.gs` và chuẩn hóa hiển thị SĐT có số `0` đầu trong email Báo cáo Nấu Sữa 20h00.
+  - Thêm nút **`Copy` 1 chạm** bên cạnh Số MoMo, Số tài khoản VCB và Số tiền trong khung Hướng dẫn thanh toán.
+  - Thêm kiểm tra độ dài Số điện thoại (9–11 số) khi đặt hàng và hỗ trợ phím `Escape` (`Esc`) để đóng nhanh Modal Giỏ hàng / Sidebar.
+
+---
+
+### [v2.1.0] — 2026-11-08: Chuyển dịch lên GitHub Pages CDN, Tối ưu Vận hành 1 Người & Tự động hóa Báo cáo Bếp 20h00 (`41e135a`)
+* **Di chuyển toàn bộ 22 Hình ảnh từ Google Drive sang GitHub CDN (`images/`)**:
+  - Tải và đồng bộ toàn bộ ảnh giao diện (`logo-only.jpg`, `base.jpg`, `logo.jpg`, `menu.jpg`, `post.jpg`, `program.jpg`), ảnh QR (`momo.jpg`) và 15 ảnh món ăn (`t2_s1.png` -> `t7_p1.png`) vào thư mục [`images/`](./images/).
+  - Thời gian tải trang và hiển thị ảnh giảm từ 5–8 giây xuống **0.1 giây**, loại bỏ hoàn toàn lỗi quá tải băng thông của Google Drive.
+* **Thiết lập File Cấu hình Nhanh [`config.js`](./config.js)**:
+  - Cho phép chủ tiệm cập nhật nhanh danh sách email nhận báo cáo bếp (`KITCHEN_REPORT_EMAILS`), nội dung thông báo hàng tuần (`WEEKLY_BANNER`), link API (`GAS_API_URL`) và thực đơn hiển thị tức thì (`FALLBACK_MENU`) ngay trên giao diện web GitHub.
+* **Tự động hóa Báo cáo Nấu Sữa 20h00 (`sendDailyKitchenReport` & `setupDaily20hTrigger` trong `code.gs`)**:
+  - Tự động tổng hợp tổng số chai cần nấu theo từng món cho ngày giao kế tiếp kèm danh sách chi tiết khách hàng, SĐT, địa chỉ và ghi chú.
+  - Gửi email tự động lúc 20h00 mỗi tối về `ll.huyhoang.1412@gmail.com` và các email trong `config.js`.
+* **Tự động điền cột `week` (`resolveCurrentWeekCode`)**:
+  - Khi ghi đơn hàng mới vào `Fact_Order_Items`, tự động phát hiện và điền mã tuần hiện hành (`w1`, `w2`...) vào cột H.
+* **Bảo vệ Quyền riêng tư Khách hàng**:
+  - Loại bỏ cơ chế lưu thông tin khách hàng vào `localStorage` để khách hàng hoàn toàn yên tâm khi sử dụng.
+* **Kích hoạt GitHub Pages**:
+  - Cấu hình phát hành trực tiếp từ nhánh `main` tại địa chỉ `https://xjithemx.github.io/heni_webapp/`.
+
+---
+
+### [v2.0.0] — 2026-11-08: Tích hợp Bộ Kỹ năng Chuyên sâu (Agent Skills) (`0822af5`, `b7f3a2d`)
+* Tích hợp 3 bộ kỹ năng chuẩn vào `.skills/` và `.claude/skills/`:
+  1. `frontend-design` (Anthropic Official): Chuẩn hóa thẩm mỹ, typography và micro-copywriting.
+  2. `taste-v3`: Kiểm soát chất lượng giao diện, chống slop UI và hoàn thiện chi tiết tương tác.
+  3. `data-platform-alpha`: Đảm bảo tính toàn vẹn dữ liệu giữa Web App và Google Sheets.
+
+---
+
+### [v1.0.0] — 2026-11-08: Khởi tạo Repository (`e74e072`)
+* Khởi tạo repository `xjithemx/heni_webapp` và tiếp nhận mã nguồn MVP ban đầu chạy trên Google Apps Script (`index.html`, `code.gs`) cùng cơ sở dữ liệu Google Sheets & Google Drive (`webapp_Heni`).
