@@ -976,11 +976,10 @@
                         })
                             .then(r => r.json())
                             .then(onOrderSuccess)
-                            .catch(err => onOrderSuccess({ success: false, message: err.message }));
+                            .catch(err => onOrderSuccess({ success: false, message: 'Lỗi kết nối tới Google Apps Script: ' + err.message }));
                     } else {
-                        setTimeout(() => {
-                            onOrderSuccess({ success: true });
-                        }, 800);
+                        isSubmitting.value = false;
+                        showToast('⚠️ Chưa cấu hình GAS_API_URL trong config.js nên đơn chưa được gửi về Sheet và chưa thể gửi email!', 6000);
                     }
                 };
 

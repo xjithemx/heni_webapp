@@ -31,6 +31,15 @@
 
 ## 🕒 3. LỊCH SỬ CẬP NHẬT & NÂNG CẤP CHI TIẾT (DETAILED CHANGELOG)
 
+### [v2.4.2] — 2026-11-08: Rà soát Quy trình Gửi Email Xác nhận Đơn Hàng & Cảnh báo `GAS_API_URL`
+* **Nguyên nhân không nhận được email ở đơn test**:
+  - Web App đang chạy tĩnh trên GitHub Pages (`xjithemx.github.io/heni_webapp`). Do biến `GAS_API_URL` trong `config.js` đang để trống, hàm `submitOrder` trong `index.html` rơi vào nhánh mô phỏng (simulation fallback). Đơn hàng chưa từng được gửi về Google Apps Script (`code.gs`), nên `Orders_Master` không ghi nhận đơn mới và `MailApp.sendEmail()` chưa được kích hoạt.
+* **Cải tiến & Khắc phục**:
+  - Cập nhật hàm `submitOrder` trong `index.html`: Không âm thầm giả lập thành công nữa mà hiển thị thông báo cảnh báo rõ ràng khi `GAS_API_URL` chưa được thiết lập, tránh gây hiểu lầm cho người vận hành.
+  - Hướng dẫn rõ ràng 5 bước lấy URL Web App Apps Script (`/exec`) và dán vào `config.js` để kích hoạt luồng gửi mail tự động tức thì.
+
+---
+
 ### [v2.4.1] — 2026-11-08: Đồng bộ Nội dung Thông báo Tuần (`47 phần quà`) & Làm rõ Cơ chế Auto-Deploy GitHub Pages
 * **Đồng bộ nội dung Thông báo tuần**: Đồng bộ số lượng quà tặng (`47 phần quà`) trong file `config.js` để đồng nhất với chỉnh sửa của chủ tiệm trên `index.html`.
 * **Cơ chế cập nhật tự động (Zero-Deploy Overhead)**: Xác nhận GitHub Pages tự động build và xuất bản trong vòng 30s sau mỗi commit trên `main`, không cần bất kỳ thao tác deploy thủ công nào.
