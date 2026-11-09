@@ -29,6 +29,13 @@ window.HENI_CONFIG = {
     content: 'Chương trình ưu đãi ra mắt đã chính thức khép lại với <b>47 phần quà</b> được trao tận tay các "thượng đế". Góc Bếp Nhà Hení vô cùng biết ơn sự ủng hộ và yêu thương của mọi người. Hẹn gặp lại cả nhà ở những chương trình ưu đãi tiếp theo nhé!',
     footer: 'Sữa hạt vẫn luôn được nấu tươi mới mỗi sáng'
   },
+  WEEKLY_BANNER: {
+    enabled: true,
+    badge: 'Tổng kết tuần 2',
+    title: 'Tiếp tục gửi tới khách hàng lời Cảm Ơn Chân Thành💚',
+    content: 'Menu được cập nhật mới liên tục và luôn nhận được những phản hồi tích cực của khách hàng, khen có góp ý cải thiện cũng có và luôn đi kèm những lời động viên chân thành!',
+    footer: 'Sữa hạt vẫn luôn được nấu tươi mới mỗi sáng và sẽ tiếp tục được nghiên cứu để ra những sản phẩm mới tốt hơn.'
+  },
 
   // 5. Thông tin Thanh toán mặc định (sẽ tự động cập nhật nếu tab payment_method trên Sheet thay đổi)
   PAYMENT_DEFAULT: {
