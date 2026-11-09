@@ -31,6 +31,12 @@
 
 ## 🕒 3. LỊCH SỬ CẬP NHẬT & NÂNG CẤP CHI TIẾT (DETAILED CHANGELOG)
 
+### [v2.4.1] — 2026-11-08: Đồng bộ Nội dung Thông báo Tuần (`47 phần quà`) & Làm rõ Cơ chế Auto-Deploy GitHub Pages
+* **Đồng bộ nội dung Thông báo tuần**: Đồng bộ số lượng quà tặng (`47 phần quà`) trong file `config.js` để đồng nhất với chỉnh sửa của chủ tiệm trên `index.html`.
+* **Cơ chế cập nhật tự động (Zero-Deploy Overhead)**: Xác nhận GitHub Pages tự động build và xuất bản trong vòng 30s sau mỗi commit trên `main`, không cần bất kỳ thao tác deploy thủ công nào.
+
+---
+
 ### [v2.4.0] — 2026-11-08: Sửa lỗi Đồng bộ Cột K (`Status`) trên `Orders_Master`, Bổ sung Live Google Sheets GViz JSONP & Đồng bộ 100% Dữ liệu Thực tế
 * **Nguyên nhân gốc (Root Cause)**:
   - Khi mở Web App trên GitHub Pages (`https://xjithemx.github.io/heni_webapp/`) trong lúc `GAS_API_URL` trong `config.js` chưa được điền, hàm `searchOrder()` rơi vào nhánh dự phòng (`mockOrders`) vốn chỉ chứa 4 đơn mẫu cố định (trong đó đơn `#HN-592467` của khách `Vy` bị gán cứng ngày `04/11/2026` và trạng thái `Đã tiếp nhận` -> hiển thị `Chưa thanh toán`, đồng thời thiếu đơn `#HN-066384`).
