@@ -5,7 +5,9 @@ window.HENI_CONFIG = {
   // 1. Danh sách Email nhận Báo cáo Nấu Sữa tự động lúc 20h00 mỗi tối
   // (Có thể thêm nhiều email, cách nhau bằng dấu phẩy hoặc thêm vào mảng dưới đây)
   KITCHEN_REPORT_EMAILS: [
-    'll.huyhoang.1412@gmail.com'
+    'll.huyhoang.1412@gmail.com',
+    'ntthien.524@gmail.com',
+    'ntthien.0403@gmail.com'
   ],
 
   // 2. ID Google Sheets Database & Đường dẫn Google Apps Script Web App API
@@ -30,7 +32,7 @@ window.HENI_CONFIG = {
 
   // 5. Thông tin Thanh toán mặc định (sẽ tự động cập nhật nếu tab payment_method trên Sheet thay đổi)
   PAYMENT_DEFAULT: {
-    momo: '0834983524',
+    momo: '',
     vcb: 'Updating',
     momoQr: './images/momo.jpg',
     vcbQr: ''
