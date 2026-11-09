@@ -14,7 +14,7 @@ window.HENI_CONFIG = {
   // Khi chạy trên GitHub Pages, app tự động thử đồng bộ trực tiếp từ SHEET_ID (qua GViz JSONP)
   // hoặc qua GAS_API_URL (nếu đã dán URL Web App ".../exec" vào đây), và đối chiếu FALLBACK_ORDERS:
   SHEET_ID: '1sjkxZS37_g-R3JowKI99AkaNTCb_HjhcAgrDAInrgb8',
-  GAS_API_URL: '',
+  GAS_API_URL: 'https://script.google.com/macros/s/AKfycbylsdvObPpSIrHHNNTEblOysNjdea5Dqh7ruT_16fRenWWLO-wt7f_SAut2DR1h0v4b7g/exec',
 
   // 3. Thư mục chứa ảnh tĩnh trên GitHub CDN (mặc định: './images/')
   IMAGE_BASE_URL: './images/',
