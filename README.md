@@ -31,6 +31,14 @@
 
 ## 🕒 3. LỊCH SỬ CẬP NHẬT & NÂNG CẤP CHI TIẾT (DETAILED CHANGELOG)
 
+### [v2.5.2] — 2026-11-09: Sửa lỗi Lọc Ngày Giao Hàng Shipper (Khớp YYYY-MM-DD với nhãn Thứ x DD-MM)
+* **Nguyên nhân không hiển thị đơn hôm nay**:
+  - Ô chọn ngày gửi định dạng `YYYY-MM-DD` (ví dụ: `2026-11-10`), trong khi cột `Raw_JSON_Items` trên Google Sheets lưu ngày giao dạng chuỗi `Thứ 3 (10-11)`.
+  - Hàm so khớp chuỗi trước đó `dLabel.includes(targetDate)` trả về `false` do không cùng định dạng, dẫn đến danh sách trả về 0 đơn.
+* **Khắc phục triệt để**:
+  - Cập nhật `code.gs`: Tự động phân tách `YYYY-MM-DD` thành tập hợp các token tìm kiếm: `DD-MM` (`10-11`), `DD/MM` (`10/11`), `D-M` (`10-11`). Khớp chính xác 100% với nhãn ngày giao của từng món trong đơn.
+  - Cập nhật `index.html`: Bổ sung nút **Tất cả đơn** trên thanh chọn ngày để Shipper có thể chuyển nhanh giữa Xem hôm nay / Xem ngày mai / Xem toàn bộ đơn.
+
 ### [v2.5.1] — 2026-11-09: Bổ sung Cổng Fallback GET cho Staff API & Khắc phục Lỗi Cũ Deploy GAS
 * **Hiện tượng**: Shipper đăng nhập email gặp thông báo `Unknown action` do bản triển khai cũ của Google Apps Script chưa cập nhật các hàm xử lý mới của v2.5.0.
 * **Cải tiến & Khắc phục**:

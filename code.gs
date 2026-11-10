@@ -829,6 +829,21 @@ function staffGetDeliveries(payload) {
     const rows = masterSheet.getDataRange().getValues();
     const deliveries = [];
 
+    // Chuẩn bị các biến thể định dạng ngày từ targetDate (YYYY-MM-DD -> DD-MM, DD/MM...)
+    const searchTokens = [];
+    if (targetDate) {
+      searchTokens.push(targetDate.toLowerCase());
+      const mIso = targetDate.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+      if (mIso) {
+        const dd = mIso[3].padStart(2, '0');
+        const mm = mIso[2].padStart(2, '0');
+        searchTokens.push(`${dd}-${mm}`);
+        searchTokens.push(`${dd}/${mm}`);
+        searchTokens.push(`${parseInt(dd, 10)}-${parseInt(mm, 10)}`);
+        searchTokens.push(`${parseInt(dd, 10)}/${parseInt(mm, 10)}`);
+      }
+    }
+
     for (let i = 1; i < rows.length; i++) {
       const r = rows[i];
       const orderId = (r[0] || '').toString().trim();
@@ -847,15 +862,18 @@ function staffGetDeliveries(payload) {
       let matchDate = false;
       let matchedItems = [];
 
-      if (!targetDate) {
+      if (!targetDate || targetDate === 'all') {
         matchDate = true;
         matchedItems = items;
       } else {
         matchedItems = items.filter(it => {
-          const dLabel = (it.deliveryDate || '').toString();
-          return dLabel.includes(targetDate) || (deliveryIso && deliveryIso === targetDate);
+          const dLabel = (it.deliveryDate || '').toString().toLowerCase();
+          const matchLabel = searchTokens.some(tok => dLabel.includes(tok));
+          const matchIso = deliveryIso && searchTokens.includes(deliveryIso.toLowerCase());
+          return matchLabel || matchIso;
         });
-        if (matchedItems.length > 0 || (deliveryIso && deliveryIso === targetDate)) {
+        const matchColIso = deliveryIso && searchTokens.includes(deliveryIso.toLowerCase());
+        if (matchedItems.length > 0 || matchColIso) {
           matchDate = true;
         }
       }

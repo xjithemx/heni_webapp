@@ -458,6 +458,11 @@
                         class="px-3 py-1.5 rounded-xl text-xs font-bold transition-colors">
                         Ngày mai
                     </button>
+                    <button @click="setStaffDateQuick('all')"
+                        :class="!staffSelectedDate ? 'bg-brand-green text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                        class="px-3 py-1.5 rounded-xl text-xs font-bold transition-colors">
+                        Tất cả đơn
+                    </button>
                 </div>
                 <div class="flex items-center gap-2 text-xs">
                     <span class="text-gray-500 font-medium">Chọn ngày:</span>
@@ -1871,10 +1876,14 @@
                 };
 
                 const setStaffDateQuick = (type) => {
-                    const d = new Date();
-                    if (type === 'tomorrow') d.setDate(d.getDate() + 1);
-                    const pad = n => String(n).padStart(2, '0');
-                    staffSelectedDate.value = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+                    if (type === 'all') {
+                        staffSelectedDate.value = '';
+                    } else {
+                        const d = new Date();
+                        if (type === 'tomorrow') d.setDate(d.getDate() + 1);
+                        const pad = n => String(n).padStart(2, '0');
+                        staffSelectedDate.value = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+                    }
                     loadStaffDeliveries();
                 };
 
