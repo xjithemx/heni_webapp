@@ -31,6 +31,14 @@
 
 ## 🕒 3. LỊCH SỬ CẬP NHẬT & NÂNG CẤP CHI TIẾT (DETAILED CHANGELOG)
 
+### [v2.5.0-plan] — 2026-11-09: Đặc tả Tab Shipper & Lịch nghỉ Menu (Chỉ tài liệu, chưa code)
+* **Bối cảnh**: Chủ tiệm cần (1) trang riêng cho shipper xem đơn trong ngày, đánh dấu Đã giao / Đã thu tiền, chỉ email được cấp quyền mới xem được; (2) bật/tắt menu theo ngày và hẹn ngày mở lại, ngày nghỉ vẫn hiển thị kèm thông báo "Ngày này quán tạm nghỉ".
+* **Đã làm**: Bổ sung mục 5 trong `prd.md` (kiến trúc Google Sign-In + kiểm tra email phía server, tab `Staff`, tab `Dim_Closures`, cột bổ sung, API, lộ trình) và mục 8 trong `usage_guide.md` (hướng dẫn sử dụng dự kiến, gắn nhãn chưa hoạt động).
+* **Ghi nhận rủi ro**: `FALLBACK_ORDERS` (thêm ở v2.4.0) đang công khai tên + SĐT khách trên GitHub — được đưa vào kế hoạch gỡ bỏ (bước P3).
+* **File thay đổi**: `prd.md`, `usage_guide.md`, `README.md`.
+
+---
+
 ### [v2.4.2] — 2026-11-08: Rà soát Quy trình Gửi Email Xác nhận Đơn Hàng & Cảnh báo `GAS_API_URL`
 * **Nguyên nhân không nhận được email ở đơn test**:
   - Web App đang chạy tĩnh trên GitHub Pages (`xjithemx.github.io/heni_webapp`). Do biến `GAS_API_URL` trong `config.js` đang để trống, hàm `submitOrder` trong `index.html` rơi vào nhánh mô phỏng (simulation fallback). Đơn hàng chưa từng được gửi về Google Apps Script (`code.gs`), nên `Orders_Master` không ghi nhận đơn mới và `MailApp.sendEmail()` chưa được kích hoạt.

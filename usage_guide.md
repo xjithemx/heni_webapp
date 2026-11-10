@@ -127,3 +127,27 @@ Mặc định báo cáo nấu sữa 20h00 luôn gửi về **`ll.huyhoang.1412@g
 5. **Lấy link API kết nối với GitHub Pages**:
    - Bấm nút **Triển khai (Deploy)** ở góc trên phải -> **Quản lý nội dung triển khai (Manage deployments)** -> Bấm biểu tượng cây bút **Chỉnh sửa (Edit)** -> Ở mục Phiên bản chọn **Phiên bản mới (New version)** -> Bấm **Triển khai (Deploy)**.
    - Copy đường link **URL ứng dụng web** (`https://script.google.com/macros/s/.../exec`) dán vào dòng `GAS_API_URL: '...'` trong file [`config.js`](./config.js) trên GitHub.
+
+---
+
+## 8. 🚧 SẮP RA MẮT (v2.5.0) — CHƯA HOẠT ĐỘNG, ĐANG CHỜ DUYỆT
+
+> Phần này mô tả cách bạn **sẽ** dùng 2 tính năng mới. Hiện tại **chưa dùng được**.
+
+### 8.1. Trang dành cho Shipper (Giao hàng & Thu tiền)
+1. **Thêm shipper (1 lần)**: Mở Google Sheets → tab **`Staff`** → thêm 1 dòng: email Gmail của shipper | `shipper` | `TRUE` | tên. Muốn khóa quyền → đổi `TRUE` thành `FALSE`.
+2. **Shipper mở link**: `https://xjithemx.github.io/heni_webapp/?view=staff` → bấm **Đăng nhập bằng Google** → thấy ngay danh sách đơn cần giao **hôm nay**.
+3. **Khi giao xong**: bấm **✅ Đã giao**. **Khi khách trả tiền**: bấm **💰 Đã thu tiền** (Cột K trên Sheet tự chuyển thành `Paid`). Bấm nhầm → bấm **Hoàn tác** trong 10 giây.
+4. Email không có trong tab `Staff` sẽ bị chặn, không xem được bất kỳ thông tin khách nào.
+5. Mọi lần bấm đều được ghi lại trong tab **`Tracking`** (ai bấm, lúc nào, đơn nào).
+
+### 8.2. Tạm nghỉ & Hẹn ngày mở lại Menu
+**Cách 1 — Trên app (bạn đăng nhập bằng email chủ tiệm):**
+1. Mở `?view=staff` → mục **Lịch nghỉ**.
+2. Gạt công tắc ngày muốn nghỉ sang **Nghỉ**, hoặc bấm **Tạm nghỉ từ… đến…** (VD: từ Thứ 6 đến Thứ 7 → Thứ 2 tự mở lại).
+3. Nếu ngày đó đã có đơn, app hiện danh sách khách + SĐT để bạn nhắn báo nghỉ.
+4. Muốn mở lại sớm → bấm **Mở lại ngay**.
+
+**Cách 2 — Trên Google Sheets (tab `Dim_Closures`):** thêm 1 dòng: ngày bắt đầu nghỉ | ngày kết thúc nghỉ (để trống nếu chưa biết ngày mở lại) | lời nhắn | để trống | để trống | `TRUE`.
+
+**Khách sẽ thấy**: ngày nghỉ vẫn hiện trên menu nhưng món bị làm mờ, không thêm vào giỏ được, kèm thông báo **"🌿 Ngày này quán tạm nghỉ"**.

@@ -156,3 +156,42 @@
   3. Cộng tổng số lượng chai cần nấu cho từng món và lập danh sách khách nhận kèm ghi chú.
   4. Tự động đọc danh sách email nhận báo cáo từ `DEFAULT_KITCHEN_EMAILS` (`ll.huyhoang.1412@gmail.com`), từ `config.js` trên GitHub (`KITCHEN_REPORT_EMAILS`), và từ tab `Dim_Config`.
   5. Gửi email báo cáo định dạng bảng rõ ràng về hộp thư của Bếp.
+
+---
+
+## 5. 🚧 TÍNH NĂNG ĐANG THIẾT KẾ — v2.5.0 (CHỜ DUYỆT, CHƯA TRIỂN KHAI)
+
+> Trạng thái: **Bản đặc tả để review.** Chưa có dòng code nào được viết cho các tính năng dưới đây.
+
+### 5.0. Điều kiện tiên quyết
+1. `GAS_API_URL` trong `config.js` phải được cấu hình (Apps Script Web App: *Execute as: Me*, *Access: Anyone*). Mọi thao tác ghi và mọi dữ liệu nhạy cảm (địa chỉ, SĐT) chỉ đi qua Apps Script.
+2. Một **OAuth Client ID** (Google Cloud Console) cho Google Sign-In, khai báo trong `config.js` (`GOOGLE_CLIENT_ID` — giá trị công khai, không phải bí mật) và trong `code.gs`.
+3. Gỡ `FALLBACK_ORDERS` (dữ liệu đơn hàng thật) khỏi `config.js` và `index.html` — vi phạm Quy tắc số 2 của `AGENTS.md`; tra cứu đơn chuyển hẳn sang `searchOrders` qua Apps Script.
+
+### 5.1. Tính năng: Tab Shipper / Staff (`?view=staff`)
+* **Truy cập**: `https://xjithemx.github.io/heni_webapp/?view=staff`. Không có nút dẫn vào trên giao diện khách.
+* **Xác thực**: Google Identity Services → ID token → mỗi request gửi kèm token → `code.gs` xác minh qua `https://oauth2.googleapis.com/tokeninfo` (`aud` = Client ID, `email_verified = true`, `exp` còn hạn) → đối chiếu tab `Staff`.
+* **Phân quyền** (kiểm tra phía server cho từng request):
+  | Vai trò | Xem đơn trong ngày | Đánh dấu Đã giao | Đánh dấu Đã thu tiền | Bật/Tắt menu |
+  | :--- | :---: | :---: | :---: | :---: |
+  | `owner` | ✅ | ✅ | ✅ | ✅ |
+  | `shipper` | ✅ | ✅ | ✅ *(chờ chốt)* | ❌ |
+* **Không lưu token** vào `localStorage`/`sessionStorage`; chỉ giữ trong bộ nhớ trang.
+* **Màn hình**: chọn ngày (mặc định hôm nay), danh sách đơn có món giao trong ngày; mỗi thẻ hiện tên, SĐT (gọi/Zalo), địa chỉ, ghi chú, món & số chai trong ngày, tổng tiền đơn, trạng thái thanh toán; nút **✅ Đã giao** (theo đơn + ngày giao) và **💰 Đã thu tiền** (theo cả đơn); hoàn tác 10 giây; thanh tiến độ "Đã giao x/y".
+* **API (`doPost`, bắt buộc `idToken`)**: `staffWhoAmI`, `staffGetDeliveries {date}`, `staffMarkDelivered {orderId, isoDate, value}`, `staffMarkPaid {orderId, value}`. Ghi có `LockService`; mọi thao tác ghi log vào `Tracking` (email, hành động, mã đơn).
+* **Tab mới `Staff`**: `A: email` | `B: role` (`owner`/`shipper`) | `C: active` (`TRUE`/`FALSE`) | `D: name`. Email chủ tiệm `ll.huyhoang.1412@gmail.com` luôn là `owner`.
+* **Cột bổ sung `Fact_Order_Items`**: `J: delivery_status` | `K: delivered_at` | `L: delivered_by` | `M: delivery_iso` (`yyyy-MM-dd`; đơn cũ suy ra từ nhãn `Thứ x (dd-MM)` + năm của Timestamp).
+* **Cột bổ sung `Orders_Master`**: `L: paid_at` | `M: paid_by` (Cột K `Status` giữ nguyên vai trò cột gạch nợ chuẩn).
+
+### 5.2. Tính năng: Bật/Tắt Menu & Hẹn ngày mở lại (Lịch nghỉ)
+* **Tab mới `Dim_Closures`**: `A: date_from` | `B: date_to` (trống = nghỉ vô thời hạn đến khi mở lại thủ công) | `C: message` (mặc định *"Ngày này quán tạm nghỉ"*) | `D: created_by` | `E: created_at` | `F: active`.
+* **Quy tắc**: Ngày giao `D` bị đóng nếu tồn tại dòng `active` với `date_from ≤ D` và (`date_to` trống hoặc `D ≤ date_to`). Múi giờ `Asia/Ho_Chi_Minh`. Hết `date_to` → tự động mở lại.
+* **Thao tác của owner**: trong `?view=staff` mục "Lịch nghỉ" (công tắc từng ngày trong 6 ngày giao tới, "Tạm nghỉ từ… đến…", "Mở lại ngay"), hoặc sửa trực tiếp tab `Dim_Closures`.
+* **Giao diện khách**: ngày nghỉ vẫn hiển thị trong "Menu Sáng Mai" và "Lịch Đặt Trước"; món làm mờ, nút thêm vào giỏ bị khóa, dải thông báo *"🌿 Ngày này quán tạm nghỉ"* + lời nhắn; nút ngày có nhãn "Nghỉ"; món của ngày nghỉ trong giỏ được cảnh báo và loại bỏ.
+* **Bảo vệ phía server**: `processOrder` từ chối món thuộc ngày nghỉ; `getDynamicMenu`/`init` trả kèm `closures`.
+* **Cảnh báo khi tắt ngày đã có đơn**: trả về số đơn/số chai và danh sách khách (tên, SĐT) cần báo nghỉ.
+* **Báo cáo bếp 20h00**: nếu ngày giao kế tiếp nghỉ → email ghi rõ "Ngày mai quán nghỉ".
+* **Đơn mới lưu thêm `deliveryISO`** trong `Raw_JSON_Items` và `Fact_Order_Items.M` để so khớp ngày chính xác.
+
+### 5.3. Lộ trình
+`P1 GAS_API_URL` → `P3 gỡ dữ liệu khách` → `Lịch nghỉ (phía khách + Sheet)` → `P2 OAuth + Tab Staff` → `Bật/tắt menu trên app` → `Tài liệu & kiểm thử`.
