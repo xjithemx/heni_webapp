@@ -152,3 +152,69 @@ Mặc định báo cáo nấu sữa 20h00 luôn gửi về **`ll.huyhoang.1412@g
 **Cách 2 — Trên Google Sheets (tab `Dim_Closures`):** thêm 1 dòng: ngày bắt đầu nghỉ | ngày kết thúc nghỉ (để trống nếu chưa biết ngày mở lại) | lời nhắn | để trống | để trống | `TRUE`.
 
 **Khách sẽ thấy**: ngày nghỉ vẫn hiện trên menu nhưng món bị làm mờ, không thêm vào giỏ được, kèm thông báo **"🌿 Ngày này quán tạm nghỉ"**.
+
+
+---
+
+## 🛵 7. HƯỚNG DẪN SỬ DỤNG BÀN GIAO HÀNG CHO SHIPPER (`?view=staff`)
+
+### 7.1. Cách Shipper mở bàn giao hàng
+1. Mở link: **`https://xjithemx.github.io/heni_webapp/?view=staff`** (hoặc cuộn xuống cuối trang web app và bấm dòng **"🛵 Bàn Giao Hàng Cho Shipper & Bếp"**).
+2. Nhập email của shipper (ví dụ: `ll.huyhoang.1412@gmail.com`) hoặc bấm nút Đăng nhập bằng Google.
+3. Khi vào giao diện, hệ thống hiển thị ngay:
+   - Tổng số đơn cần giao hôm nay.
+   - Tổng số chai sữa cần giao.
+   - Danh sách từng khách hàng, địa chỉ, số điện thoại, ghi chú và số tiền cần thu.
+
+### 7.2. Các thao tác giao hàng thực tế
+* **Gọi điện thoại cho khách**: Bấm nút **📞 Gọi** để gọi ngay trên điện thoại.
+* **Nhắn tin Zalo**: Bấm nút **💬 Zalo** để mở ngay khung chat Zalo với khách mà không cần lưu danh bạ.
+* **Chỉ đường**: Bấm vào địa chỉ khách hàng để mở Google Maps dẫn đường.
+* **Khi đã giao xong chai sữa**: Bấm nút **🚚 Đã giao xong**. 
+  - Hệ thống sẽ ghi nhận giờ giao và tên người giao.
+  - Có nút **↩️ Hoàn tác (10s)** nếu shipper lỡ tay bấm nhầm.
+* **Khi đã thu tiền mặt của khách**: Bấm nút **💵 Đã thu tiền mặt**. Hệ thống sẽ tự động gạch nợ thành công và chuyển trạng thái sang **💰 Đã thanh toán (Paid)** trên Google Sheets.
+
+---
+
+## 🌿 8. HƯỚNG DẪN BẬT/TẮT MENU & HẸN GIỜ NGHỈ QUÁN CHO CHỦ TIỆM
+
+### Cách 1: Thiết lập ngay trên Web App (Nhanh nhất)
+1. Mở `?view=staff` và đăng nhập bằng email Chủ tiệm (`owner`).
+2. Cuộn xuống mục **"Quản Lý Lịch Nghỉ Quán (Dim_Closures)"**:
+   - Chọn **Nghỉ từ**: Điền thứ (VD: `Thứ 6`) hoặc ngày cụ thể (`2026-11-13`).
+   - Chọn **Đến hết**: Điền thứ (VD: `Thứ 7`) hoặc ngày cụ thể (`2026-11-14`).
+   - Nhập **Lời nhắn**: Ví dụ *"Tiệm nâng cấp máy nấu sữa, hẹn gặp lại cả nhà vào Thứ 2 nhé!"*.
+   - Bấm **🌿 Kích hoạt lịch nghỉ**.
+3. **Khi muốn mở lại menu sớm**: Chỉ cần bấm nút đỏ **"Mở lại menu ngay"**, menu sẽ tự động mở lại cho khách đặt hàng.
+
+### Cách 2: Thiết lập trực tiếp trên Google Sheets
+1. Mở file Google Sheets **`heni_webapp`**, chọn tab **`Dim_Closures`**.
+2. Thêm dòng mới:
+   - Cột A (`date_from`): `Thứ 6` (hoặc ngày ISO `2026-11-13`).
+   - Cột B (`date_to`): `Thứ 7` (hoặc ngày ISO `2026-11-14`).
+   - Cột C (`message`): Lời nhắn gửi khách.
+   - Cột F (`active`): Đổi thành `TRUE` để đóng menu, đổi thành `FALSE` để mở lại menu.
+
+---
+
+## 👥 9. HƯỚNG DẪN THÊM BỚT SHIPPER TRONG TAB `Staff`
+1. Mở file Google Sheets **`heni_webapp`**, vào tab **`Staff`**.
+2. Điền thông tin nhân sự:
+   - Cột A (`email`): Email Google của shipper (VD: `shipper1@gmail.com`).
+   - Cột B (`role`): Điền `shipper` (hoặc `owner` nếu là chủ tiệm).
+   - Cột C (`active`): Điền `TRUE` (cho phép làm việc) hoặc `FALSE` (khóa quyền truy cập ngay lập tức).
+   - Cột D (`name`): Tên hiển thị (VD: `Hoàng Shipper`).
+
+---
+
+## 🚀 10. HƯỚNG DẪN TRIỂN KHAI BẢN MỚI TRÊN GOOGLE APPS SCRIPT
+Sau khi code được cập nhật, chủ tiệm làm theo các bước sau để Google Apps Script áp dụng ngay:
+1. Mở Google Sheets -> menu **Tiện ích mở rộng (Extensions)** -> **Apps Script**.
+2. Mở file `code.gs`, chọn toàn bộ code cũ (`Ctrl+A` -> `Delete`).
+3. Mở file [code_gs_clean_copy.md](./code_gs_clean_copy.md) trên repo, bấm icon Copy khung code và dán vào Apps Script (`Ctrl+V`).
+4. Nhấn **Ctrl+S** để lưu.
+5. Ở góc trên bên phải, bấm nút **Triển khai (Deploy)** -> **Quản lý bản triển khai (Manage deployments)**.
+6. Chọn bản Web app đang hoạt động -> Bấm icon **Bút chì (Chỉnh sửa)**.
+7. Tại mục **Phiên bản (Version)**: Chọn **Phiên bản mới (New version)**.
+8. Bấm **Triển khai (Deploy)** -> **Xong (Done)**.

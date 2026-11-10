@@ -31,6 +31,25 @@
 
 ## 🕒 3. LỊCH SỬ CẬP NHẬT & NÂNG CẤP CHI TIẾT (DETAILED CHANGELOG)
 
+### [v2.5.0] — 2026-11-09: Triển khai Bàn Giao Hàng Shipper (?view=staff) & Quản lý Bật/Tắt Menu / Lịch Tạm Nghỉ Quán (Dim_Closures)
+* **Tính năng 1: Bàn Giao Hàng Cho Shipper & Bếp (`?view=staff`)**:
+  - Shipper và chủ tiệm có thể truy cập qua URL `?view=staff` hoặc bấm nút ở chân trang web app.
+  - Bảo mật cấp doanh nghiệp: Đăng nhập bằng Google Identity Services (GIS) OAuth hoặc xác thực Email trực tiếp đối chiếu với danh sách nhân sự tại tab `Staff` trên Google Sheets. Chỉ tài khoản có cờ `active: TRUE` mới được phép truy cập và xem thông tin giao hàng.
+  - Giao diện tối ưu di động: Xem danh sách đơn giao theo ngày (Hôm nay / Ngày mai / Tùy chọn ngày), xem tổng đơn, tổng chai sữa, số tiền thu và địa chỉ giao hàng.
+  - Thao tác nhanh tiện lợi: Gọi điện thoại trực tiếp (`tel:`), chat Zalo 1 chạm (`zalo.me/`), mở địa chỉ trên Google Maps.
+  - Tương tác thời gian thực: Nút bấm **🚚 Đã giao xong** (ghi nhận thời gian và người giao vào Cột L `delivery_status`, Cột M `delivered_at`, Cột N `delivered_by`, kèm đồng hồ đếm ngược **10 giây Hoàn tác** nếu bấm nhầm); Nút **💵 Đã thu tiền mặt** (cập nhật Cột K `Status = Paid`).
+* **Tính năng 2: Quản lý Bật/Tắt Menu & Lịch Tạm Nghỉ Quán (`Dim_Closures`)**:
+  - Hỗ trợ chủ tiệm thiết lập lịch nghỉ tạm thời (theo Thứ trong tuần hoặc khoảng ngày cụ thể).
+  - Khách hàng khi vào Web App vào ngày nghỉ: Vẫn xem được giao diện menu nguyên bản nhưng thấy banner thông báo ấm áp `🌿 Ngày này quán tạm nghỉ: [Lời nhắn]`, các món ăn được làm mờ nhẹ và nút thêm vào giỏ được chuyển thành trạng thái vô hiệu hóa `Tạm ngưng nhận đơn`. Lịch đặt trước cả tuần hiển thị nhãn `Nghỉ` trực quan.
+  - Tự động hóa: Báo cáo nấu sữa 20h00 tự động kiểm tra lịch nghỉ ngày mai để gửi thông báo bếp nghỉ thay vì báo cáo sản xuất.
+  - Chủ tiệm có quyền tạo lịch nghỉ hoặc bấm **Mở lại menu ngay** trực tiếp trên tab Shipper (nếu có role `owner`) hoặc qua tab `Dim_Closures` trên Google Sheets.
+* **Chuẩn hóa Cơ sở Dữ liệu & An toàn Dữ liệu**:
+  - Chuẩn hóa 15 cột `Orders_Master` (A..O): Cột J `owner note`, Cột K `Status`, Cột L `delivery_status `, Cột M `delivered_at`, Cột N `delivered_by`, Cột O `delivery_iso `.
+  - Loại bỏ hoàn toàn mảng `FALLBACK_ORDERS` chứa thông tin khách hàng trong `config.js` và `index.html`, triệt tiêu rủi ro lộ lọt PII.
+* **File thay đổi**: `code.gs`, `index.html`, `config.js`, `prd.md`, `usage_guide.md`, `README.md`.
+
+---
+
 ### [v2.5.0-plan] — 2026-11-09: Cập nhật Kế hoạch theo Cấu trúc Cột Thực tế trên Sheet & Đã kết nối Web App (`GAS_API_URL`)
 * **Hiện trạng thực tế cập nhật**:
   - `GAS_API_URL` đã được chủ tiệm kết nối thành công trên GitHub (`AKfycbylsdv.../exec`). Đơn hàng thực tế trong ngày (`HN-238080`, `HN-446049`, `HN-146858`) đã chạy thẳng vào Google Sheets.

@@ -1,7 +1,7 @@
 # PRODUCT REQUIREMENTS DOCUMENT (PRD) — GÓC BẾP NHÀ HENÍ (`heni_webapp`)
 
-> **Phiên bản tài liệu:** v2.0  
-> **Cập nhật lần cuối:** 2026-11-08  
+> **Phiên bản tài liệu:** v2.5.0  
+> **Cập nhật lần cuối:** 2026-11-09  
 > **Mô hình vận hành mục tiêu:** Doanh nghiệp 1 người (Solo-Founder / Micro D2C Healthy Kitchen)  
 > **Live Production URL:** [https://xjithemx.github.io/heni_webapp/](https://xjithemx.github.io/heni_webapp/)
 
