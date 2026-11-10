@@ -1791,6 +1791,12 @@
                             body: JSON.stringify({ action: 'staffWhoAmI', payload })
                         })
                             .then(r => r.json())
+                            .then(res => {
+                                if (res && !res.success && res.message && res.message.toLowerCase().includes('unknown action')) {
+                                    return fetch(`${GAS_API_URL}?action=staffWhoAmI&token=${encodeURIComponent(tokenOrTestEmail)}`).then(r => r.json());
+                                }
+                                return res;
+                            })
                             .then(onLoginSuccess)
                             .catch(err => { isStaffLoggingIn.value = false; staffLoginError.value = 'Lỗi kết nối GAS: ' + err.message; });
                     } else {
@@ -1853,6 +1859,12 @@
                             body: JSON.stringify({ action: 'staffGetDeliveries', payload })
                         })
                             .then(r => r.json())
+                            .then(res => {
+                                if (res && !res.success && res.message && res.message.toLowerCase().includes('unknown action')) {
+                                    return fetch(`${GAS_API_URL}?action=staffGetDeliveries&token=${encodeURIComponent(staffToken.value)}&date=${encodeURIComponent(staffSelectedDate.value)}`).then(r => r.json());
+                                }
+                                return res;
+                            })
                             .then(onDeliveriesSuccess)
                             .catch(err => { isLoadingDeliveries.value = false; staffActionError.value = 'Lỗi kết nối GAS: ' + err.message; });
                     }

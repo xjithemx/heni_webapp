@@ -82,6 +82,17 @@ function doGet(e) {
     return jsonResponse(sendDailyKitchenReport());
   }
 
+  if (action === 'staffWhoAmI') {
+    const token = (e && e.parameter && (e.parameter.token || e.parameter.idToken)) || '';
+    return jsonResponse(staffWhoAmI({ idToken: token }));
+  }
+
+  if (action === 'staffGetDeliveries') {
+    const token = (e && e.parameter && (e.parameter.token || e.parameter.idToken)) || '';
+    const date = (e && e.parameter && e.parameter.date) || '';
+    return jsonResponse(staffGetDeliveries({ idToken: token, date: date }));
+  }
+
   logTracking({ action: 'open_app', details: 'User loaded the web app' });
   return HtmlService.createHtmlOutputFromFile('index')
     .setTitle('Góc Bếp Nhà Hení')

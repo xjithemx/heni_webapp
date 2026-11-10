@@ -31,6 +31,13 @@
 
 ## 🕒 3. LỊCH SỬ CẬP NHẬT & NÂNG CẤP CHI TIẾT (DETAILED CHANGELOG)
 
+### [v2.5.1] — 2026-11-09: Bổ sung Cổng Fallback GET cho Staff API & Khắc phục Lỗi Cũ Deploy GAS
+* **Hiện tượng**: Shipper đăng nhập email gặp thông báo `Unknown action` do bản triển khai cũ của Google Apps Script chưa cập nhật các hàm xử lý mới của v2.5.0.
+* **Cải tiến & Khắc phục**:
+  - Bổ sung cả 2 phương thức POST và GET trong `code.gs` (`?action=staffWhoAmI`, `?action=staffGetDeliveries`).
+  - Cập nhật `index.html`: Tự động fallback sang GET nếu POST gặp thông báo `Unknown action`.
+  - Hướng dẫn rõ ràng quy trình Deploy tạo Version mới trên Google Apps Script.
+
 ### [v2.5.0] — 2026-11-09: Triển khai Bàn Giao Hàng Shipper (?view=staff) & Quản lý Bật/Tắt Menu / Lịch Tạm Nghỉ Quán (Dim_Closures)
 * **Tính năng 1: Bàn Giao Hàng Cho Shipper & Bếp (`?view=staff`)**:
   - Shipper và chủ tiệm có thể truy cập qua URL `?view=staff` hoặc bấm nút ở chân trang web app.
