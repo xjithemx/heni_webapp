@@ -89,8 +89,12 @@
 | **G** | `Raw_JSON_Items` | Chuỗi JSON lưu toàn bộ danh sách món và ngày giao trong đơn |
 | **H** | `Tổng Tiền` | Tổng giá trị đơn hàng (VNĐ) |
 | **I** | `Ghi chú` | Lời nhắn của khách cho bếp (VD: ít ngọt, giữ chai...) |
-| **J** | `Trạng thái tiếp nhận` | Mặc định khi mới đặt qua web: `Đã tiếp nhận` |
+| **J** | `owner note` | Ghi chú riêng của chủ tiệm / bếp |
 | **K** | `Status` (**Cột chuẩn gạch nợ**) | Cột ưu tiên số 1 để kiểm tra thanh toán: `Paid` / `Đã thanh toán` (hiển thị nhãn xanh **Đã thanh toán**), `Cancelled` / `Đã hủy` (hiển thị nhãn xám **Đã hủy**), hoặc để trống (hiển thị nhãn cam **Chưa thanh toán**) |
+| **L** | `delivery_status ` | Trạng thái giao hàng của shipper: `Đã giao` hoặc để trống (chưa giao) |
+| **M** | `delivered_at` | Thời gian shipper bấm xác nhận đã giao |
+| **N** | `delivered_by` | Email shipper đã xác nhận giao đơn |
+| **O** | `delivery_iso ` | Ngày giao chuẩn `yyyy-MM-dd` để lọc đơn trong ngày |
 
 ### 3.3. Tab `Fact_Order_Items` (Bảng Phẳng Chi Tiết Từng Món Để Nấu Sữa)
 * **Cấu trúc cột (A -> I)**: `Mã Đơn` | `Ngày Giao` | `Tên Món` | `ID Món` | `Số Lượng` | `Tên Khách` | `SĐT` | `week` | `Status/Feedback`.
@@ -179,9 +183,16 @@
 * **Không lưu token** vào `localStorage`/`sessionStorage`; chỉ giữ trong bộ nhớ trang.
 * **Màn hình**: chọn ngày (mặc định hôm nay), danh sách đơn có món giao trong ngày; mỗi thẻ hiện tên, SĐT (gọi/Zalo), địa chỉ, ghi chú, món & số chai trong ngày, tổng tiền đơn, trạng thái thanh toán; nút **✅ Đã giao** (theo đơn + ngày giao) và **💰 Đã thu tiền** (theo cả đơn); hoàn tác 10 giây; thanh tiến độ "Đã giao x/y".
 * **API (`doPost`, bắt buộc `idToken`)**: `staffWhoAmI`, `staffGetDeliveries {date}`, `staffMarkDelivered {orderId, isoDate, value}`, `staffMarkPaid {orderId, value}`. Ghi có `LockService`; mọi thao tác ghi log vào `Tracking` (email, hành động, mã đơn).
-* **Tab mới `Staff`**: `A: email` | `B: role` (`owner`/`shipper`) | `C: active` (`TRUE`/`FALSE`) | `D: name`. Email chủ tiệm `ll.huyhoang.1412@gmail.com` luôn là `owner`.
-* **Cột bổ sung `Fact_Order_Items`**: `J: delivery_status` | `K: delivered_at` | `L: delivered_by` | `M: delivery_iso` (`yyyy-MM-dd`; đơn cũ suy ra từ nhãn `Thứ x (dd-MM)` + năm của Timestamp).
-* **Cột bổ sung `Orders_Master`**: `L: paid_at` | `M: paid_by` (Cột K `Status` giữ nguyên vai trò cột gạch nợ chuẩn).
+* **Cột đã tạo trên `Orders_Master` (Cột L -> O)**:
+  - `L: delivery_status `: Trạng thái giao (`Đã giao` hoặc để trống).
+  - `M: delivered_at`: Thời điểm shipper bấm hoàn tất đơn.
+  - `N: delivered_by`: Email shipper thực hiện giao.
+  - `O: delivery_iso `: Ngày giao chuẩn định dạng `yyyy-MM-dd` (VD: `2026-11-13`) dùng lọc nhanh đơn trong ngày.
+* **Cột J & K trên `Orders_Master`**:
+  - `J: owner note`: Ghi chú nội bộ.
+  - `K: Status`: Cột gạch nợ thanh toán chuẩn (`Paid` / `Cancelled`). Khi shipper bấm "Đã thu tiền", server ghi trực tiếp `Paid` vào Cột K.
+* **Tab `Staff`**: `A: email` | `B: role` (`owner`/`shipper`) | `C: active` (`TRUE`/`FALSE`) | `D: name`.
+* **Tab `Dim_Closures`**: `A: date_from ` | `B: date_to ` | `C: message ` | `D: created_by ` | `E: created_at ` | `F: active`.
 
 ### 5.2. Tính năng: Bật/Tắt Menu & Hẹn ngày mở lại (Lịch nghỉ)
 * **Tab mới `Dim_Closures`**: `A: date_from` | `B: date_to` (trống = nghỉ vô thời hạn đến khi mở lại thủ công) | `C: message` (mặc định *"Ngày này quán tạm nghỉ"*) | `D: created_by` | `E: created_at` | `F: active`.

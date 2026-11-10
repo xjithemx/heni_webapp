@@ -73,11 +73,12 @@ Mở file [`config.js`](./config.js) trên GitHub, tìm mục `WEEKLY_BANNER` (d
 2. **Cập nhật ảnh mã QR MoMo**:
    - Ảnh QR mặc định đang được lưu siêu tốc tại [`images/momo.jpg`](./images/momo.jpg) trên GitHub. Nếu đổi mã QR mới, bạn chỉ cần thay file `images/momo.jpg` trên GitHub (hoặc gắn link Drive vào cột C tab `payment_method`).
 3. **Gạch nợ & Cập nhật Trạng thái Đơn hàng (Cột K — `Status`)**:
-   - Trên tab **`Orders_Master`**, **Cột K (`Status`)** là cột chuẩn để điều khiển trạng thái đơn hàng hiển thị trên Web App:
+   - Trên tab **`Orders_Master`**, **Cột J** là `owner note` (ghi chú nội bộ), còn **Cột K (`Status`)** là cột chuẩn để điều khiển trạng thái thanh toán hiển thị trên Web App:
      * Gõ **`Paid`** (hoặc `Đã thanh toán`): Đơn hàng hiển thị huy hiệu màu Xanh Lá **`Đã thanh toán`**.
      * Gõ **`Cancelled`** (hoặc `Đã hủy`): Đơn hàng hiển thị huy hiệu màu Xám **`Đã hủy`**.
      * Để trống (hoặc `Unpaid`): Đơn hàng hiển thị huy hiệu màu Cam **`Chưa thanh toán`**.
-   - **Cơ chế đồng bộ**: Khi chủ tiệm mở Web App trên trình duyệt đã đăng nhập Google (hoặc khi đã gắn `GAS_API_URL` / bật chia sẻ xem link cho Sheet), Web App tự động đọc trực tiếp Cột K từ Google Sheets theo thời gian thực; đồng thời `config.js` (`FALLBACK_ORDERS`) lưu trữ bản sao đồng bộ toàn bộ 16 đơn hàng thực tế từ `Orders_Master`.
+   - **Cột L (`delivery_status `)**: Shipper đánh dấu `Đã giao` hoặc để trống (chưa giao).
+   - **Cơ chế đồng bộ**: Khi chủ tiệm mở Web App trên trình duyệt đã đăng nhập Google, Web App tự động đọc trực tiếp Cột K từ Google Sheets theo thời gian thực. Giờ đây đã có `GAS_API_URL`, mọi đơn mới đều được gửi trực tiếp vào Google Sheets và kích hoạt email tự động.
 
 ---
 

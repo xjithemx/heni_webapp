@@ -31,10 +31,12 @@
 
 ## 🕒 3. LỊCH SỬ CẬP NHẬT & NÂNG CẤP CHI TIẾT (DETAILED CHANGELOG)
 
-### [v2.5.0-plan] — 2026-11-09: Đặc tả Tab Shipper & Lịch nghỉ Menu (Chỉ tài liệu, chưa code)
-* **Bối cảnh**: Chủ tiệm cần (1) trang riêng cho shipper xem đơn trong ngày, đánh dấu Đã giao / Đã thu tiền, chỉ email được cấp quyền mới xem được; (2) bật/tắt menu theo ngày và hẹn ngày mở lại, ngày nghỉ vẫn hiển thị kèm thông báo "Ngày này quán tạm nghỉ".
-* **Đã làm**: Bổ sung mục 5 trong `prd.md` (kiến trúc Google Sign-In + kiểm tra email phía server, tab `Staff`, tab `Dim_Closures`, cột bổ sung, API, lộ trình) và mục 8 trong `usage_guide.md` (hướng dẫn sử dụng dự kiến, gắn nhãn chưa hoạt động).
-* **Ghi nhận rủi ro**: `FALLBACK_ORDERS` (thêm ở v2.4.0) đang công khai tên + SĐT khách trên GitHub — được đưa vào kế hoạch gỡ bỏ (bước P3).
+### [v2.5.0-plan] — 2026-11-09: Cập nhật Kế hoạch theo Cấu trúc Cột Thực tế trên Sheet & Đã kết nối Web App (`GAS_API_URL`)
+* **Hiện trạng thực tế cập nhật**:
+  - `GAS_API_URL` đã được chủ tiệm kết nối thành công trên GitHub (`AKfycbylsdv.../exec`). Đơn hàng thực tế trong ngày (`HN-238080`, `HN-446049`, `HN-146858`) đã chạy thẳng vào Google Sheets.
+  - Tab `Dim_Closures` (Lịch nghỉ) và tab `Staff` (Danh sách shipper) đã được tạo sẵn trên Google Sheets.
+  - Cột `Orders_Master` đã được chuẩn hóa chính xác: **J: owner note**, **K: Status** (gạch nợ), **L: delivery_status **, **M: delivered_at**, **N: delivered_by**, **O: delivery_iso **.
+* **Đã cập nhật**: Điều chỉnh artifact kế hoạch, `prd.md` và `usage_guide.md` khớp 100% với tên cột trên Sheet của chủ tiệm.
 * **File thay đổi**: `prd.md`, `usage_guide.md`, `README.md`.
 
 ---
