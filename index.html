@@ -412,8 +412,9 @@
                                     <div class="grid grid-cols-3 gap-1 bg-brand-bone/70 p-1 rounded-xl border border-gray-100">
                                         <button v-for="opt in SWEETNESS_OPTIONS" :key="opt.code" type="button"
                                             @click="setSelectedSweetness(item, nextDeliveryDate, opt.code)"
+                                            :title="opt.label"
                                             :class="getSelectedSweetness(item, nextDeliveryDate) === opt.code ? 'bg-white text-brand-dark shadow-sm font-bold border-brand-green/30' : 'text-gray-500 hover:text-brand-dark border-transparent'"
-                                            class="py-1.5 px-1 rounded-lg text-[11px] border transition-all truncate text-center">
+                                            class="py-1.5 px-0.5 sm:px-1 rounded-lg text-[10.5px] sm:text-[11px] border transition-all whitespace-nowrap text-center">
                                             {{ opt.icon }} {{ opt.short }}
                                         </button>
                                     </div>
@@ -453,8 +454,9 @@
                                     <div class="grid grid-cols-3 gap-1 bg-brand-bone/70 p-1 rounded-xl border border-gray-100">
                                         <button v-for="opt in SWEETNESS_OPTIONS" :key="opt.code" type="button"
                                             @click="setSelectedSweetness(item, nextDeliveryDate, opt.code)"
+                                            :title="opt.label"
                                             :class="getSelectedSweetness(item, nextDeliveryDate) === opt.code ? 'bg-white text-brand-dark shadow-sm font-bold border-brand-gold/40' : 'text-gray-500 hover:text-brand-dark border-transparent'"
-                                            class="py-1.5 px-1 rounded-lg text-[11px] border transition-all truncate text-center">
+                                            class="py-1.5 px-0.5 sm:px-1 rounded-lg text-[10.5px] sm:text-[11px] border transition-all whitespace-nowrap text-center">
                                             {{ opt.icon }} {{ opt.short }}
                                         </button>
                                     </div>
@@ -1783,7 +1785,7 @@
                     },
                     {
                         code: 'less',
-                        label: 'Ít đường (Giảm ngọt)',
+                        label: 'Ít đường (Giảm đường)',
                         short: 'Ít đường',
                         icon: '🌿',
                         badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200'
@@ -1801,10 +1803,10 @@
 
                 const getSweetnessMeta = (codeOrLabel) => {
                     const s = (codeOrLabel || '').toString().trim().toLowerCase();
-                    if (s === 'none' || s.includes('không đường') || s.includes('khong duong') || s.includes('100%')) {
+                    if (s === 'none' || s.includes('không đường') || s.includes('khong duong') || s.includes('không ngọt') || s.includes('khong ngot') || s.includes('100%')) {
                         return SWEETNESS_OPTIONS[2];
                     }
-                    if (s === 'less' || s.includes('ít đường') || s.includes('it duong') || s.includes('giảm đường')) {
+                    if (s === 'less' || s.includes('ít đường') || s.includes('it duong') || s.includes('giảm đường') || s.includes('ít ngọt') || s.includes('it ngot') || s.includes('giảm ngọt')) {
                         return SWEETNESS_OPTIONS[1];
                     }
                     return SWEETNESS_OPTIONS[0];

@@ -31,6 +31,14 @@
 
 ## 🕒 3. LỊCH SỬ CẬP NHẬT & NÂNG CẤP CHI TIẾT (DETAILED CHANGELOG)
 
+### [v2.8.2] — 2026-11-15: Đồng Bộ Nhãn Độ Ngọt Frontend (`Bình thường`, `Ít đường`, `Không đường`) & Tối Ưu Hiển Thị Mobile
+* **Đồng bộ từ GitHub & Cập nhật nhãn Frontend ([`index.html`](./index.html))**:
+  - Hợp nhất chỉnh sửa thủ công (`6151b07`) và chuẩn hóa 3 mức hiển thị độ ngọt trên giao diện khách hàng thành **`🍯 Bình thường`**, **`🌿 Ít đường`** (`Ít đường (Giảm đường)`), và **`🥥 Không đường`** (`Không đường (100% vị tự nhiên)`).
+  - Bổ sung tương thích ngược trong `getSweetnessMeta()` để nhận diện chính xác cả dữ liệu cũ (`ít ngọt` / `không ngọt`) lẫn dữ liệu mới (`ít đường` / `không đường`) khi tra cứu đơn hàng hoặc xem trên Shipper App.
+  - Tinh chỉnh kích thước chữ & khoảng đệm nút chọn (`text-[10.5px] sm:text-[11px] whitespace-nowrap`) để không bị cắt chữ (`...`) trên màn hình điện thoại nhỏ.
+
+---
+
 ### [v2.8.1] — 2026-11-15: Cập Nhật Mã QR MoMo Mới, Hotline Liên Hệ (`0834983524`) & Chính Sách Giao Hàng Chi Tiết
 * **Thay thế ảnh mã QR MoMo mới ([`images/momo.jpg`](./images/momo.jpg), [`config.js`](./config.js), [`index.html`](./index.html))**:
   - Tải ảnh QR MoMo VietQR mới (`IMG_20261115_121543.jpg`) từ Google Drive (`payment/`) và lưu đè chuẩn tên `images/momo.jpg` trên GitHub để tương thích 100% với cấu trúc hiện tại.

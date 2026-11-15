@@ -138,10 +138,10 @@
 * Mục **"Lịch Đặt Trước Cả Tuần"**: Hiển thị 5 ngày làm việc tiếp theo kèm chủ đề từng ngày (*Thứ 2: Năng lượng, Thứ 3: Thanh mát, Thứ 4: Dưỡng nhan, Thứ 5: Dưỡng chất, Thứ 6: Ấm bụng, Thứ 7: Thảnh thơi*).
 
 ### 4.3. Giỏ Hàng Đa Ngày, Tùy Chọn Độ Ngọt & Thanh Toán (Multi-Day Cart, Sweetness & Checkout)
-* Khách có thể tùy chọn **Độ ngọt trên từng món** ngay tại thẻ sản phẩm hoặc đổi nhanh trong giỏ hàng với 3 mức chuẩn:
+* Khách có thể tùy chọn **Độ ngọt trên từng món** ngay tại thẻ sản phẩm hoặc đổi nhanh trong giỏ hàng với 3 mức chuẩn trên giao diện:
   - `🍯 Bình thường` *(Mặc định)*
-  - `🌿 Ít ngọt (Giảm ngọt)`
-  - `🥥 Không ngọt (100% vị tự nhiên)`
+  - `🌿 Ít đường (Giảm đường)`
+  - `🥥 Không đường (100% vị tự nhiên)`
 * Grain giỏ hàng (`uniqueId = item.id + '_' + date.id + '_' + sweetnessCode`) cho phép đặt cùng 1 món trong cùng 1 ngày với nhiều mức độ ngọt khác nhau.
 * Trong Modal Giỏ hàng, các món được tự động gom nhóm theo từng ngày giao (`Giao Sáng Thứ 3 (03/11)`, `Giao Sáng Thứ 5 (05/11)`...).
 * Tích hợp nút **`Copy` 1 chạm** bên cạnh Số MoMo, Số TK Vietcombank và Số tiền để khách dễ dàng dán vào ứng dụng ngân hàng.
