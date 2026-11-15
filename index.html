@@ -1783,15 +1783,15 @@
                     },
                     {
                         code: 'less',
-                        label: 'Ít ngọt (Giảm ngọt)',
-                        short: 'Ít ngọt',
+                        label: 'Ít đường (Giảm ngọt)',
+                        short: 'Ít đường',
                         icon: '🌿',
                         badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200'
                     },
                     {
                         code: 'none',
-                        label: 'Không ngọt (100% vị tự nhiên)',
-                        short: 'Không ngọt',
+                        label: 'Không đường (100% vị tự nhiên)',
+                        short: 'Không đường',
                         icon: '🥥',
                         badgeClass: 'bg-amber-100 text-amber-900 border-amber-300'
                     }
@@ -1801,10 +1801,10 @@
 
                 const getSweetnessMeta = (codeOrLabel) => {
                     const s = (codeOrLabel || '').toString().trim().toLowerCase();
-                    if (s === 'none' || s.includes('không ngọt') || s.includes('khong ngot') || s.includes('100%')) {
+                    if (s === 'none' || s.includes('không đường') || s.includes('khong duong') || s.includes('100%')) {
                         return SWEETNESS_OPTIONS[2];
                     }
-                    if (s === 'less' || s.includes('ít ngọt') || s.includes('it ngot') || s.includes('giảm ngọt')) {
+                    if (s === 'less' || s.includes('ít đường') || s.includes('it duong') || s.includes('giảm đường')) {
                         return SWEETNESS_OPTIONS[1];
                     }
                     return SWEETNESS_OPTIONS[0];
