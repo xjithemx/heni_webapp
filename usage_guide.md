@@ -12,12 +12,13 @@
 Với hệ thống mới đã được tự động hóa, công việc mỗi ngày của bạn được rút gọn tối đa:
 
 ### 🌞 Ban ngày (Khách tự đặt hàng & Tra cứu)
-1. Khách mở link web, chọn món cho **Sáng Mai** hoặc **Đặt Trước Cả Tuần**, chọn **Độ ngọt** mong muốn ngay trên từng món (`🍯 Bình thường`, `🌿 Ít ngọt`, hoặc `🥥 Không ngọt` — mặc định là `Bình thường`) và bấm **Xác nhận đơn hàng**.
-2. Hệ thống tự động:
+1. Khách mở link web, nhận thông báo bản tin tuần dạng **Pop-up tự động tắt sau 3.5 giây** (có nút **`✕`** đóng nhanh hoặc nút **`💌 Bản tin`** ở góc trên để xem lại). Trên thanh đầu trang còn có cụm nút tiện ích **Facebook**, **Mã QR thanh toán** và **Liên hệ** (rê chuột qua để xem nhanh).
+2. Khách chọn món cho **Sáng Mai** hoặc **Đặt Trước Cả Tuần**, chọn **Độ ngọt** mong muốn ngay trên từng món (`🍯 Bình thường`, `🌿 Ít ngọt`, hoặc `🥥 Không ngọt` — mặc định là `Bình thường`) và bấm **Xác nhận đơn hàng**.
+3. Hệ thống tự động:
    - Ghi đơn tổng vào tab **`Orders_Master`** (trạng thái mặc định: `Đã tiếp nhận`).
    - Tách từng món vào tab **`Fact_Order_Items`**, **tự động điền cột `week` (`w1`, `w2`...)** ở Cột H và **tự động ghi nhận `Độ Ngọt`** ở Cột K để bạn dễ dàng lọc và theo dõi khẩu vị khách hàng.
    - Gửi ngay 1 email xác nhận đơn hàng chi tiết (kèm độ ngọt từng món) cho khách.
-3. Khách muốn xem lại lịch sử đơn hoặc kiểm tra tiền sữa chốt tuần chỉ cần mở mục **Tra cứu & Giải trí** (nút kính lúp góc dưới phải), nhập **Tên** (VD: `Lan Anh`, `Bình Minh`), **Số điện thoại** (VD: `0901234567`), hoặc **Mã đơn** (`HN-751646`). Thông tin khách sẽ được che giấu một phần (Incognito Masking) để bảo vệ quyền riêng tư.
+4. Khách muốn xem lại lịch sử đơn hoặc kiểm tra tiền sữa chốt tuần chỉ cần mở mục **Tra cứu & Giải trí** (nút kính lúp góc dưới phải), nhập **Tên** (VD: `Lan Anh`, `Bình Minh`), **Số điện thoại** (VD: `0901234567`), hoặc **Mã đơn** (`HN-751646`). Thông tin khách sẽ được che giấu một phần (Incognito Masking) để bảo vệ quyền riêng tư.
 
 ### 🌙 Đúng 20h00 Mỗi Tối (Chốt Mẻ Nấu Sữa Tự Động Cho Bếp)
 1. **Trên Web**: Đúng 20h00, web tự động khóa đặt món cho sáng ngày mai và chuyển sang nhận đơn cho ngày kế tiếp.

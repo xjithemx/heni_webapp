@@ -19,22 +19,23 @@ window.HENI_CONFIG = {
   // 3. Thư mục chứa ảnh tĩnh trên GitHub CDN (mặc định: './images/')
   IMAGE_BASE_URL: './images/',
 
-  // 4. Nội dung Thông Báo Hàng Tuần (Weekly Section)
+  // 4. Nội dung Thông Báo Hàng Tuần (Weekly Pop-up tự động tắt sau 3.5s)
   // (Nếu trên Google Sheet tab Dim_Config có khai báo weekly_title thì sẽ ưu tiên lấy từ Sheet,
-  //  nếu không có thì lấy mặc định tại đây. Đổi enabled: false nếu muốn ẩn khung này)
-  WEEKLY_BANNER: {
-    enabled: true,
-    badge: 'Tổng kết tuần lễ ra mắt',
-    title: 'Chân Thành Cảm Ơn 💚',
-    content: 'Chương trình ưu đãi ra mắt đã chính thức khép lại với <b>47 phần quà</b> được trao tận tay các "thượng đế". Góc Bếp Nhà Hení vô cùng biết ơn sự ủng hộ và yêu thương của mọi người. Hẹn gặp lại cả nhà ở những chương trình ưu đãi tiếp theo nhé!',
-    footer: 'Sữa hạt vẫn luôn được nấu tươi mới mỗi sáng'
-  },
+  //  nếu không có thì lấy mặc định tại đây. Đổi enabled: false nếu muốn ẩn thông báo)
   WEEKLY_BANNER: {
     enabled: true,
     badge: 'Tổng kết tuần 2',
     title: 'Tiếp tục gửi tới khách hàng lời Cảm Ơn Chân Thành💚',
     content: 'Menu được cập nhật mới liên tục và luôn nhận được những phản hồi tích cực của khách hàng, khen có góp ý cải thiện cũng có và luôn đi kèm những lời động viên chân thành!',
     footer: 'Sữa hạt vẫn luôn được nấu tươi mới mỗi sáng và sẽ tiếp tục được nghiên cứu để ra những sản phẩm mới tốt hơn.'
+  },
+
+  // 4b. Thông tin Liên hệ, Mạng xã hội & Thời lượng Pop-up
+  SOCIAL_LINKS: {
+    facebookUrl: 'https://www.facebook.com/profile.php?id=61595353216988',
+    facebookName: 'Góc Bếp Nhà Hení',
+    contactPhone: '', // Để trống hoặc điền số Hotline công khai (hoặc cấu hình trong Dim_Config key: contact_phone)
+    popupDurationMs: 3500
   },
 
   // 5. Thông tin Thanh toán mặc định (sẽ tự động cập nhật nếu tab payment_method trên Sheet thay đổi)

@@ -31,6 +31,19 @@
 
 ## 🕒 3. LỊCH SỬ CẬP NHẬT & NÂNG CẤP CHI TIẾT (DETAILED CHANGELOG)
 
+### [v2.8.0] — 2026-11-15: Tinh Gọn Đầu Trang (Unified Hero), Pop-up Bản Tin 3.5s & Cụm Hover Tooltip (`taste-v3`)
+* **Hợp nhất phần đầu trang & Xóa bỏ nội dung trùng lặp ([`index.html`](./index.html))**:
+  - Loại bỏ khối chữ HTML lặp lại (`Góc Bếp Nhà Hení ~ Đong Đầy Yêu Thương ~`) phía trên ảnh `base.jpg`, giữ nguyên tiêu đề nghệ thuật có sẵn trong ảnh và hợp nhất cùng dải 3 cam kết chất lượng thành **1 khối Hero Card thống nhất**, giúp đẩy **Menu Sáng Mai** lên ngay tầm mắt đầu tiên.
+* **Chuyển Card Thông Báo Tuần sang Pop-up Tự Tắt Sau 3.5 Giây**:
+  - Tự động hiển thị Pop-up thông báo tuần khi mở trang và tự tắt êm ái sau **3.5 giây** kèm thanh tiến trình mảnh.
+  - Hỗ trợ tạm dừng đồng hồ khi khách rê chuột đọc kỹ hơn, nút **`✕`** đóng rõ ràng và nút **`💌 Bản tin`** trên thanh đầu trang để mở xem lại bất cứ lúc nào.
+* **Cụm Hover Tooltip Tiện Ích Chuẩn `taste-v3` ([`index.html`](./index.html) & [`config.js`](./config.js))**:
+  - **`📘 Facebook`**: Rê chuột (hoặc chạm trên mobile) để xem thẻ giới thiệu Fanpage và mở nhanh trang [Facebook Góc Bếp Nhà Hení](https://www.facebook.com/profile.php?id=61595353216988).
+  - **`💳 Mã QR`**: Rê chuột xem ngay mã QR MoMo/Ngân hàng và nút Copy để thanh toán hóa đơn tuần nhanh chóng không cần qua giỏ hàng.
+  - **`💬 Liên hệ`**: Rê chuột xem thông tin giờ chốt mẻ nấu (`20h00`), Freeship (`Bcons City` & `< 3km`), Hotline (cấu hình tùy chọn trong `Dim_Config`/`config.js`) và nút kết nối nhanh.
+
+---
+
 ### [v2.7.0] — 2026-11-15: Tùy Chọn Độ Ngọt Trên Từng Món (End-to-End Flow: Khách $\rightarrow$ Bếp $\rightarrow$ Shipper $\rightarrow$ Data Sheet Monitor)
 * **Giao diện Khách hàng ([`index.html`](./index.html))**:
   - Thêm bộ chọn 3 mức độ ngọt ngay trên từng thẻ món ăn (Menu Sáng Mai & Lịch Đặt Trước Cả Tuần): **`🍯 Bình thường`** *(mặc định)*, **`🌿 Ít ngọt`**, và **`🥥 Không ngọt`** *(100% vị tự nhiên)*.

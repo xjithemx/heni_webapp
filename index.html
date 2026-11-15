@@ -90,6 +90,31 @@
             transform: translateX(100%);
         }
 
+        /* Taste v3 Motion Tokens */
+        .popover-enter-active {
+            transition: opacity 0.22s cubic-bezier(0.22, 1, 0.36, 1), transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .popover-leave-active {
+            transition: opacity 0.14s cubic-bezier(0.22, 1, 0.36, 1), transform 0.14s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .popover-enter-from,
+        .popover-leave-to {
+            opacity: 0;
+            transform: translateY(4px) scale(0.98);
+        }
+
+        .popup-enter-active {
+            transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1), transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .popup-leave-active {
+            transition: opacity 0.15s cubic-bezier(0.22, 1, 0.36, 1), transform 0.15s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .popup-enter-from,
+        .popup-leave-to {
+            opacity: 0;
+            transform: translateY(8px) scale(0.96);
+        }
+
         /* Skeleton Loading v2 */
         .skeleton-text {
             background: #e2e8f0;
@@ -115,75 +140,224 @@
     <div id="app" class="max-w-3xl mx-auto px-4 py-8">
         <main v-if="!isStaffView">
 
-        <!-- Hero Header -->
-        <header class="text-center mb-8">
-            <div
-                class="w-28 h-28 mx-auto bg-brand-bone rounded-full flex items-center justify-center text-brand-green mb-4 shadow-sm overflow-hidden border border-brand-green/10 relative">
-                <img v-if="storeImages['logo-only']" :src="storeImages['logo-only']" @error="onLogoError" class="w-full h-full object-cover"
-                    alt="Hení Logo">
-                <span v-else-if="!imageError" class="animate-pulse font-serif text-sm">Đang tải...</span>
-                <span v-else class="font-serif text-3xl italic">Hení</span>
+        <!-- Unified Brand Bar & Quick Hover Tooltips (v2.8.0) -->
+        <header class="mb-4 flex flex-wrap items-center justify-between gap-3 relative z-30">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 bg-white rounded-full flex items-center justify-center text-brand-green shadow-sm overflow-hidden border border-brand-green/15 shrink-0">
+                    <img v-if="storeImages['logo-only']" :src="storeImages['logo-only']" @error="onLogoError" class="w-full h-full object-cover" alt="Hení Logo">
+                    <span v-else class="font-serif text-sm italic font-bold">Hení</span>
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-serif font-bold text-brand-dark leading-tight tracking-tight">Góc Bếp Nhà Hení</h1>
+                    <p class="text-[11px] text-gray-500">Sữa hạt tươi nấu mới mỗi sáng · Chốt đơn 20h00</p>
+                </div>
             </div>
-            <h1 class="text-4xl md:text-5xl font-serif font-bold text-brand-dark tracking-tight mb-3">Góc Bếp Nhà Hení
-            </h1>
-            <p class="text-brand-gold italic font-serif text-lg md:text-xl">~ Đong Đầy Yêu Thương ~</p>
 
-            <div v-if="imageError"
-                class="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl max-w-md mx-auto">
-                {{ imageError }}
+            <!-- Interactive Quick Pills with Hover Tooltips -->
+            <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                <!-- 1. Facebook Fanpage Tooltip -->
+                <div class="relative" @mouseenter="openTooltip('facebook')" @mouseleave="scheduleCloseTooltip">
+                    <a :href="socialLinks.facebookUrl" target="_blank" rel="noopener noreferrer"
+                        @click="activeTooltip === 'facebook' ? null : null"
+                        class="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-white border border-gray-200/80 text-xs font-semibold text-brand-dark hover:border-blue-300 hover:text-blue-700 shadow-xs transition-colors min-h-[36px]">
+                        <svg class="w-3.5 h-3.5 text-blue-600 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"/></svg>
+                        <span>Facebook</span>
+                    </a>
+                    <transition name="popover">
+                        <div v-if="activeTooltip === 'facebook'" @mouseenter="cancelCloseTooltip" @mouseleave="scheduleCloseTooltip"
+                            class="fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-20 sm:top-full sm:mt-2 sm:w-72 bg-white rounded-2xl shadow-xl border border-brand-green/15 p-4 z-50 text-left">
+                            <div class="flex items-center gap-3 mb-2.5">
+                                <img v-if="storeImages['logo-only']" :src="storeImages['logo-only']" class="w-10 h-10 rounded-full object-cover border border-brand-green/20 shrink-0" alt="Fanpage">
+                                <div>
+                                    <p class="font-bold text-sm text-brand-dark flex items-center gap-1.5">
+                                        {{ socialLinks.facebookName || 'Góc Bếp Nhà Hení' }}
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+                                    </p>
+                                    <p class="text-[11px] text-gray-400">Fanpage chính thức</p>
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-600 leading-relaxed mb-3">
+                                Theo dõi lịch sữa hạt theo mùa, chia sẻ từ khách hàng & nhắn tin trực tiếp cho bếp.
+                            </p>
+                            <a :href="socialLinks.facebookUrl" target="_blank" rel="noopener noreferrer"
+                                class="w-full py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-colors">
+                                <span>Mở trang Facebook</span>
+                                <span>↗</span>
+                            </a>
+                        </div>
+                    </transition>
+                </div>
+
+                <!-- 2. Payment QR Tooltip -->
+                <div class="relative" @mouseenter="openTooltip('qr')" @mouseleave="scheduleCloseTooltip">
+                    <button type="button" @click="toggleTooltip('qr')"
+                        :class="activeTooltip === 'qr' ? 'border-brand-green text-brand-green bg-brand-green/5' : 'border-gray-200/80 text-brand-dark bg-white hover:border-brand-green/50 hover:text-brand-green'"
+                        class="inline-flex items-center gap-1.5 px-3 py-2 rounded-full border text-xs font-semibold shadow-xs transition-colors min-h-[36px]">
+                        <span>💳</span>
+                        <span>Mã QR</span>
+                    </button>
+                    <transition name="popover">
+                        <div v-if="activeTooltip === 'qr'" @mouseenter="cancelCloseTooltip" @mouseleave="scheduleCloseTooltip"
+                            class="fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-20 sm:top-full sm:mt-2 sm:w-72 bg-white rounded-2xl shadow-xl border border-brand-green/15 p-4 z-50 text-center">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-bold text-brand-dark">Quét QR Thanh Toán Nhanh</span>
+                                <button type="button" @click="activeTooltip = null" class="sm:hidden text-gray-400 hover:text-gray-600 px-1.5 py-0.5 text-sm">✕</button>
+                            </div>
+                            <div class="bg-brand-bone rounded-xl p-2.5 inline-block border border-gray-100 mb-2.5">
+                                <img v-if="paymentInfo && paymentInfo.momoQr" :src="paymentInfo.momoQr" alt="QR Thanh Toán"
+                                    class="w-40 h-40 object-contain mx-auto rounded-lg bg-white">
+                                <p v-else class="text-xs text-gray-400 py-8 px-4 italic">Đang cập nhật mã QR</p>
+                            </div>
+                            <div v-if="paymentInfo && (paymentInfo.momo || (paymentInfo.vcb && paymentInfo.vcb.toLowerCase() !== 'updating'))" class="space-y-1.5 text-xs text-left bg-brand-bone/70 p-2.5 rounded-xl">
+                                <div v-if="paymentInfo.momo" class="flex items-center justify-between gap-2">
+                                    <span class="text-gray-500">MoMo: <b class="text-brand-dark">{{ paymentInfo.momo }}</b></span>
+                                    <button type="button" @click="copyText(paymentInfo.momo, 'Số MoMo')" class="text-[11px] px-2 py-0.5 rounded-lg bg-brand-green/10 text-brand-green font-bold hover:bg-brand-green hover:text-white transition-colors">Copy</button>
+                                </div>
+                                <div v-if="paymentInfo.vcb && paymentInfo.vcb.toLowerCase() !== 'updating'" class="flex items-center justify-between gap-2">
+                                    <span class="text-gray-500">VCB: <b class="text-brand-dark">{{ paymentInfo.vcb }}</b></span>
+                                    <button type="button" @click="copyText(paymentInfo.vcb, 'Số TK VCB')" class="text-[11px] px-2 py-0.5 rounded-lg bg-brand-green/10 text-brand-green font-bold hover:bg-brand-green hover:text-white transition-colors">Copy</button>
+                                </div>
+                            </div>
+                            <p v-else class="text-[11px] text-gray-500">Quét mã MoMo để thanh toán hóa đơn tuần nhanh chóng.</p>
+                        </div>
+                    </transition>
+                </div>
+
+                <!-- 3. Contact & Delivery Info Tooltip -->
+                <div class="relative" @mouseenter="openTooltip('contact')" @mouseleave="scheduleCloseTooltip">
+                    <button type="button" @click="toggleTooltip('contact')"
+                        :class="activeTooltip === 'contact' ? 'border-brand-gold text-brand-dark bg-brand-gold/10' : 'border-gray-200/80 text-brand-dark bg-white hover:border-brand-gold/60'"
+                        class="inline-flex items-center gap-1.5 px-3 py-2 rounded-full border text-xs font-semibold shadow-xs transition-colors min-h-[36px]">
+                        <span>💬</span>
+                        <span>Liên hệ</span>
+                    </button>
+                    <transition name="popover">
+                        <div v-if="activeTooltip === 'contact'" @mouseenter="cancelCloseTooltip" @mouseleave="scheduleCloseTooltip"
+                            class="fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-20 sm:top-full sm:mt-2 sm:w-80 bg-white rounded-2xl shadow-xl border border-brand-green/15 p-4 z-50 text-left space-y-3">
+                            <div class="flex items-center justify-between border-b border-gray-100 pb-2">
+                                <span class="font-serif font-bold text-sm text-brand-dark">Thông Tin Bếp & Giao Hàng</span>
+                                <button type="button" @click="activeTooltip = null" class="sm:hidden text-gray-400 hover:text-gray-600 px-1.5 py-0.5 text-sm">✕</button>
+                            </div>
+                            <div class="space-y-2 text-xs text-gray-600">
+                                <p class="flex items-start gap-2">
+                                    <span class="shrink-0">🕗</span>
+                                    <span><b>Giờ nhận đơn:</b> Chốt mẻ nấu lúc <b>20h00</b> mỗi tối (Giao sáng Thứ 2 - Thứ 7).</span>
+                                </p>
+                                <p class="flex items-start gap-2">
+                                    <span class="shrink-0">🛵</span>
+                                    <span><b>Phí giao hàng:</b> Freeship <b>Bcons City</b> & bán kính &lt; 3km.</span>
+                                </p>
+                                <p v-if="socialLinks.contactPhone" class="flex items-center justify-between gap-2 bg-brand-bone p-2 rounded-xl">
+                                    <span>📞 Hotline / Zalo: <b class="text-brand-dark">{{ socialLinks.contactPhone }}</b></span>
+                                    <button type="button" @click="copyText(socialLinks.contactPhone, 'Hotline')" class="text-[11px] px-2 py-0.5 rounded-lg bg-brand-green/10 text-brand-green font-bold">Copy</button>
+                                </p>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 pt-1">
+                                <a :href="socialLinks.facebookUrl" target="_blank" rel="noopener noreferrer"
+                                    class="py-2 px-3 rounded-xl bg-brand-green text-white text-xs font-bold text-center hover:bg-brand-dark transition-colors">
+                                    Nhắn Facebook
+                                </a>
+                                <button type="button" @click="activeTooltip = null; isSidebarOpen = true"
+                                    class="py-2 px-3 rounded-xl bg-brand-bone text-brand-dark text-xs font-bold text-center hover:bg-gray-200 transition-colors">
+                                    Tra cứu đơn
+                                </button>
+                            </div>
+                        </div>
+                    </transition>
+                </div>
+
+                <!-- 4. Reopen Weekly Popup Button -->
+                <button v-if="weeklyBanner.enabled && weeklyBanner.title" type="button" @click="reopenWeeklyPopup"
+                    title="Xem lại bản tin tuần"
+                    class="inline-flex items-center gap-1 px-3 py-2 rounded-full bg-brand-gold/10 border border-brand-gold/30 text-xs font-semibold text-brand-dark hover:bg-brand-gold/20 transition-colors min-h-[36px]">
+                    <span>💌</span>
+                    <span class="hidden sm:inline">Bản tin</span>
+                </button>
             </div>
         </header>
 
-        <!-- Trust Badges -->
-        <div class="flex flex-wrap justify-center gap-3 mb-10">
-            <div
-                class="bg-white px-4 py-2 rounded-full shadow-sm text-sm text-brand-dark font-medium border border-gray-100 flex items-center gap-2">
-                <span class="text-brand-green">🌱</span> Không chất bảo quản
-            </div>
-            <div
-                class="bg-white px-4 py-2 rounded-full shadow-sm text-sm text-brand-dark font-medium border border-gray-100 flex items-center gap-2">
-                <span class="text-brand-green">🍯</span> Ngọt dịu chà là, thốt nốt
-            </div>
-            <div
-                class="bg-white px-4 py-2 rounded-full shadow-sm text-sm text-brand-dark font-medium border border-gray-100 flex items-center gap-2">
-                <span class="text-brand-green">🎨</span> 100% màu tự nhiên
-            </div>
+        <div v-if="imageError"
+            class="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl">
+            {{ imageError }}
         </div>
 
-        <!-- Hero Image -->
-        <transition name="fade">
-            <div v-if="storeImages['base']"
-                class="w-full h-[30vh] md:h-[45vh] rounded-3xl mb-12 overflow-hidden shadow-md relative bg-brand-dark">
-                <img :src="storeImages['base']" class="w-full h-full object-cover" alt="Sữa hạt Hení">
-                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-                <div class="absolute bottom-6 left-6 text-white">
-                    <p class="font-serif italic text-xl md:text-2xl drop-shadow-md">Mộc mạc, lành sạch mỗi ngày</p>
+        <!-- Unified Hero Showcase (Gom hình ảnh thương hiệu + cam kết thành 1 thể thống nhất, bỏ text lặp) -->
+        <section class="mb-10 rounded-3xl overflow-hidden shadow-md bg-white border border-gray-100">
+            <div v-if="storeImages['base']" class="w-full h-[30vh] sm:h-[38vh] md:h-[42vh] relative bg-brand-bone">
+                <img :src="storeImages['base']" class="w-full h-full object-cover object-center" alt="Góc Bếp Nhà Hení - Sữa hạt tươi mỗi sáng">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none"></div>
+                <div class="absolute bottom-4 left-5 right-5 flex items-end justify-between text-white">
+                    <p class="font-serif italic text-lg sm:text-xl md:text-2xl drop-shadow-md">Mộc mạc, lành sạch mỗi ngày</p>
                 </div>
             </div>
-        </transition>
-
-        <!-- Weekly Content / Thank You Section (Dễ dàng cập nhật từ Sheet Dim_Config hoặc config.js) -->
-        <section v-if="weeklyBanner.enabled && weeklyBanner.title"
-            class="mb-14 bg-white rounded-3xl p-6 md:p-10 shadow-sm border border-brand-green/20 relative overflow-hidden">
-            <div
-                class="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-brand-green/5 rounded-full blur-3xl pointer-events-none">
-            </div>
-            <div
-                class="absolute bottom-0 left-0 -mb-10 -ml-10 w-32 h-32 bg-brand-gold/5 rounded-full blur-2xl pointer-events-none">
-            </div>
-
-            <div class="relative z-10 text-center">
-                <span v-if="weeklyBanner.badge"
-                    class="uppercase tracking-widest text-xs font-bold text-brand-gold bg-brand-bone px-4 py-1.5 rounded-full inline-block mb-4">{{ weeklyBanner.badge }}</span>
-                <h2 class="text-3xl font-serif font-bold text-brand-dark mb-4">{{ weeklyBanner.title }}</h2>
-                <p class="text-gray-600 leading-relaxed max-w-xl mx-auto mb-6 text-base md:text-lg" v-html="weeklyBanner.content">
-                </p>
-                <div v-if="weeklyBanner.footer"
-                    class="inline-flex items-center gap-2 text-sm font-semibold text-brand-green bg-brand-green/10 px-5 py-2.5 rounded-xl">
-                    <span class="text-xl">💌</span> {{ weeklyBanner.footer }}
+            <!-- Integrated Trust Strip -->
+            <div class="px-4 py-3 bg-white flex flex-wrap items-center justify-center sm:justify-between gap-2 sm:gap-4 border-t border-gray-100 text-xs sm:text-sm text-brand-dark font-medium">
+                <div class="flex items-center gap-1.5">
+                    <span class="text-brand-green">🌱</span>
+                    <span>Không chất bảo quản</span>
+                </div>
+                <span class="hidden sm:inline text-gray-300">·</span>
+                <div class="flex items-center gap-1.5">
+                    <span class="text-brand-green">🍯</span>
+                    <span>Ngọt dịu chà là, thốt nốt</span>
+                </div>
+                <span class="hidden sm:inline text-gray-300">·</span>
+                <div class="flex items-center gap-1.5">
+                    <span class="text-brand-green">🎨</span>
+                    <span>100% màu tự nhiên</span>
                 </div>
             </div>
         </section>
+
+        <!-- Weekly Banner Pop-up Modal (Tự động tắt sau 3.5 giây, tạm dừng khi rê chuột) -->
+        <transition name="popup">
+            <div v-if="showWeeklyPopup && weeklyBanner.enabled && weeklyBanner.title"
+                @click.self="closeWeeklyPopup"
+                class="fixed inset-0 z-50 bg-black/45 backdrop-blur-xs flex items-center justify-center p-4">
+                <div @mouseenter="pauseWeeklyPopup" @mouseleave="resumeWeeklyPopup"
+                    class="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-brand-green/20 relative overflow-hidden">
+                    <!-- Thanh tiến trình đếm ngược 3.5s -->
+                    <div class="h-1 w-full bg-brand-bone">
+                        <div class="h-full bg-brand-green transition-[width] duration-75 ease-linear"
+                            :style="{ width: weeklyPopupProgress + '%' }"></div>
+                    </div>
+
+                    <!-- Nút tắt thông báo rõ ràng -->
+                    <button type="button" @click="closeWeeklyPopup" aria-label="Đóng thông báo"
+                        class="absolute top-3.5 right-3.5 w-10 h-10 rounded-full bg-brand-bone hover:bg-gray-200 text-gray-600 hover:text-brand-dark flex items-center justify-center text-lg font-bold transition-colors z-10">
+                        ✕
+                    </button>
+
+                    <div class="p-6 sm:p-7 text-center relative">
+                        <span v-if="weeklyBanner.badge"
+                            class="uppercase tracking-widest text-[11px] font-bold text-brand-gold bg-brand-bone px-3.5 py-1 rounded-full inline-block mb-3">
+                            {{ weeklyBanner.badge }}
+                        </span>
+                        <h2 class="text-2xl font-serif font-bold text-brand-dark mb-3 pr-6 pl-6">{{ weeklyBanner.title }}</h2>
+                        <p class="text-gray-600 leading-relaxed text-sm mb-4" v-html="weeklyBanner.content"></p>
+                        <div v-if="weeklyBanner.footer"
+                            class="inline-flex items-center gap-2 text-xs font-semibold text-brand-green bg-brand-green/10 px-4 py-2 rounded-xl mb-5">
+                            <span>💌</span>
+                            <span>{{ weeklyBanner.footer }}</span>
+                        </div>
+
+                        <div class="flex items-center gap-2.5">
+                            <button type="button" @click="closeWeeklyPopup"
+                                class="flex-1 py-2.5 px-4 rounded-xl bg-brand-green text-white font-bold text-xs hover:bg-brand-dark transition-colors">
+                                Đặt sữa ngay
+                            </button>
+                            <a :href="socialLinks.facebookUrl" target="_blank" rel="noopener noreferrer"
+                                class="py-2.5 px-4 rounded-xl bg-brand-bone text-brand-dark font-semibold text-xs hover:bg-gray-200 transition-colors">
+                                Facebook ↗
+                            </a>
+                        </div>
+                        <p class="text-[10px] text-gray-400 mt-2.5">
+                            {{ weeklyPopupPaused ? 'Đang tạm dừng để bạn đọc kỹ hơn' : 'Tự động đóng sau 3.5 giây' }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </transition>
 
         <!-- Menu Sáng Mai -->
         <section v-if="nextDeliveryDate" class="mb-14">
@@ -1260,11 +1434,84 @@
                 // State cho Weekly Banner & Video Thư Giãn (Cập nhật động từ Sheet Dim_Config hoặc config.js)
                 const weeklyBanner = ref(cfg.WEEKLY_BANNER || {
                     enabled: true,
-                    badge: 'Tổng kết tuần lễ ra mắt',
-                    title: 'Chân Thành Cảm Ơn 💚',
-                    content: 'Chương trình ưu đãi ra mắt đã chính thức khép lại với <b>47 phần quà</b> được trao tận tay các "thượng đế". Góc Bếp Nhà Hení vô cùng biết ơn sự ủng hộ và yêu thương của mọi người. Hẹn gặp lại cả nhà ở những chương trình ưu đãi tiếp theo nhé!',
-                    footer: 'Sữa hạt vẫn luôn được nấu tươi mới mỗi sáng'
+                    badge: 'Tổng kết tuần 2',
+                    title: 'Tiếp tục gửi tới khách hàng lời Cảm Ơn Chân Thành💚',
+                    content: 'Menu được cập nhật mới liên tục và luôn nhận được những phản hồi tích cực của khách hàng, khen có góp ý cải thiện cũng có và luôn đi kèm những lời động viên chân thành!',
+                    footer: 'Sữa hạt vẫn luôn được nấu tươi mới mỗi sáng và sẽ tiếp tục được nghiên cứu để ra những sản phẩm mới tốt hơn.'
                 });
+
+                // v2.8.0: Thông tin liên hệ, Facebook & Hover Tooltips
+                const socialLinks = ref({
+                    facebookUrl: (cfg.SOCIAL_LINKS && cfg.SOCIAL_LINKS.facebookUrl) || 'https://www.facebook.com/profile.php?id=61595353216988',
+                    facebookName: (cfg.SOCIAL_LINKS && cfg.SOCIAL_LINKS.facebookName) || 'Góc Bếp Nhà Hení',
+                    contactPhone: (cfg.SOCIAL_LINKS && cfg.SOCIAL_LINKS.contactPhone) || '',
+                    popupDurationMs: (cfg.SOCIAL_LINKS && Number(cfg.SOCIAL_LINKS.popupDurationMs)) || 3500
+                });
+
+                const activeTooltip = ref(null);
+                let tooltipCloseTimer = null;
+
+                const openTooltip = (name) => {
+                    if (tooltipCloseTimer) { clearTimeout(tooltipCloseTimer); tooltipCloseTimer = null; }
+                    activeTooltip.value = name;
+                };
+                const cancelCloseTooltip = () => {
+                    if (tooltipCloseTimer) { clearTimeout(tooltipCloseTimer); tooltipCloseTimer = null; }
+                };
+                const scheduleCloseTooltip = () => {
+                    cancelCloseTooltip();
+                    tooltipCloseTimer = setTimeout(() => { activeTooltip.value = null; }, 160);
+                };
+                const toggleTooltip = (name) => {
+                    cancelCloseTooltip();
+                    activeTooltip.value = (activeTooltip.value === name) ? null : name;
+                };
+
+                // v2.8.0: Weekly Banner Pop-up tự động đóng sau 3.5 giây
+                const showWeeklyPopup = ref(false);
+                const weeklyPopupPaused = ref(false);
+                const weeklyPopupProgress = ref(100);
+                let weeklyPopupInterval = null;
+                let weeklyPopupRemainingMs = 3500;
+
+                const stopWeeklyPopupTimer = () => {
+                    if (weeklyPopupInterval) {
+                        clearInterval(weeklyPopupInterval);
+                        weeklyPopupInterval = null;
+                    }
+                };
+
+                const closeWeeklyPopup = () => {
+                    stopWeeklyPopupTimer();
+                    showWeeklyPopup.value = false;
+                    weeklyPopupPaused.value = false;
+                };
+
+                const startWeeklyPopupTimer = () => {
+                    stopWeeklyPopupTimer();
+                    const totalMs = socialLinks.value.popupDurationMs || 3500;
+                    weeklyPopupRemainingMs = totalMs;
+                    weeklyPopupProgress.value = 100;
+                    weeklyPopupInterval = setInterval(() => {
+                        if (weeklyPopupPaused.value) return;
+                        weeklyPopupRemainingMs -= 50;
+                        if (weeklyPopupRemainingMs <= 0) {
+                            weeklyPopupProgress.value = 0;
+                            closeWeeklyPopup();
+                        } else {
+                            weeklyPopupProgress.value = Math.max(0, (weeklyPopupRemainingMs / totalMs) * 100);
+                        }
+                    }, 50);
+                };
+
+                const pauseWeeklyPopup = () => { weeklyPopupPaused.value = true; };
+                const resumeWeeklyPopup = () => { weeklyPopupPaused.value = false; };
+                const reopenWeeklyPopup = () => {
+                    showWeeklyPopup.value = true;
+                    weeklyPopupPaused.value = false;
+                    startWeeklyPopupTimer();
+                };
+
                 const relaxVideoId = ref(cfg.RELAX_VIDEO_ID || '1S7qneg966XvP_X_OZikjMoR3aWH77jkn');
 
                 const relaxVideoEmbedUrl = computed(() => {
@@ -1333,6 +1580,8 @@
                 const applySheetConfig = (conf) => {
                     if (!conf) return;
                     if (conf.video_thu_gian) relaxVideoId.value = conf.video_thu_gian;
+                    if (conf.contact_phone !== undefined) socialLinks.value.contactPhone = String(conf.contact_phone).trim();
+                    if (conf.facebook_url) socialLinks.value.facebookUrl = String(conf.facebook_url).trim();
                     if (conf.weekly_title !== undefined) {
                         weeklyBanner.value = {
                             enabled: String(conf.weekly_title).trim() !== '',
@@ -1341,6 +1590,7 @@
                             content: conf.weekly_content !== undefined ? conf.weekly_content : weeklyBanner.value.content,
                             footer: conf.weekly_footer !== undefined ? conf.weekly_footer : weeklyBanner.value.footer
                         };
+                        if (!weeklyBanner.value.enabled) closeWeeklyPopup();
                     }
                 };
 
@@ -1401,13 +1651,20 @@
                 };
 
                 onMounted(() => {
-                    // Lắng nghe phím Escape để đóng nhanh Sidebar hoặc Giỏ hàng
+                    // Lắng nghe phím Escape để đóng nhanh Sidebar, Giỏ hàng, Pop-up hoặc Tooltip
                     window.addEventListener('keydown', (e) => {
                         if (e.key === 'Escape') {
                             if (showCheckout.value) showCheckout.value = false;
                             if (isSidebarOpen.value) isSidebarOpen.value = false;
+                            if (showWeeklyPopup.value) closeWeeklyPopup();
+                            if (activeTooltip.value) activeTooltip.value = null;
                         }
                     });
+
+                    // v2.8.0: Tự động hiển thị Pop-up thông báo tuần trong 3.5 giây khi mở trang khách hàng
+                    if (!isStaffView.value && weeklyBanner.value.enabled && weeklyBanner.value.title) {
+                        reopenWeeklyPopup();
+                    }
 
                     // 1. Hiển thị ngay thực đơn từ FALLBACK_MENU trong 0.1s để khách không phải chờ
                     if (cfg.FALLBACK_MENU && cfg.FALLBACK_MENU.length > 0) {
@@ -2428,7 +2685,11 @@
                     toggleScheduleExpand,
                     // V2.7.0 Sweetness Customization:
                     SWEETNESS_OPTIONS, getSweetnessMeta, getSelectedSweetness, setSelectedSweetness,
-                    changeCartItemSweetness
+                    changeCartItemSweetness,
+                    // V2.8.0 Unified Hero, Weekly Popup & Hover Tooltips:
+                    socialLinks, activeTooltip, openTooltip, cancelCloseTooltip, scheduleCloseTooltip, toggleTooltip,
+                    showWeeklyPopup, weeklyPopupPaused, weeklyPopupProgress, closeWeeklyPopup,
+                    pauseWeeklyPopup, resumeWeeklyPopup, reopenWeeklyPopup
                 }
             }
         }).mount('#app');

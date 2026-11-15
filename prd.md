@@ -117,13 +117,19 @@
 
 ## 4. ĐẶC TẢ CHI TIẾT CÁC TÍNH NĂNG (FUNCTIONAL SPECIFICATIONS)
 
-### 4.1. Giao diện & Nhận diện Thương hiệu (Giữ nguyên 100% Bản sắc Gốc)
+### 4.1. Giao diện, Nhận diện Thương hiệu & Trải nghiệm Đầu trang (`v2.8.0` Taste v3 Refinement)
 * **Bảng màu (Brand Tokens)**:
   - `brand-bone` (`#F9F8F6`): Nền kem ấm chủ đạo.
   - `brand-green` (`#4F6B4A`): Xanh lá thảo mộc chủ đạo.
   - `brand-gold` (`#C49A45`): Vàng đồng điểm nhấn dòng Cao Cấp (Premium).
   - `brand-dark` (`#2C3D29`): Xanh đen đậm cho chữ và thanh giỏ hàng nổi.
 * **Typography**: Tiêu đề dùng `Playfair Display` (Serif), nội dung dùng `DM Sans` (Sans-serif).
+* **Unified Hero Showcase**: Hợp nhất thanh nhận diện thương hiệu, hình ảnh `base.jpg` (chứa sẵn tiêu đề nghệ thuật) và dải 3 cam kết (`Không chất bảo quản`, `Ngọt dịu chà là, thốt nốt`, `100% màu tự nhiên`) thành một thể thống nhất, loại bỏ chữ tiêu đề trùng lặp để đẩy **Menu Sáng Mai** lên ngay tầm mắt đầu tiên.
+* **Cụm Hover Tooltip Tiện Ích (`taste-v3`)**:
+  - **`📘 Facebook`**: Rê chuột hiển thị thẻ xem trước Fanpage [Góc Bếp Nhà Hení](https://www.facebook.com/profile.php?id=61595353216988) và bấm mở trực tiếp.
+  - **`💳 Mã QR`**: Rê chuột hiển thị ngay mã QR MoMo/Ngân hàng kèm nút Copy nhanh để thanh toán hóa đơn tuần tức thì.
+  - **`💬 Liên hệ`**: Rê chuột hiển thị giờ chốt đơn (`20h00`), chính sách Freeship (`Bcons City` & `< 3km`), Hotline (nếu cấu hình) và nút nhắn tin Facebook / Tra cứu đơn.
+* **Weekly Banner Pop-up (3.5 giây)**: Thông báo tuần hiển thị dạng Pop-up tinh tế khi vừa mở trang, tự động tắt sau **3.5 giây** kèm thanh tiến trình đếm ngược (tạm dừng khi rê chuột vào đọc), nút **`✕`** đóng rõ ràng và nút **`💌 Bản tin`** trên thanh đầu trang để mở xem lại.
 
 ### 4.2. Logic Lịch Đặt Sữa Thông Minh (Cut-off 20h00 & Bỏ qua Chủ Nhật)
 * Nếu khách truy cập **trước 20h00**: Mục **"Menu Sáng Mai"** hiển thị thực đơn của ngày mai (`dayOffset = 1`).
