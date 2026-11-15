@@ -96,9 +96,9 @@
 | **N** | `delivered_by` | Người xác nhận giao từng ca: Đơn 1 ngày: `email/tên`; Đơn tuần: `tok1: tên1 | tok2: tên2 (gộp tok1)` |
 | **O** | `delivery_iso ` | Ngày giao chuẩn `yyyy-MM-dd` để lọc đơn trong ngày |
 
-### 3.3. Tab `Fact_Order_Items` (Bảng Phẳng Chi Tiết Từng Món Để Nấu Sữa)
-* **Cấu trúc cột (A -> I)**: `Mã Đơn` | `Ngày Giao` | `Tên Món` | `ID Món` | `Số Lượng` | `Tên Khách` | `SĐT` | `week` | `Status/Feedback`.
-* Khi khách đặt đơn qua `processOrder()`, hệ thống tự động tách từng món trong giỏ thành từng dòng riêng biệt và **tự động điền mã tuần hiện hành (`w1`, `w2`...)** vào cột H (`week`).
+### 3.3. Tab `Fact_Order_Items` (Bảng Phẳng Chi Tiết Từng Món Để Nấu Sữa & Theo Dõi Khẩu Vị)
+* **Cấu trúc cột (A -> K)**: `Mã Đơn` | `Ngày Giao` | `Tên Món` | `ID Món` | `Số Lượng` | `Tên Khách` | `SĐT` | `week` | `Status` | `Feedback` | `Độ Ngọt`.
+* Khi khách đặt đơn qua `processOrder()`, hệ thống tự động tách từng món trong giỏ thành từng dòng riêng biệt, **tự động điền mã tuần hiện hành (`w1`, `w2`...)** vào cột H (`week`) và ghi nhận độ ngọt khách chọn (`Bình thường`, `Ít ngọt (Giảm ngọt)`, `Không ngọt (100% vị tự nhiên)`) vào cột K (`Độ Ngọt`).
 
 ### 3.4. Tab `payment_method` (Thông tin Thanh toán)
 * **Cấu trúc cột**: `type` (`MoMo`, `VCB`) | `info` (Số tài khoản/SĐT) | `qr_screenshot`.
@@ -131,8 +131,12 @@
 * Nếu ngày giao rơi vào **Chủ Nhật (`dayOfWeek === 0`)**: Tự động nhảy qua Thứ 2 tuần kế tiếp.
 * Mục **"Lịch Đặt Trước Cả Tuần"**: Hiển thị 5 ngày làm việc tiếp theo kèm chủ đề từng ngày (*Thứ 2: Năng lượng, Thứ 3: Thanh mát, Thứ 4: Dưỡng nhan, Thứ 5: Dưỡng chất, Thứ 6: Ấm bụng, Thứ 7: Thảnh thơi*).
 
-### 4.3. Giỏ Hàng Đa Ngày & Thanh Toán (Multi-Day Cart & Checkout)
-* Khách có thể chọn nhiều món của nhiều ngày khác nhau vào chung 1 giỏ hàng.
+### 4.3. Giỏ Hàng Đa Ngày, Tùy Chọn Độ Ngọt & Thanh Toán (Multi-Day Cart, Sweetness & Checkout)
+* Khách có thể tùy chọn **Độ ngọt trên từng món** ngay tại thẻ sản phẩm hoặc đổi nhanh trong giỏ hàng với 3 mức chuẩn:
+  - `🍯 Bình thường` *(Mặc định)*
+  - `🌿 Ít ngọt (Giảm ngọt)`
+  - `🥥 Không ngọt (100% vị tự nhiên)`
+* Grain giỏ hàng (`uniqueId = item.id + '_' + date.id + '_' + sweetnessCode`) cho phép đặt cùng 1 món trong cùng 1 ngày với nhiều mức độ ngọt khác nhau.
 * Trong Modal Giỏ hàng, các món được tự động gom nhóm theo từng ngày giao (`Giao Sáng Thứ 3 (03/11)`, `Giao Sáng Thứ 5 (05/11)`...).
 * Tích hợp nút **`Copy` 1 chạm** bên cạnh Số MoMo, Số TK Vietcombank và Số tiền để khách dễ dàng dán vào ứng dụng ngân hàng.
 * Kiểm tra tính hợp lệ của Số điện thoại (9–11 chữ số) trước khi gửi đơn.
@@ -156,8 +160,8 @@
 ### 4.5. Tự Động Gửi Báo Cáo Nấu Sữa Lúc 20h00 Hàng Ngày (`sendDailyKitchenReport`)
 * Đúng **20h00 mỗi tối** (qua Time-driven Trigger `setupDaily20hTrigger`), hệ thống tự động:
   1. Xác định ngày giao hàng tiếp theo (nếu ngày mai là Chủ Nhật thì lấy Thứ 2).
-  2. Quét bảng `Fact_Order_Items` và đối chiếu địa chỉ/ghi chú từ `Orders_Master`.
-  3. Cộng tổng số lượng chai cần nấu cho từng món và lập danh sách khách nhận kèm ghi chú.
+  2. Quét bảng `Fact_Order_Items` (bỏ qua các dòng `Cancelled`/`Đã hủy`), đọc cột K (`Độ Ngọt`) và đối chiếu địa chỉ/ghi chú từ `Orders_Master`.
+  3. Cộng tổng số lượng chai cần nấu cho từng món kèm **phân rã theo từng mức độ ngọt** (`🍯 Bình thường`, `🌿 Ít ngọt`, `🥥 Không ngọt`) và lập danh sách khách nhận kèm badge độ ngọt + ghi chú.
   4. Tự động đọc danh sách email nhận báo cáo từ tài khoản Google triển khai Web App, từ `config.js` trên GitHub (`KITCHEN_REPORT_EMAILS`), và từ tab `Dim_Config`.
   5. Gửi email báo cáo định dạng bảng rõ ràng về hộp thư của Bếp.
 

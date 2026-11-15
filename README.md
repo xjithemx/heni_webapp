@@ -31,6 +31,21 @@
 
 ## 🕒 3. LỊCH SỬ CẬP NHẬT & NÂNG CẤP CHI TIẾT (DETAILED CHANGELOG)
 
+### [v2.7.0] — 2026-11-15: Tùy Chọn Độ Ngọt Trên Từng Món (End-to-End Flow: Khách $\rightarrow$ Bếp $\rightarrow$ Shipper $\rightarrow$ Data Sheet Monitor)
+* **Giao diện Khách hàng ([`index.html`](./index.html))**:
+  - Thêm bộ chọn 3 mức độ ngọt ngay trên từng thẻ món ăn (Menu Sáng Mai & Lịch Đặt Trước Cả Tuần): **`🍯 Bình thường`** *(mặc định)*, **`🌿 Ít ngọt`**, và **`🥥 Không ngọt`** *(100% vị tự nhiên)*.
+  - Nâng cấp Grain giỏ hàng (`item.id + '_' + date.id + '_' + sweetnessCode`) cho phép khách đặt cùng 1 món trong cùng 1 ngày với nhiều mức độ ngọt khác nhau; đồng thời hỗ trợ chạm đổi nhanh độ ngọt ngay trong Modal Giỏ hàng và hiển thị nhãn độ ngọt khi tra cứu đơn.
+* **Bếp 20h00 & Email Xác Nhận ([`code.gs`](./code.gs))**:
+  - Email xác nhận đơn hàng gửi khách hiển thị rõ độ ngọt từng món.
+  - Báo cáo nấu sữa 20h00 tự động tổng hợp và **phân rã số chai cần nấu theo từng độ ngọt** (*Bình thường | Ít ngọt | Không ngọt*), đồng thời gắn badge nổi bật cạnh tên khách ở danh sách chi tiết và bỏ qua các dòng đơn đã hủy.
+* **Bàn Giao Hàng Shipper (`?view=staff`)**:
+  - Hiển thị huy hiệu độ ngọt trực quan trên từng món ở danh sách giao ca hôm nay, món giao gộp ca sớm (`Combined Drop`) và lịch trình chi tiết nhiều ngày.
+* **Lưu trữ & Theo dõi trên Google Sheets (`Orders_Master` & `Fact_Order_Items`)**:
+  - Chuẩn hóa lưu `sweetness` & `sweetnessCode` trong `Raw_JSON_Items` (`Orders_Master`).
+  - Chuẩn hóa tiêu đề Cột J (`Feedback`) và bổ sung **Cột K (`Độ Ngọt`)** trên bảng phẳng `Fact_Order_Items` để chủ tiệm theo dõi và lọc dữ liệu khẩu vị khách hàng.
+
+---
+
 ### [v2.6.1] — 2026-11-15: Security & Privacy Audit, Loại bỏ Scraper GViz, Ẩn Danh Hóa Khách Hàng (Incognito Masking) & Hỗ trợ Google Sheets Restricted
 * **Bảo Mật Cơ Sở Dữ Liệu & Hỗ Trợ Google Sheets Chế Độ Riêng Tư (Restricted Mode)**:
   - Loại bỏ hoàn toàn cơ chế đọc trực tiếp `Orders_Master` qua Google Sheets GViz JSONP trên trình duyệt (`fetchLiveOrdersFromSheet`). Trước đây, nếu bảng tính công khai, kẻ xấu có thể cào toàn bộ danh sách đơn hàng của khách hàng trực tiếp qua URL GViz.

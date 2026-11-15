@@ -46,6 +46,19 @@ function cleanPhone(val) {
   }
 }
 
+// Helper: chuẩn hóa độ ngọt (normal | less | none)
+function normalizeSweetness(sweetness, sweetnessCode) {
+  const codeRaw = (sweetnessCode || '').toString().trim().toLowerCase();
+  const labelRaw = (sweetness || '').toString().trim().toLowerCase();
+  if (codeRaw === 'none' || labelRaw.indexOf('không ngọt') !== -1 || labelRaw.indexOf('khong ngot') !== -1 || labelRaw.indexOf('100%') !== -1) {
+    return { code: 'none', label: 'Không ngọt (100% vị tự nhiên)', shortLabel: 'Không ngọt' };
+  }
+  if (codeRaw === 'less' || labelRaw.indexOf('ít ngọt') !== -1 || labelRaw.indexOf('it ngot') !== -1 || labelRaw.indexOf('giảm ngọt') !== -1) {
+    return { code: 'less', label: 'Ít ngọt (Giảm ngọt)', shortLabel: 'Ít ngọt' };
+  }
+  return { code: 'normal', label: 'Bình thường', shortLabel: 'Bình thường' };
+}
+
 // Helper: trả về JSON chuẩn cho GitHub Pages fetch API
 function jsonResponse(obj) {
   return ContentService
@@ -346,12 +359,17 @@ function searchOrders(rawQuery) {
         timestamp: ts.toISOString(),
         total: Number(rawTotal) || 0,
         deliveryStatus: deliveryStatus || '',
-        items: items.map(it => ({
-          name: it.name || '',
-          quantity: Number(it.quantity) || 0,
-          price: Number(it.price) || 0,
-          deliveryDate: it.deliveryDate || ''
-        })),
+        items: items.map(it => {
+          const sw = normalizeSweetness(it.sweetness, it.sweetnessCode);
+          return {
+            name: it.name || '',
+            quantity: Number(it.quantity) || 0,
+            price: Number(it.price) || 0,
+            deliveryDate: it.deliveryDate || '',
+            sweetness: sw.label,
+            sweetnessCode: sw.code
+          };
+        }),
         status: normalizedStatus
       });
 
@@ -481,11 +499,22 @@ function processOrder(orderData) {
       }
     }
 
+    // Chuẩn hóa độ ngọt cho từng món trước khi ghi DB & gửi email
+    const normalizedItems = (orderData.items || []).map(function(item) {
+      const sw = normalizeSweetness(item.sweetness, item.sweetnessCode);
+      return {
+        ...item,
+        sweetness: sw.label,
+        sweetnessCode: sw.code
+      };
+    });
+    orderData.items = normalizedItems;
+
     // Ghi Master đúng 15 cột (A -> O):
     // A: Mã Đơn | B: Timestamp | C: Tên Khách | D: SĐT | E: Email | F: Địa chỉ |
     // G: Raw_JSON_Items | H: Tổng Tiền | I: Ghi chú | J: owner note | K: Status |
     // L: delivery_status | M: delivered_at | N: delivered_by | O: delivery_iso
-    const itemsJson = JSON.stringify(orderData.items);
+    const itemsJson = JSON.stringify(normalizedItems);
     masterSheet.appendRow([
       orderId,
       timestamp,
@@ -504,11 +533,21 @@ function processOrder(orderData) {
       firstDeliveryIso // O: delivery_iso
     ]);
 
-    // Ghi Fact kèm tự động điền cột week
+    // Ghi Fact kèm tự động điền cột week (Cột H) và Độ Ngọt (Cột K)
     const currentWeek = resolveCurrentWeekCode(factSheet);
-    const factRows = orderData.items.map(item => {
+    const factRows = normalizedItems.map(item => {
       return [
-        orderId, item.deliveryDate, item.name, item.id, item.quantity, orderData.name, orderData.phone, currentWeek
+        orderId,
+        item.deliveryDate,
+        item.name,
+        item.id,
+        item.quantity,
+        orderData.name,
+        orderData.phone,
+        currentWeek,
+        '', // I: Status
+        '', // J: Feedback
+        item.sweetness // K: Độ Ngọt
       ];
     });
     if (factRows.length > 0) {
@@ -534,9 +573,14 @@ function processOrder(orderData) {
 function sendOrderEmail(orderData, orderId) {
   const subject = `[Góc Bếp Nhà Hení] Xác nhận đơn đặt hàng #${orderId}`;
 
-  let itemsHtml = orderData.items.map(item =>
-    `<li style="margin-bottom: 8px;"><b>${item.name}</b><br><span style="color: #666; font-size: 13px;">Giao: ${item.deliveryDate} | Số lượng: ${item.quantity} | Giá: ${(item.price * item.quantity).toLocaleString('vi-VN')}đ</span></li>`
-  ).join('');
+  let itemsHtml = orderData.items.map(item => {
+    const sw = normalizeSweetness(item.sweetness, item.sweetnessCode);
+    const swColor = sw.code === 'none' ? '#b45309' : (sw.code === 'less' ? '#047857' : '#4b5563');
+    return `<li style="margin-bottom: 10px;">
+      <b>${item.name}</b> <span style="display: inline-block; font-size: 11px; padding: 2px 7px; border-radius: 999px; background: #F9F8F6; border: 1px solid #e5e7eb; color: ${swColor}; font-weight: bold;">Độ ngọt: ${sw.label}</span><br>
+      <span style="color: #666; font-size: 13px;">Giao: ${item.deliveryDate} | Số lượng: ${item.quantity} | Giá: ${(item.price * item.quantity).toLocaleString('vi-VN')}đ</span>
+    </li>`;
+  }).join('');
 
   const body = `
     <div style="font-family: 'Helvetica Neue', Arial, sans-serif; color: #2C3D29; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
@@ -686,6 +730,10 @@ function sendDailyKitchenReport() {
                       deliveryDate === targetLabelDash;
 
       if (isMatch) {
+        const statusFact = (row[8] || '').toString().trim().toLowerCase();
+        if (statusFact.indexOf('cancel') !== -1 || statusFact.indexOf('hủy') !== -1 || statusFact.indexOf('huỷ') !== -1) {
+          continue;
+        }
         const orderId = (row[0] || '').toString().trim();
         const dishName = (row[2] || '').toString().trim();
         const qty = Number(row[4]) || 1;
@@ -693,14 +741,22 @@ function sendDailyKitchenReport() {
         const rawPhone = row[6];
         const cleanPhoneStr = cleanPhone(rawPhone);
         const formattedPhone = cleanPhoneStr ? ('0' + cleanPhoneStr) : '';
+        const sw = normalizeSweetness(row[10], '');
 
-        dishCounts[dishName] = (dishCounts[dishName] || 0) + qty;
+        if (!dishCounts[dishName]) {
+          dishCounts[dishName] = { total: 0, normal: 0, less: 0, none: 0 };
+        }
+        dishCounts[dishName].total += qty;
+        dishCounts[dishName][sw.code] = (dishCounts[dishName][sw.code] || 0) + qty;
         totalBottles += qty;
 
         customerDeliveries.push({
           orderId,
           dishName,
           qty,
+          sweetness: sw.label,
+          sweetnessShort: sw.shortLabel,
+          sweetnessCode: sw.code,
           custName,
           custPhone: formattedPhone,
           address: orderAddresses[orderId] || '',
@@ -711,23 +767,38 @@ function sendDailyKitchenReport() {
 
     const subject = `[Bếp Hení 20h00] Báo cáo nấu sữa giao ${targetLabelDash} — Tổng: ${totalBottles} chai`;
 
-    let dishRowsHtml = Object.keys(dishCounts).map(dish =>
-      `<tr style="border-bottom: 1px solid #e5e7eb;">
-        <td style="padding: 10px 12px; font-weight: bold; color: #2C3D29;">${dish}</td>
-        <td style="padding: 10px 12px; text-align: right; font-weight: bold; color: #4F6B4A; font-size: 16px;">${dishCounts[dish]} chai</td>
-      </tr>`
-    ).join('');
+    let dishRowsHtml = Object.keys(dishCounts).map(dish => {
+      const dc = dishCounts[dish];
+      const breakdownParts = [];
+      if (dc.normal > 0) breakdownParts.push(`<span style="color:#4b5563;">🍯 Bình thường: <b>${dc.normal}</b></span>`);
+      if (dc.less > 0) breakdownParts.push(`<span style="color:#047857;">🌿 Ít ngọt: <b>${dc.less}</b></span>`);
+      if (dc.none > 0) breakdownParts.push(`<span style="color:#b45309; background:#fef3c7; padding:1px 6px; border-radius:4px;">🥥 Không ngọt: <b>${dc.none}</b></span>`);
+      const breakdownHtml = breakdownParts.length > 0
+        ? `<div style="font-size:12px; font-weight:normal; margin-top:4px; line-height:1.4;">${breakdownParts.join(' &nbsp;|&nbsp; ')}</div>`
+        : '';
+
+      return `<tr style="border-bottom: 1px solid #e5e7eb;">
+        <td style="padding: 10px 12px; font-weight: bold; color: #2C3D29;">${dish}${breakdownHtml}</td>
+        <td style="padding: 10px 12px; text-align: right; font-weight: bold; color: #4F6B4A; font-size: 16px; vertical-align: top;">${dc.total} chai</td>
+      </tr>`;
+    }).join('');
 
     if (!dishRowsHtml) {
       dishRowsHtml = `<tr><td colspan="2" style="padding: 16px; text-align: center; color: #6b7280;">Chưa có đơn đặt trước nào cho ngày ${targetLabelDash}.</td></tr>`;
     }
 
-    let custRowsHtml = customerDeliveries.map(c =>
-      `<li style="margin-bottom: 10px; line-height: 1.5;">
-        <b>${c.custName}</b> (${c.custPhone}) — <b>${c.qty}x ${c.dishName}</b><br>
+    let custRowsHtml = customerDeliveries.map(c => {
+      const swBadge = c.sweetnessCode === 'none'
+        ? `<span style="background:#fef3c7; color:#b45309; border:1px solid #fcd34d; padding:1px 6px; border-radius:999px; font-size:11px; font-weight:bold;">🥥 ${c.sweetness}</span>`
+        : (c.sweetnessCode === 'less'
+          ? `<span style="background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; padding:1px 6px; border-radius:999px; font-size:11px; font-weight:bold;">🌿 ${c.sweetness}</span>`
+          : `<span style="background:#f3f4f6; color:#4b5563; padding:1px 6px; border-radius:999px; font-size:11px;">🍯 ${c.sweetness}</span>`);
+
+      return `<li style="margin-bottom: 10px; line-height: 1.5;">
+        <b>${c.custName}</b> (${c.custPhone}) — <b>${c.qty}x ${c.dishName}</b> ${swBadge}<br>
         <span style="color: #4b5563; font-size: 13px;">📍 Đ/c: ${c.address || 'Chưa rõ'} ${c.note ? ' | 📝 Ghi chú: <b>' + c.note + '</b>' : ''}</span>
-      </li>`
-    ).join('');
+      </li>`;
+    }).join('');
 
     const htmlBody = `
       <div style="font-family: 'Helvetica Neue', Arial, sans-serif; color: #2C3D29; max-width: 640px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden;">
@@ -1012,6 +1083,14 @@ function staffGetDeliveries(payload) {
 
       let items = [];
       try { items = JSON.parse(r[6]) || []; } catch (e) { items = []; }
+      items = items.map(function(it) {
+        const sw = normalizeSweetness(it.sweetness, it.sweetnessCode);
+        return {
+          ...it,
+          sweetness: sw.label,
+          sweetnessCode: sw.code
+        };
+      });
 
       const statusK = (r[10] || '').toString().trim();
       const deliveryStatus = (r[11] || '').toString().trim();

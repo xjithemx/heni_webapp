@@ -12,11 +12,11 @@
 Với hệ thống mới đã được tự động hóa, công việc mỗi ngày của bạn được rút gọn tối đa:
 
 ### 🌞 Ban ngày (Khách tự đặt hàng & Tra cứu)
-1. Khách mở link web, chọn món cho **Sáng Mai** hoặc **Đặt Trước Cả Tuần** và bấm **Xác nhận đơn hàng**.
+1. Khách mở link web, chọn món cho **Sáng Mai** hoặc **Đặt Trước Cả Tuần**, chọn **Độ ngọt** mong muốn ngay trên từng món (`🍯 Bình thường`, `🌿 Ít ngọt`, hoặc `🥥 Không ngọt` — mặc định là `Bình thường`) và bấm **Xác nhận đơn hàng**.
 2. Hệ thống tự động:
    - Ghi đơn tổng vào tab **`Orders_Master`** (trạng thái mặc định: `Đã tiếp nhận`).
-   - Tách từng món vào tab **`Fact_Order_Items`** và **tự động điền cột `week` (`w1`, `w2`...)** — bạn không cần phải gõ tay cột `week` nữa.
-   - Gửi ngay 1 email xác nhận đơn hàng chi tiết cho khách.
+   - Tách từng món vào tab **`Fact_Order_Items`**, **tự động điền cột `week` (`w1`, `w2`...)** ở Cột H và **tự động ghi nhận `Độ Ngọt`** ở Cột K để bạn dễ dàng lọc và theo dõi khẩu vị khách hàng.
+   - Gửi ngay 1 email xác nhận đơn hàng chi tiết (kèm độ ngọt từng món) cho khách.
 3. Khách muốn xem lại lịch sử đơn hoặc kiểm tra tiền sữa chốt tuần chỉ cần mở mục **Tra cứu & Giải trí** (nút kính lúp góc dưới phải), nhập **Tên** (VD: `Lan Anh`, `Bình Minh`), **Số điện thoại** (VD: `0901234567`), hoặc **Mã đơn** (`HN-751646`). Thông tin khách sẽ được che giấu một phần (Incognito Masking) để bảo vệ quyền riêng tư.
 
 ### 🌙 Đúng 20h00 Mỗi Tối (Chốt Mẻ Nấu Sữa Tự Động Cho Bếp)
@@ -24,8 +24,8 @@ Với hệ thống mới đã được tự động hóa, công việc mỗi ng�
 2. **Báo cáo Bếp tự động gửi về Email**:
    - Đúng 20h00, hệ thống tự động gửi 1 email tiêu đề **`[Bếp Hení 20h00] Báo cáo nấu sữa giao Thứ ... — Tổng: XX chai`** về địa chỉ email quản trị bếp cấu hình trong tab `Dim_Config` hoặc `config.js` (và tài khoản Google triển khai Web App).
    - Trong email có sẵn **2 bảng rõ ràng**:
-     1. **Tổng hợp số lượng cần nấu**: Mỗi vị bao nhiêu chai để bạn ngâm hạt ngay trong đêm.
-     2. **Chi tiết khách nhận & ghi chú giao hàng**: Tên khách, SĐT (đã chuẩn hóa số 0 đầu), địa chỉ tòa nhà, và lời nhắn riêng (VD: *"ít ngọt"*, *"giữ chị 1 chai"*).
+     1. **Tổng hợp số lượng cần nấu**: Mỗi vị bao nhiêu chai kèm **phân rã số chai theo độ ngọt** (`🍯 Bình thường`, `🌿 Ít ngọt`, `🥥 Không ngọt`) để bạn múc riêng trước khi pha ngọt.
+     2. **Chi tiết khách nhận & ghi chú giao hàng**: Tên khách, SĐT (đã chuẩn hóa số 0 đầu), **nhãn độ ngọt từng chai**, địa chỉ tòa nhà, và lời nhắn riêng (VD: *"ít ngọt"*, *"giữ chị 1 chai"*).
    - **Ứng dụng Zalo cho Bếp**: Bạn chỉ cần mở email trên điện thoại, copy nội dung báo cáo dán thẳng vào **Nhóm Zalo Bếp / Cloud của tôi** để sáng mai nấu và đi giao mà không cần mở máy tính lọc bảng tính.
 
 ---

@@ -232,7 +232,21 @@
                                         class="shrink-0 text-[11px] font-semibold bg-orange-50 text-orange-700 px-2 py-0.5 rounded-full whitespace-nowrap">🔥 {{ item.kcal }} kcal</span>
                                 </div>
                                 <p class="text-xs text-gray-500 whitespace-pre-line">{{ item.desc }}</p>
-                                <p class="font-semibold text-brand-green text-sm mt-2 mb-4">{{ formatPrice(item.price) }}</p>
+                                <p class="font-semibold text-brand-green text-sm mt-2 mb-3">{{ formatPrice(item.price) }}</p>
+                                <!-- Chọn độ ngọt (Sweetness) -->
+                                <div class="mb-3">
+                                    <div class="grid grid-cols-3 gap-1 bg-brand-bone/70 p-1 rounded-xl border border-gray-100">
+                                        <button v-for="opt in SWEETNESS_OPTIONS" :key="opt.code" type="button"
+                                            @click="setSelectedSweetness(item, nextDeliveryDate, opt.code)"
+                                            :class="getSelectedSweetness(item, nextDeliveryDate) === opt.code ? 'bg-white text-brand-dark shadow-sm font-bold border-brand-green/30' : 'text-gray-500 hover:text-brand-dark border-transparent'"
+                                            class="py-1.5 px-1 rounded-lg text-[11px] border transition-all truncate text-center">
+                                            {{ opt.icon }} {{ opt.short }}
+                                        </button>
+                                    </div>
+                                    <p v-if="getSelectedSweetness(item, nextDeliveryDate) === 'none'" class="text-[10px] text-amber-700 mt-1 px-1">
+                                        100% vị hạt tự nhiên, không chà là/thốt nốt
+                                    </p>
+                                </div>
                                 <button :disabled="!!nextDeliveryClosure" @click="addToCart(item, nextDeliveryDate)"
                                     :class="nextDeliveryClosure ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-brand-bone text-brand-green hover:bg-brand-green hover:text-white active:scale-[0.98]'"
                                     class="mt-auto w-full py-2.5 rounded-xl font-semibold text-sm transition-colors">
@@ -259,7 +273,21 @@
                                         class="shrink-0 text-[11px] font-semibold bg-orange-50 text-orange-700 px-2 py-0.5 rounded-full whitespace-nowrap">🔥 {{ item.kcal }} kcal</span>
                                 </div>
                                 <p class="text-xs text-gray-500 whitespace-pre-line">{{ item.desc }}</p>
-                                <p class="font-semibold text-brand-gold text-sm mt-2 mb-4">{{ formatPrice(item.price) }}</p>
+                                <p class="font-semibold text-brand-gold text-sm mt-2 mb-3">{{ formatPrice(item.price) }}</p>
+                                <!-- Chọn độ ngọt (Sweetness) -->
+                                <div class="mb-3">
+                                    <div class="grid grid-cols-3 gap-1 bg-brand-bone/70 p-1 rounded-xl border border-gray-100">
+                                        <button v-for="opt in SWEETNESS_OPTIONS" :key="opt.code" type="button"
+                                            @click="setSelectedSweetness(item, nextDeliveryDate, opt.code)"
+                                            :class="getSelectedSweetness(item, nextDeliveryDate) === opt.code ? 'bg-white text-brand-dark shadow-sm font-bold border-brand-gold/40' : 'text-gray-500 hover:text-brand-dark border-transparent'"
+                                            class="py-1.5 px-1 rounded-lg text-[11px] border transition-all truncate text-center">
+                                            {{ opt.icon }} {{ opt.short }}
+                                        </button>
+                                    </div>
+                                    <p v-if="getSelectedSweetness(item, nextDeliveryDate) === 'none'" class="text-[10px] text-amber-700 mt-1 px-1">
+                                        100% vị hạt tự nhiên, không chà là/thốt nốt
+                                    </p>
+                                </div>
                                 <button :disabled="!!nextDeliveryClosure" @click="addToCart(item, nextDeliveryDate)"
                                     :class="nextDeliveryClosure ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-brand-bone text-brand-gold hover:bg-brand-gold hover:text-white active:scale-[0.98]'"
                                     class="mt-auto w-full py-2.5 rounded-xl font-semibold text-sm transition-colors">
@@ -332,6 +360,20 @@
                                         </div>
                                     </div>
                                 </div>
+                            <!-- Chọn độ ngọt (Sweetness) -->
+                            <div class="mb-2.5">
+                                <div class="grid grid-cols-3 gap-1 bg-brand-bone/70 p-1 rounded-xl border border-gray-100">
+                                    <button v-for="opt in SWEETNESS_OPTIONS" :key="opt.code" type="button"
+                                        @click="setSelectedSweetness(item, activePreOrder, opt.code)"
+                                        :class="getSelectedSweetness(item, activePreOrder) === opt.code ? 'bg-white text-brand-dark shadow-sm font-bold border-brand-green/30' : 'text-gray-500 hover:text-brand-dark border-transparent'"
+                                        class="py-1.5 px-1 rounded-lg text-[11px] border transition-all truncate text-center">
+                                        {{ opt.icon }} {{ opt.short }}
+                                    </button>
+                                </div>
+                                <p v-if="getSelectedSweetness(item, activePreOrder) === 'none'" class="text-[10px] text-amber-700 mt-1 px-1">
+                                    100% vị hạt tự nhiên, không chà là/thốt nốt
+                                </p>
+                            </div>
                             <button :disabled="!!activePreOrderClosure" @click="addToCart(item, activePreOrder)"
                                 :class="activePreOrderClosure ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gray-50 text-brand-dark hover:bg-brand-dark hover:text-white active:scale-[0.98]'"
                                 class="w-full py-2.5 rounded-xl font-semibold text-sm transition-colors">
@@ -583,9 +625,16 @@
                                 <span>🥛 Món giao ca hôm nay ({{ order.todayBottles }} chai):</span>
                                 <span class="text-brand-green font-bold">{{ formatPrice(order.todaySubtotal) }}</span>
                             </div>
-                            <div v-for="(it, idx) in order.todayItems" :key="idx" class="flex justify-between items-center pl-2">
-                                <span class="text-brand-dark">· <b>{{ it.name }}</b> <span class="text-gray-500 text-[11px]">({{ it.deliveryDate }})</span></span>
-                                <span class="font-bold text-brand-green text-sm">x{{ it.quantity }}</span>
+                            <div v-for="(it, idx) in order.todayItems" :key="idx" class="flex justify-between items-center gap-2 pl-2">
+                                <div class="text-brand-dark flex flex-wrap items-center gap-1.5">
+                                    <span>· <b>{{ it.name }}</b></span>
+                                    <span :class="getSweetnessMeta(it.sweetnessCode || it.sweetness).badgeClass"
+                                        class="text-[10px] font-bold px-2 py-0.5 rounded-full border whitespace-nowrap">
+                                        {{ getSweetnessMeta(it.sweetnessCode || it.sweetness).icon }} {{ getSweetnessMeta(it.sweetnessCode || it.sweetness).short }}
+                                    </span>
+                                    <span class="text-gray-500 text-[11px]">({{ it.deliveryDate }})</span>
+                                </div>
+                                <span class="font-bold text-brand-green text-sm shrink-0">x{{ it.quantity }}</span>
                             </div>
 
                             <!-- Smart Combined Drop Picker (Giao gộp ca tiếp theo) -->
@@ -612,9 +661,16 @@
                                 <div v-if="getCombinedDays(order).length > 0" class="p-2.5 bg-amber-50/80 rounded-lg space-y-1 border border-amber-200">
                                     <p class="font-bold text-amber-900 text-[11px]">⚡ Món gộp mang theo hôm nay:</p>
                                     <div v-for="cDay in getCombinedDays(order)" :key="cDay.dateToken">
-                                        <div v-for="(cIt, cIdx) in cDay.items" :key="cIdx" class="flex justify-between items-center text-[11px] pl-2 text-amber-800">
-                                            <span>+ {{ cIt.name }} ({{ cDay.dateLabel }})</span>
-                                            <span class="font-bold">x{{ cIt.quantity }}</span>
+                                        <div v-for="(cIt, cIdx) in cDay.items" :key="cIdx" class="flex justify-between items-center gap-2 text-[11px] pl-2 text-amber-800">
+                                            <span class="flex flex-wrap items-center gap-1">
+                                                <span>+ {{ cIt.name }}</span>
+                                                <span :class="getSweetnessMeta(cIt.sweetnessCode || cIt.sweetness).badgeClass"
+                                                    class="text-[9px] font-bold px-1.5 py-0.5 rounded-full border whitespace-nowrap">
+                                                    {{ getSweetnessMeta(cIt.sweetnessCode || cIt.sweetness).icon }} {{ getSweetnessMeta(cIt.sweetnessCode || cIt.sweetness).short }}
+                                                </span>
+                                                <span class="opacity-75">({{ cDay.dateLabel }})</span>
+                                            </span>
+                                            <span class="font-bold shrink-0">x{{ cIt.quantity }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -644,21 +700,35 @@
                             </button>
                             <div v-if="expandedScheduleOrders[order.orderId]" class="space-y-1.5 pt-2 border-t border-gray-200/60">
                                 <div v-for="(day, dIdx) in (order.schedule?.daysList || [])" :key="dIdx"
-                                    class="p-2 rounded-lg bg-white border border-gray-200 flex flex-wrap items-center justify-between gap-2">
-                                    <div>
-                                        <span class="font-bold text-brand-dark">📅 {{ day.dateLabel }}</span>
-                                        <span class="text-gray-500 ml-2">({{ day.bottleCount }} chai · {{ formatPrice(day.subtotal) }})</span>
+                                    class="p-2.5 rounded-lg bg-white border border-gray-200 space-y-1.5">
+                                    <div class="flex flex-wrap items-center justify-between gap-2">
+                                        <div>
+                                            <span class="font-bold text-brand-dark">📅 {{ day.dateLabel }}</span>
+                                            <span class="text-gray-500 ml-2">({{ day.bottleCount }} chai · {{ formatPrice(day.subtotal) }})</span>
+                                        </div>
+                                        <div>
+                                            <span v-if="day.isEarly" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800">
+                                                ⚡ Giao sớm ({{ day.earlyNote }}) - {{ day.deliveredAt || '' }}
+                                            </span>
+                                            <span v-else-if="day.isDelivered" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                                                ✅ Đã giao {{ day.deliveredAt || '' }}
+                                            </span>
+                                            <span v-else class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
+                                                ⏳ Chờ giao
+                                            </span>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <span v-if="day.isEarly" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800">
-                                            ⚡ Giao sớm ({{ day.earlyNote }}) - {{ day.deliveredAt || '' }}
-                                        </span>
-                                        <span v-else-if="day.isDelivered" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
-                                            ✅ Đã giao {{ day.deliveredAt || '' }}
-                                        </span>
-                                        <span v-else class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
-                                            ⏳ Chờ giao
-                                        </span>
+                                    <div class="pl-2 space-y-1 border-t border-gray-100 pt-1">
+                                        <div v-for="(dIt, dItIdx) in (day.items || [])" :key="dItIdx" class="flex justify-between items-center text-[11px] text-gray-600">
+                                            <span class="flex flex-wrap items-center gap-1">
+                                                <span>· {{ dIt.name }}</span>
+                                                <span :class="getSweetnessMeta(dIt.sweetnessCode || dIt.sweetness).badgeClass"
+                                                    class="text-[9px] font-bold px-1.5 py-0.5 rounded-full border whitespace-nowrap">
+                                                    {{ getSweetnessMeta(dIt.sweetnessCode || dIt.sweetness).icon }} {{ getSweetnessMeta(dIt.sweetnessCode || dIt.sweetness).short }}
+                                                </span>
+                                            </span>
+                                            <span class="font-bold text-brand-dark">x{{ dIt.quantity }}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -847,7 +917,13 @@
                                                     class="flex justify-between gap-3 text-xs text-gray-600">
                                                     <div>
                                                         <p class="font-semibold text-brand-dark text-sm">{{ it.name }}</p>
-                                                        <p>Giao: {{ it.deliveryDate }}</p>
+                                                        <p class="mt-0.5 flex flex-wrap items-center gap-1.5">
+                                                            <span>Giao: {{ it.deliveryDate }}</span>
+                                                            <span :class="getSweetnessMeta(it.sweetnessCode || it.sweetness).badgeClass"
+                                                                class="text-[10px] font-semibold px-2 py-0.5 rounded-full border whitespace-nowrap">
+                                                                {{ getSweetnessMeta(it.sweetnessCode || it.sweetness).icon }} {{ getSweetnessMeta(it.sweetnessCode || it.sweetness).short }}
+                                                            </span>
+                                                        </p>
                                                     </div>
                                                     <div class="text-right whitespace-nowrap">
                                                         <p>SL: {{ it.quantity }}</p>
@@ -928,12 +1004,20 @@
 
                                     <div class="space-y-3">
                                         <div v-for="item in items" :key="item.uniqueId"
-                                            class="flex justify-between items-center">
-                                            <div class="flex-1 pr-3">
+                                            class="flex justify-between items-start gap-2">
+                                            <div class="flex-1 pr-2">
                                                 <p class="font-bold text-brand-dark text-sm mb-0.5">{{ item.name }}</p>
-                                                <p class="text-xs text-gray-500">{{ formatPrice(item.price) }}</p>
+                                                <p class="text-xs text-gray-500 mb-1.5">{{ formatPrice(item.price) }}</p>
+                                                <div class="flex flex-wrap gap-1">
+                                                    <button v-for="opt in SWEETNESS_OPTIONS" :key="opt.code" type="button"
+                                                        @click="changeCartItemSweetness(item, opt.code)"
+                                                        :class="(item.sweetnessCode || 'normal') === opt.code ? opt.badgeClass + ' font-bold shadow-xs' : 'bg-gray-50 text-gray-400 border-gray-100 hover:text-gray-600'"
+                                                        class="text-[10px] px-2 py-0.5 rounded-full border transition-all">
+                                                        {{ opt.icon }} {{ opt.short }}
+                                                    </button>
+                                                </div>
                                             </div>
-                                            <div class="flex items-center gap-3 bg-brand-bone rounded-full px-2 py-1">
+                                            <div class="flex items-center gap-3 bg-brand-bone rounded-full px-2 py-1 mt-0.5 shrink-0">
                                                 <button @click="decreaseItem(item)"
                                                     class="w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center text-brand-dark font-medium active:scale-95">-</button>
                                                 <span class="text-sm font-bold w-4 text-center text-brand-dark">{{
@@ -1430,27 +1514,102 @@
                 };
                 const formatPrice = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
 
-                // Xử lý giỏ hàng từ v1
+                // ==========================================
+                // V2.7.0: Sweetness Customization (Độ ngọt từng món)
+                // ==========================================
+                const SWEETNESS_OPTIONS = [
+                    {
+                        code: 'normal',
+                        label: 'Bình thường',
+                        short: 'Bình thường',
+                        icon: '🍯',
+                        badgeClass: 'bg-gray-100 text-gray-700 border-gray-200'
+                    },
+                    {
+                        code: 'less',
+                        label: 'Ít ngọt (Giảm ngọt)',
+                        short: 'Ít ngọt',
+                        icon: '🌿',
+                        badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    },
+                    {
+                        code: 'none',
+                        label: 'Không ngọt (100% vị tự nhiên)',
+                        short: 'Không ngọt',
+                        icon: '🥥',
+                        badgeClass: 'bg-amber-100 text-amber-900 border-amber-300'
+                    }
+                ];
+
+                const selectedSweetnessMap = ref({});
+
+                const getSweetnessMeta = (codeOrLabel) => {
+                    const s = (codeOrLabel || '').toString().trim().toLowerCase();
+                    if (s === 'none' || s.includes('không ngọt') || s.includes('khong ngot') || s.includes('100%')) {
+                        return SWEETNESS_OPTIONS[2];
+                    }
+                    if (s === 'less' || s.includes('ít ngọt') || s.includes('it ngot') || s.includes('giảm ngọt')) {
+                        return SWEETNESS_OPTIONS[1];
+                    }
+                    return SWEETNESS_OPTIONS[0];
+                };
+
+                const getSelectedSweetness = (item, dateObj) => {
+                    if (!item || !dateObj) return 'normal';
+                    const key = item.id + '_' + dateObj.id;
+                    return selectedSweetnessMap.value[key] || 'normal';
+                };
+
+                const setSelectedSweetness = (item, dateObj, code) => {
+                    if (!item || !dateObj) return;
+                    const key = item.id + '_' + dateObj.id;
+                    selectedSweetnessMap.value = { ...selectedSweetnessMap.value, [key]: code || 'normal' };
+                };
+
+                // Xử lý giỏ hàng (v2.7.0: Grain tách theo item.id + dateObj.id + sweetnessCode)
                 const addToCart = (item, dateObj) => {
                     const closure = getClosureForDate(dateObj);
                     if (closure) {
                         showToast(`🌿 ${closure.message || 'Ngày này quán tạm nghỉ nhận đơn!'}`, 4000);
                         return;
                     }
-                    const uniqueId = item.id + '_' + dateObj.id;
+                    const swCode = getSelectedSweetness(item, dateObj);
+                    const swMeta = getSweetnessMeta(swCode);
+                    const baseDateKey = item.id + '_' + dateObj.id;
+                    const uniqueId = baseDateKey + '_' + swMeta.code;
                     const existing = cart.value.find(i => i.uniqueId === uniqueId);
                     if (existing) {
                         existing.quantity++;
                     } else {
                         cart.value.push({
                             ...item,
+                            baseDateKey,
                             uniqueId,
                             deliveryDate: dateObj.label,
+                            sweetness: swMeta.label,
+                            sweetnessCode: swMeta.code,
                             quantity: 1
                         });
                     }
-                    showToast(`Đã thêm order giao ${dateObj.label} 🌿`);
-                    sendTracking('add_to_cart', `${dateObj.label} - ${item.name}`);
+                    showToast(`Đã thêm ${item.name} (${swMeta.short}) giao ${dateObj.label} 🌿`);
+                    sendTracking('add_to_cart', `${dateObj.label} - ${item.name} (${swMeta.short})`);
+                };
+
+                const changeCartItemSweetness = (cartItem, newCode) => {
+                    const swMeta = getSweetnessMeta(newCode);
+                    if ((cartItem.sweetnessCode || 'normal') === swMeta.code) return;
+                    const baseKey = cartItem.baseDateKey || cartItem.uniqueId.replace(/_(normal|less|none)$/, '');
+                    const newUniqueId = baseKey + '_' + swMeta.code;
+                    const duplicate = cart.value.find(i => i.uniqueId === newUniqueId && i !== cartItem);
+                    if (duplicate) {
+                        duplicate.quantity += cartItem.quantity;
+                        cart.value = cart.value.filter(i => i !== cartItem);
+                    } else {
+                        cartItem.baseDateKey = baseKey;
+                        cartItem.uniqueId = newUniqueId;
+                        cartItem.sweetness = swMeta.label;
+                        cartItem.sweetnessCode = swMeta.code;
+                    }
                 };
 
                 const increaseItem = (item) => { item.quantity++; };
@@ -2266,7 +2425,10 @@
                     // V2.6.0 Multi-Day & Combined Drop Helpers:
                     selectedCombinedDrops, expandedScheduleOrders, toggleCombinedDrop, isCombinedSelected,
                     getCombinedDays, getDueTodayAmount, getDueTodayBottles, getTodayPlusCombinedTokens,
-                    toggleScheduleExpand
+                    toggleScheduleExpand,
+                    // V2.7.0 Sweetness Customization:
+                    SWEETNESS_OPTIONS, getSweetnessMeta, getSelectedSweetness, setSelectedSweetness,
+                    changeCartItemSweetness
                 }
             }
         }).mount('#app');
