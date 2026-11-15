@@ -14,7 +14,7 @@
 ### Đặc thù Mô hình Vận hành 1 Người (Solo-Operator Constraints):
 1. **Batch Kitchen Loop (Chốt mẻ nấu 20h00 mỗi tối)**:
    - Khách đặt trước (Pre-order) cho sáng hôm sau hoặc đặt lịch uống sữa cho cả tuần (Thứ 2 – Thứ 7, nghỉ Chủ Nhật).
-   - Đúng **20h00 mỗi tối**, hệ thống tự động khóa nhận đơn cho ca sáng mai (chuyển sang ngày kế tiếp) và tự động tổng hợp số lượng từng loại sữa + danh sách giao hàng gửi về email của bếp (`ll.huyhoang.1412@gmail.com`).
+   - Đúng **20h00 mỗi tối**, hệ thống tự động khóa nhận đơn cho ca sáng mai (chuyển sang ngày kế tiếp) và tự động tổng hợp số lượng từng loại sữa + danh sách giao hàng gửi về email quản trị viên bếp cấu hình trong `Dim_Config` / `config.js` (hoặc tài khoản Google triển khai Web App).
 2. **Zero-Code Daily Maintenance (Quản trị không cần sửa code)**:
    - Chủ tiệm chỉ cần dùng **Google Sheets** (`heni_webapp`) và file cấu hình nhanh [`config.js`](./config.js) trên GitHub để cập nhật giá, bật/tắt món, đổi nội dung thông báo hàng tuần và thêm email nhận báo cáo bếp.
 3. **Privacy-First & Minimalist UX (Quyền riêng tư & Tối giản)**:
@@ -82,7 +82,7 @@
 | :--- | :--- | :--- |
 | **A** | `Mã Đơn` | Mã đơn tự sinh theo định dạng `HN-xxxxxx` (6 số cuối của timestamp) |
 | **B** | `Timestamp` | Thời điểm khách đặt đơn |
-| **C** | `Tên Khách` | Họ tên hoặc biệt danh khách nhập (VD: `C Ngọc`, `Anh Đào`, `Suri`) |
+| **C** | `Tên Khách` | Họ tên hoặc biệt danh khách nhập (VD: `Khách hàng Lan Anh`, `Bình Minh`...) |
 | **D** | `SĐT` | Số điện thoại / Zalo của khách |
 | **E** | `Email` | Email nhận hóa đơn xác nhận tự động |
 | **F** | `Địa chỉ` | Địa chỉ giao hàng (Tòa nhà, tầng, phòng...) |
@@ -137,16 +137,16 @@
 * Tích hợp nút **`Copy` 1 chạm** bên cạnh Số MoMo, Số TK Vietcombank và Số tiền để khách dễ dàng dán vào ứng dụng ngân hàng.
 * Kiểm tra tính hợp lệ của Số điện thoại (9–11 chữ số) trước khi gửi đơn.
 
-### 4.4. Tra Cứu Lịch Sử Đơn Hàng Đa Năng (Smart Order History Search)
+### 4.4. Tra Cứu Lịch Sử Đơn Hàng Đa Năng Bảo Mật (Smart & Incognito Order History Search)
 * Nằm trong Sidebar trượt (**"Tra cứu & Giải trí"**).
 * **Khả năng tìm kiếm 3-trong-1**:
-  1. **Tìm theo Tên khách hàng**: Không phân biệt chữ hoa/thường và không phân biệt dấu tiếng Việt (gõ `C Ngọc`, `c ngoc`, `Ngọc`, `Anh Đào`, `Suri` đều khớp chính xác).
-  2. **Tìm theo Số điện thoại**: Tự động xử lý lỗi mất số `0` ở đầu hoặc định dạng số khoa học (`3.79524516E8`) của Google Sheets. Hỗ trợ tìm theo SĐT đầy đủ (`0379524516`) hoặc 4–9 số cuối (`4516`).
+  1. **Tìm theo Tên khách hàng**: Không phân biệt chữ hoa/thường và không phân biệt dấu tiếng Việt (gõ `Lan Anh`, `lan anh`, `Anh`, `Bình Minh` đều khớp chính xác).
+  2. **Tìm theo Số điện thoại**: Tự động xử lý lỗi mất số `0` ở đầu hoặc định dạng số khoa học (`9.01234567E8`) của Google Sheets. Hỗ trợ tìm theo SĐT đầy đủ (`0901234567`) hoặc 4–9 số cuối (`4567`).
   3. **Tìm theo Mã đơn hàng**: Khớp mã `HN-751646` hoặc `751646`.
-* **Cơ chế Đồng bộ 3 Lớp (3-Tier Real-Time & Fallback Sync)**:
-  1. **Lớp 1 (Apps Script Native / Web App API)**: Gọi trực tiếp `google.script.run.searchOrders` hoặc `GAS_API_URL`.
-  2. **Lớp 2 (Live Google Sheets GViz JSONP)**: Khi chạy trên GitHub Pages mà chưa cấu hình `GAS_API_URL`, trình duyệt tự động truy vấn trực tiếp tab `Orders_Master` qua giao thức JSONP (`gviz/tq`) để lấy trạng thái Cột K (`Status`) theo thời gian thực.
-  3. **Lớp 3 (`FALLBACK_ORDERS` trong `config.js`)**: Bản sao đồng bộ toàn bộ 16 đơn hàng thực tế từ `Orders_Master` giúp tra cứu tức thì ngay cả khi thiết bị khách hàng không có quyền truy cập trực tiếp Google Sheets.
+* **Cơ Chế Bảo Mật Tuyệt Đối & Ẩn Danh Hóa (Incognito Privacy Masking)**:
+  1. **Triệt tiêu lỗ hổng cào dữ liệu qua GViz**: Đã gỡ bỏ toàn bộ việc gọi trực tiếp `Orders_Master` qua JSONP GViz trên trình duyệt. Mọi truy vấn tra cứu bắt buộc đi qua Google Apps Script Web App API (`searchOrders`).
+  2. **Hỗ trợ Google Sheets Riêng tư (Restricted Mode)**: Chủ tiệm có thể khóa file Google Sheets về chế độ "Chỉ những người được thêm mới mở được" mà Web App vẫn hoạt động bình thường, vì Google Apps Script chạy dưới quyền của Chủ sở hữu (*Execute as: Me*).
+  3. **Che giấu PII trả về**: Tên khách được ẩn ký tự giữa (VD: `L** A**`), SĐT được che giấu (`090****567`), không trả về địa chỉ giao hàng và yêu cầu từ khóa tối thiểu 3 ký tự (giới hạn tối đa 10 đơn gần nhất) để chống quét dữ liệu tự động.
 * **Hiển thị kết quả**:
   - Gom nhóm đơn hàng theo từng tuần (`Tuần dd/MM – dd/MM`).
   - Đơn hàng có Cột K là `Paid` hoặc `Đã thanh toán` hiển thị huy hiệu xanh lá **`Đã thanh toán`**.
@@ -158,7 +158,7 @@
   1. Xác định ngày giao hàng tiếp theo (nếu ngày mai là Chủ Nhật thì lấy Thứ 2).
   2. Quét bảng `Fact_Order_Items` và đối chiếu địa chỉ/ghi chú từ `Orders_Master`.
   3. Cộng tổng số lượng chai cần nấu cho từng món và lập danh sách khách nhận kèm ghi chú.
-  4. Tự động đọc danh sách email nhận báo cáo từ `DEFAULT_KITCHEN_EMAILS` (`ll.huyhoang.1412@gmail.com`), từ `config.js` trên GitHub (`KITCHEN_REPORT_EMAILS`), và từ tab `Dim_Config`.
+  4. Tự động đọc danh sách email nhận báo cáo từ tài khoản Google triển khai Web App, từ `config.js` trên GitHub (`KITCHEN_REPORT_EMAILS`), và từ tab `Dim_Config`.
   5. Gửi email báo cáo định dạng bảng rõ ràng về hộp thư của Bếp.
 
 ---

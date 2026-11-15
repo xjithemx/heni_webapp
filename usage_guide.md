@@ -17,12 +17,12 @@ Với hệ thống mới đã được tự động hóa, công việc mỗi ng�
    - Ghi đơn tổng vào tab **`Orders_Master`** (trạng thái mặc định: `Đã tiếp nhận`).
    - Tách từng món vào tab **`Fact_Order_Items`** và **tự động điền cột `week` (`w1`, `w2`...)** — bạn không cần phải gõ tay cột `week` nữa.
    - Gửi ngay 1 email xác nhận đơn hàng chi tiết cho khách.
-3. Khách muốn xem lại lịch sử đơn hoặc kiểm tra tiền sữa chốt tuần chỉ cần mở mục **Tra cứu & Giải trí** (nút kính lúp góc dưới phải), nhập **Tên** (VD: `C Ngọc`, `Anh Đào`), **Số điện thoại** (VD: `0379524516`), hoặc **Mã đơn** (`HN-751646`).
+3. Khách muốn xem lại lịch sử đơn hoặc kiểm tra tiền sữa chốt tuần chỉ cần mở mục **Tra cứu & Giải trí** (nút kính lúp góc dưới phải), nhập **Tên** (VD: `Lan Anh`, `Bình Minh`), **Số điện thoại** (VD: `0901234567`), hoặc **Mã đơn** (`HN-751646`). Thông tin khách sẽ được che giấu một phần (Incognito Masking) để bảo vệ quyền riêng tư.
 
 ### 🌙 Đúng 20h00 Mỗi Tối (Chốt Mẻ Nấu Sữa Tự Động Cho Bếp)
 1. **Trên Web**: Đúng 20h00, web tự động khóa đặt món cho sáng ngày mai và chuyển sang nhận đơn cho ngày kế tiếp.
 2. **Báo cáo Bếp tự động gửi về Email**:
-   - Đúng 20h00, hệ thống tự động gửi 1 email tiêu đề **`[Bếp Hení 20h00] Báo cáo nấu sữa giao Thứ ... — Tổng: XX chai`** về địa chỉ mặc định **`ll.huyhoang.1412@gmail.com`** (và các email bạn thêm trong `config.js`).
+   - Đúng 20h00, hệ thống tự động gửi 1 email tiêu đề **`[Bếp Hení 20h00] Báo cáo nấu sữa giao Thứ ... — Tổng: XX chai`** về địa chỉ email quản trị bếp cấu hình trong tab `Dim_Config` hoặc `config.js` (và tài khoản Google triển khai Web App).
    - Trong email có sẵn **2 bảng rõ ràng**:
      1. **Tổng hợp số lượng cần nấu**: Mỗi vị bao nhiêu chai để bạn ngâm hạt ngay trong đêm.
      2. **Chi tiết khách nhận & ghi chú giao hàng**: Tên khách, SĐT (đã chuẩn hóa số 0 đầu), địa chỉ tòa nhà, và lời nhắn riêng (VD: *"ít ngọt"*, *"giữ chị 1 chai"*).
@@ -96,19 +96,27 @@ Mở file [`config.js`](./config.js) trên GitHub, tìm mục `WEEKLY_BANNER` (d
 
 ---
 
-## 6. CẬP NHẬT EMAIL NHẬN BÁO CÁO BẾP 20H00 TRÊN GITHUB
+## 6. CẬP NHẬT EMAIL NHẬN BÁO CÁO BẾP 20H00
 
-Mặc định báo cáo nấu sữa 20h00 luôn gửi về **`ll.huyhoang.1412@gmail.com`**. Khi bạn muốn thêm email của người phụ bếp hoặc email cá nhân khác:
+Mặc định báo cáo nấu sữa 20h00 luôn gửi về tài khoản Google triển khai Web App. Khi bạn muốn thêm email của người phụ bếp hoặc email cá nhân khác:
 
+### Cách 1: Thêm trực tiếp trên Google Sheets (Khuyên dùng — Không lộ email trên Git)
+1. Mở file Google Sheets `heni_webapp` -> chọn tab **`Dim_Config`**.
+2. Thêm dòng cấu hình:
+   - Cột A (`key`): `kitchen_emails`
+   - Cột B (`value`): Danh sách email ngăn cách bằng dấu phẩy, ví dụ: `bep-phu@example.com, quanly@example.com`
+   - Cột C (`description`): `Danh sách email nhận báo cáo bếp 20h00`
+
+### Cách 2: Thêm qua file `config.js` trên GitHub
 1. Mở file [`config.js`](./config.js) trên GitHub.
-2. Tại mục `KITCHEN_REPORT_EMAILS` (dòng 7–9), thêm email mới vào danh sách:
+2. Tại mục `KITCHEN_REPORT_EMAILS`, thêm email mới vào danh sách:
    ```javascript
    KITCHEN_REPORT_EMAILS: [
-     'll.huyhoang.1412@gmail.com',
-     'bep-phu-heni@gmail.com'
+     'bep.heni@example.com',
+     'bep-phu@example.com'
    ],
    ```
-3. Bấm **Commit changes**. Đúng 20h00 tối, Google Apps Script sẽ tự động đọc file này trên GitHub và gửi báo cáo tới tất cả các email trong danh sách!
+3. Bấm **Commit changes**. Đúng 20h00 tối, Google Apps Script sẽ tự động đọc danh sách này và gửi báo cáo đầy đủ!
 
 ---
 
@@ -135,7 +143,7 @@ Mặc định báo cáo nấu sữa 20h00 luôn gửi về **`ll.huyhoang.1412@g
 
 ### 7.1. Cách Shipper mở bàn giao hàng
 1. Mở link: **`https://xjithemx.github.io/heni_webapp/?view=staff`** (hoặc cuộn xuống cuối trang web app và bấm dòng **"🛵 Bàn Giao Hàng Cho Shipper & Bếp"**).
-2. Nhập email của shipper (ví dụ: `ll.huyhoang.1412@gmail.com`) hoặc bấm nút **Đăng nhập bằng Google**.
+2. Nhập email của shipper (ví dụ: `shipper@example.com`) hoặc bấm nút **Đăng nhập bằng Google**.
 3. Khi vào giao diện, hệ thống hiển thị ngay:
    - **Hôm nay**: Chỉ hiển thị đúng các đơn và số chai sữa cần giao trong ca sáng hôm nay.
    - **Ngày mai**: Xem trước danh sách đơn để Bếp và Shipper chuẩn bị.
@@ -204,3 +212,25 @@ Sau khi code được cập nhật, chủ tiệm làm theo các bước sau đ�
 6. Chọn bản Web app đang hoạt động -> Bấm icon **Bút chì (Chỉnh sửa)**.
 7. Tại mục **Phiên bản (Version)**: Chọn **Phiên bản mới (New version)**.
 8. Bấm **Triển khai (Deploy)** -> **Xong (Done)**.
+
+---
+
+## 🔒 11. HƯỚNG DẪN KHÓA QUYỀN TRUY CẬP GOOGLE SHEET VỀ RIÊNG TƯ (RESTRICTED) ĐỂ BẢO MẬT 100%
+
+### Tại sao nên khóa file Google Sheets về "Hạn chế" (Restricted)?
+* Trước đây, khi còn cơ chế đọc qua GViz JSONP, bảng tính bắt buộc phải để ở chế độ "Bất kỳ ai có đường liên kết đều có thể xem". Điều này tiềm ẩn rủi ro lộ toàn bộ SĐT, họ tên, địa chỉ khách hàng nếu ai đó biết ID bảng tính.
+* Từ phiên bản **v2.6.1**, toàn bộ luồng tra cứu đơn hàng và đồng bộ đã chuyển qua **Google Apps Script Web App API (`searchOrders`)** có cơ chế che giấu danh tính (**Incognito Masking**).
+* Khi triển khai Web App với cấu hình chuẩn:
+  - **Thực thi dưới dạng (Execute as)**: `Tôi (Me / Chủ sở hữu)`
+  - **Người có quyền truy cập (Who has access)**: `Bất kỳ ai (Anyone)`
+  $\rightarrow$ Google Apps Script chạy dưới quyền của bạn (Chủ tiệm), do đó nó **vẫn đọc và ghi dữ liệu bình thường 100%** ngay cả khi bạn khóa toàn bộ bảng tính lại chỉ mình bạn xem được!
+
+### Các bước khóa file Google Sheets về Riêng tư:
+1. Mở file Google Sheets **`heni_webapp`**.
+2. Bấm nút màu xanh **Chia sẻ (Share)** ở góc trên cùng bên phải.
+3. Tại khung **Quyền truy cập chung (General access)**:
+   - Nhấp vào menu thả xuống và chuyển từ `Bất kỳ ai có đường liên kết (Anyone with the link)` $\rightarrow$ **`Hạn chế (Restricted)`**.
+4. Bấm nút **Xong (Done)**.
+5. **Kiểm tra**:
+   - Mở cửa sổ Ẩn danh (Incognito) trên trình duyệt, dán link Google Sheets vào $\rightarrow$ Google sẽ yêu cầu đăng nhập và báo không có quyền truy cập (hoàn toàn an toàn!).
+   - Mở Web App tại `https://xjithemx.github.io/heni_webapp/` $\rightarrow$ Web App vẫn tải thực đơn, đặt đơn mới và tra cứu đơn hàng nhanh chóng, mượt mà!

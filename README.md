@@ -13,7 +13,7 @@
   - Toàn bộ giao diện (`index.html`), cấu hình nhanh (`config.js`) và kho 22 hình ảnh (`images/`) được phục vụ trực tiếp trên **GitHub Pages CDN**, giúp mở trang và hiển thị ảnh tức thì trong **0.1 giây**, xóa bỏ hoàn toàn lỗi giới hạn băng thông và độ trễ Base64 của Google Drive.
   - Dữ liệu thực đơn (`Dim_Menu`), cấu hình thông báo tuần (`Dim_Config`), thanh toán (`payment_method`) và đơn hàng (`Orders_Master`, `Fact_Order_Items`) vẫn đồng bộ 2 chiều với **Google Sheets** qua Google Apps Script (`code.gs`).
 * **Quyền riêng tư tuyệt đối (Privacy-First)**: Không lưu thông tin cá nhân của khách hàng vào trình duyệt (`localStorage`).
-* **Tự động hóa Bếp 20h00 (Daily Kitchen Dispatch)**: Đúng 20h00 mỗi tối, hệ thống tự động tổng hợp số chai cần nấu cho ngày mai + danh sách khách hàng/địa chỉ/ghi chú và gửi báo cáo về email mặc định `ll.huyhoang.1412@gmail.com` (cùng các email trong `config.js`).
+* **Tự động hóa Bếp 20h00 (Daily Kitchen Dispatch)**: Đúng 20h00 mỗi tối, hệ thống tự động tổng hợp số chai cần nấu cho ngày mai + danh sách khách hàng/địa chỉ/ghi chú và gửi báo cáo về email cấu hình bảo mật trong `Dim_Config` / `config.js` (hoặc tài khoản Google triển khai Web App).
 
 ---
 
@@ -30,6 +30,24 @@
 ---
 
 ## 🕒 3. LỊCH SỬ CẬP NHẬT & NÂNG CẤP CHI TIẾT (DETAILED CHANGELOG)
+
+### [v2.6.1] — 2026-11-15: Security & Privacy Audit, Loại bỏ Scraper GViz, Ẩn Danh Hóa Khách Hàng (Incognito Masking) & Hỗ trợ Google Sheets Restricted
+* **Bảo Mật Cơ Sở Dữ Liệu & Hỗ Trợ Google Sheets Chế Độ Riêng Tư (Restricted Mode)**:
+  - Loại bỏ hoàn toàn cơ chế đọc trực tiếp `Orders_Master` qua Google Sheets GViz JSONP trên trình duyệt (`fetchLiveOrdersFromSheet`). Trước đây, nếu bảng tính công khai, kẻ xấu có thể cào toàn bộ danh sách đơn hàng của khách hàng trực tiếp qua URL GViz.
+  - Sau khi chuyển dịch sang API Apps Script độc quyền (`searchOrders`), chủ tiệm có thể chuyển Google Sheets sang chế độ **Hạn chế (Chỉ những người được chia sẻ mới có quyền truy cập / Restricted)** mà Web App vẫn hoạt động bình thường 100%, do Google Apps Script thực thi dưới quyền chủ sở hữu (*Execute as: Me*).
+* **Cơ Chế Che Giấu Danh Tính Khách Hàng (Incognito Data Masking)**:
+  - Khi tra cứu đơn hàng công khai qua `searchOrders`, API tự động mã hóa bảo vệ PII:
+    - Họ tên khách hàng được che giấu: `Nguyễn Văn An` $\rightarrow$ `N***** V** A*`.
+    - Số điện thoại được ẩn số giữa: `0901234567` $\rightarrow$ `090****567`.
+    - Địa chỉ giao hàng thực tế không gửi về client trong API tra cứu công khai.
+  - Yêu cầu từ khóa tìm kiếm tối thiểu 3 ký tự và giới hạn tối đa 10 kết quả gần nhất để triệt tiêu nguy cơ brute-force / data harvesting.
+* **Bảo Vệ Tài Khoản Bàn Giao Hàng Cho Nhân Viên / Shipper (`?view=staff`)**:
+  - Hỗ trợ mã PIN bảo mật `staff_pin` trong tab `Dim_Config` cho hình thức đăng nhập thủ công bằng email, ngăn chặn kẻ lạ mạo danh nhân viên khi chỉ biết địa chỉ email.
+  - Loại bỏ trường `createdBy` (email nhân viên) trong API trả về ngày nghỉ lễ/đóng cửa bếp (`getActiveClosures`).
+* **Ẩn Danh Hóa 100% Dữ Liệu Mẫu (Sanitize Sample Data)**:
+  - Thay thế toàn bộ email cá nhân thực tế, số điện thoại thật và tên khách hàng thực tế trong code và tài liệu bằng danh tính ẩn danh ngẫu nhiên (`bep.heni@example.com`, `0901234567`, `Khách hàng Lan Anh`, `Khách hàng Bình Minh`).
+
+---
 
 ### [v2.6.0] — 2026-11-10: Nâng cấp Toàn Diện Đơn Tuần Đa Ngày (Multi-Day), Giải quyết Grain Mismatch & Hỗ trợ Giao Gộp Ca Sớm (Combined Drop)
 * **Bối cảnh & Vấn đề nghiệp vụ (Grain Mismatch)**:
@@ -132,9 +150,9 @@
 
 ### [v2.2.0] — 2026-11-08: Sửa dứt điểm Tính năng Tra Cứu Lịch Sử Đơn Hàng, Vá lỗi `getPaymentInfo` & Nâng cấp UX Thanh toán (`1edb17b`, `96d6aa0`)
 * **Debug & Sửa lỗi Tra cứu Lịch sử Đơn hàng (`searchOrder` trong `index.html` & `searchOrders` trong `code.gs`)**:
-  - *Nguyên nhân gốc*: Bản cũ dùng `.replace(/\D/g, '')` xóa sạch toàn bộ chữ cái nên khi nhập tên khách (VD: `"C Ngọc"`) chuỗi bị biến thành rỗng `""` và thoát hàm im lặng; đồng thời SĐT trên Google Sheets bị lưu dạng số mất số `0` đầu (`379524516` / `3.79524516E8`) khiến so sánh tuyệt đối bị trượt.
+  - *Nguyên nhân gốc*: Bản cũ dùng `.replace(/\D/g, '')` xóa sạch toàn bộ chữ cái nên khi nhập tên khách (VD: `"Lan Anh"`) chuỗi bị biến thành rỗng `""` và thoát hàm im lặng; đồng thời SĐT trên Google Sheets bị lưu dạng số mất số `0` đầu (`901234567` / `9.01234567E8`) khiến so sánh tuyệt đối bị trượt.
   - *Giải pháp đã triển khai*:
-    1. Hỗ trợ **Tra cứu 3-trong-1**: Tìm theo **Tên khách hàng** (không phân biệt hoa/thường và không phân biệt dấu tiếng Việt — gõ `C Ngọc`, `c ngoc`, `Ngọc` đều ra kết quả), tìm theo **Số điện thoại** (tự động xử lý scientific notation và số `0` đầu, hỗ trợ tìm 4–10 số cuối), hoặc tìm theo **Mã đơn** (`HN-751646`).
+    1. Hỗ trợ **Tra cứu 3-trong-1**: Tìm theo **Tên khách hàng** (không phân biệt hoa/thường và không phân biệt dấu tiếng Việt — gõ `Lan Anh`, `lan anh`, `Anh` đều ra kết quả), tìm theo **Số điện thoại** (tự động xử lý scientific notation và số `0` đầu, hỗ trợ tìm 4–10 số cuối), hoặc tìm theo **Mã đơn** (`HN-751646`).
     2. Kiểm tra đồng thời cả Cột J và Cột K trên `Orders_Master` để nhận diện chính xác trạng thái `Paid` / `Đã thanh toán`.
     3. Bổ sung thông báo hướng dẫn rõ ràng khi bấm tra cứu lúc ô tìm kiếm đang trống và tích hợp dữ liệu mẫu dự phòng khi chạy Local/Preview.
 * **Debug & Sửa lỗi `getPaymentInfo` trong `code.gs` (Dòng 232)**:
@@ -155,7 +173,7 @@
   - Cho phép chủ tiệm cập nhật nhanh danh sách email nhận báo cáo bếp (`KITCHEN_REPORT_EMAILS`), nội dung thông báo hàng tuần (`WEEKLY_BANNER`), link API (`GAS_API_URL`) và thực đơn hiển thị tức thì (`FALLBACK_MENU`) ngay trên giao diện web GitHub.
 * **Tự động hóa Báo cáo Nấu Sữa 20h00 (`sendDailyKitchenReport` & `setupDaily20hTrigger` trong `code.gs`)**:
   - Tự động tổng hợp tổng số chai cần nấu theo từng món cho ngày giao kế tiếp kèm danh sách chi tiết khách hàng, SĐT, địa chỉ và ghi chú.
-  - Gửi email tự động lúc 20h00 mỗi tối về `ll.huyhoang.1412@gmail.com` và các email trong `config.js`.
+  - Gửi email tự động lúc 20h00 mỗi tối về email quản trị viên cấu hình trong `Dim_Config` / `config.js` (`bep.heni@example.com`).
 * **Tự động điền cột `week` (`resolveCurrentWeekCode`)**:
   - Khi ghi đơn hàng mới vào `Fact_Order_Items`, tự động phát hiện và điền mã tuần hiện hành (`w1`, `w2`...) vào cột H.
 * **Bảo vệ Quyền riêng tư Khách hàng**:

@@ -35,7 +35,7 @@ Sau **bất kỳ** lần chỉnh sửa code, sửa lỗi (bugfix), thêm tính n
    - Mọi thông tin biến động theo ngày/tuần (Menu, Giá bán, Calo, Trạng thái món `active`, Thông báo hàng tuần `WEEKLY_BANNER`, Danh sách email nhận báo cáo bếp `KITCHEN_REPORT_EMAILS`) phải luôn chỉnh sửa được dễ dàng qua **Google Sheets (`heni_webapp`)** hoặc file **[`config.js`](./config.js)** mà không bắt chủ tiệm phải can thiệp vào `index.html`.
 2. **An toàn Tuyệt đối trong [`code.gs`](./code.gs)**:
    - Khi đọc dữ liệu từ các ô Google Sheets (`getValues()`, `getValue()`), luôn phải kiểm tra `null`/`undefined` trước khi gọi `.toString()` hoặc `.trim()`.
-   - Chuẩn hóa số điện thoại bằng hàm `cleanPhone()` để xử lý triệt để trường hợp Google Sheets tự cắt số `0` ở đầu hoặc chuyển sang dạng số khoa học (`3.79524516E8`).
+   - Chuẩn hóa số điện thoại bằng hàm `cleanPhone()` để xử lý triệt để trường hợp Google Sheets tự cắt số `0` ở đầu hoặc chuyển sang dạng số khoa học (`9.01234567E8`).
    - Đồng bộ bản sao của `code.gs` và `index.html` giữa thư mục repo (`/home/antigravity/xjithemx/heni_webapp/`) và thư mục gốc (`/home/antigravity/`) nếu tồn tại, nhằm tránh việc người dùng mở nhầm file cũ.
 3. **Chế độ Làm việc Tự động (Auto-Fix & Auto-Review)**:
    - Luôn tự động kiểm tra cú pháp (`node --check`), tự động đối chiếu dữ liệu thực tế và đồng bộ lên nhánh `main` của GitHub (`xjithemx/heni_webapp`).

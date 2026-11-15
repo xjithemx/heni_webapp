@@ -3,7 +3,7 @@ const CONFIG = {
   FOLDER_ID: '1t4ATTufnr7ZXJM45Ek-V7f--mKGO6i4J', // ID thư mục Drive
   FOLDER_ID_menu: '1UNKQJYm3nmjf_j6EA8QmRSXpyxzPOo6z', // ID thư mục Ảnh món
   PAYMENT_QR_MOMO_ID: '1w2QoGQoc9tjgv2AqWXt9yGU1eN1zMK_e', // QR MoMo tĩnh (fallback khi ô Sheet không có link)
-  DEFAULT_KITCHEN_EMAILS: 'll.huyhoang.1412@gmail.com,ntthien.524@gmail.com,ntthien.0403@gmail.com', // Email mặc định nhận Báo cáo Nấu Sữa 20h00
+  DEFAULT_KITCHEN_EMAILS: '', // Tự động nhận email của chủ tài khoản Google Apps Script hoặc cấu hình trong tab Dim_Config
   GITHUB_CONFIG_URL: 'https://raw.githubusercontent.com/xjithemx/heni_webapp/main/config.js' // Tự động đọc cấu hình từ GitHub config.js
 };
 
@@ -226,7 +226,7 @@ function getActiveClosures() {
           dateFrom: (r[0] || '').toString().trim(),
           dateTo: (r[1] || '').toString().trim(),
           message: (r[2] || '').toString().trim() || 'Shop tạm nghỉ',
-          createdBy: (r[3] || '').toString().trim(),
+          createdBy: '', // Ẩn email nhân sự khỏi API công khai
           createdAt: r[4] instanceof Date ? Utilities.formatDate(r[4], Session.getScriptTimeZone() || 'Asia/Ho_Chi_Minh', 'dd/MM/yyyy HH:mm:ss') : (r[4] || '').toString().trim(),
           active: true
         });
@@ -257,10 +257,30 @@ function getAppConfig() {
 }
 
 // 4. Tra cứu đơn hàng theo Tên Khách, SĐT, hoặc Mã Đơn (Bảo mật, Cột J: owner note, K: Status)
+// Helper làm mờ tên khách hàng bảo vệ quyền riêng tư công khai (Incognito Privacy Masking)
+function maskCustomerName(name) {
+  if (!name) return 'Khách hàng';
+  const parts = name.toString().trim().split(/\s+/);
+  return parts.map(p => {
+    if (p.length <= 1) return p;
+    if (p.length === 2) return p[0] + '*';
+    return p[0] + '*'.repeat(Math.max(1, p.length - 2)) + p[p.length - 1];
+  }).join(' ');
+}
+
+// Helper làm mờ số điện thoại (VD: "0901234567" -> "090****567")
+function maskCustomerPhone(phone) {
+  if (!phone) return '';
+  const digits = phone.toString().replace(/\D/g, '');
+  if (digits.length <= 4) return '***';
+  if (digits.length <= 7) return digits.slice(0, 2) + '***' + digits.slice(-2);
+  return digits.slice(0, 3) + '****' + digits.slice(-3);
+}
+
 function searchOrders(rawQuery) {
   try {
     const q = (rawQuery || '').toString().trim();
-    if (!q) return { success: false, message: 'Vui lòng nhập Tên, Số điện thoại hoặc Mã đơn hàng.' };
+    if (!q || q.length < 3) return { success: false, message: 'Vui lòng nhập tối thiểu 3 ký tự (Tên, Số điện thoại hoặc Mã đơn).' };
 
     const ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
     const sheet = ss.getSheetByName('Orders_Master');
@@ -320,8 +340,8 @@ function searchOrders(rawQuery) {
 
       orders.push({
         orderId: orderId,
-        customerName: custName,
-        phone: custPhoneClean ? ('0' + custPhoneClean) : '',
+        customerName: maskCustomerName(custName),
+        phone: maskCustomerPhone(custPhoneClean ? ('0' + custPhoneClean) : ''),
         date: Utilities.formatDate(ts, Session.getScriptTimeZone() || 'Asia/Ho_Chi_Minh', 'dd/MM/yyyy'),
         timestamp: ts.toISOString(),
         total: Number(rawTotal) || 0,
@@ -334,6 +354,8 @@ function searchOrders(rawQuery) {
         })),
         status: normalizedStatus
       });
+
+      if (orders.length >= 10) break; // Giới hạn tối đa 10 đơn gần nhất chống cào dữ liệu
     }
 
     if (orders.length === 0) {
@@ -559,10 +581,17 @@ function sendOrderEmail(orderData, orderId) {
 // ============================================================================
 function getKitchenRecipientEmails() {
   const emailSet = {};
-  CONFIG.DEFAULT_KITCHEN_EMAILS.split(',').forEach(e => {
-    const clean = e.trim();
-    if (clean) emailSet[clean] = true;
-  });
+  try {
+    const ownerEmail = (typeof Session !== 'undefined' && Session.getActiveUser && Session.getActiveUser().getEmail()) ? Session.getActiveUser().getEmail().trim() : '';
+    if (ownerEmail) emailSet[ownerEmail] = true;
+  } catch (e) {}
+
+  if (CONFIG.DEFAULT_KITCHEN_EMAILS) {
+    CONFIG.DEFAULT_KITCHEN_EMAILS.split(',').forEach(e => {
+      const clean = e.trim();
+      if (clean) emailSet[clean] = true;
+    });
+  }
 
   try {
     const conf = getAppConfig();
@@ -758,7 +787,28 @@ function verifyStaffToken(idToken) {
 
     const idTokenStr = idToken.toString().trim();
     if (idTokenStr.startsWith('test_email:')) {
-      email = idTokenStr.substring('test_email:'.length).toLowerCase().trim();
+      const parts = idTokenStr.substring('test_email:'.length).split('|');
+      email = (parts[0] || '').toLowerCase().trim();
+      const providedPin = (parts[1] || '').trim();
+
+      // Kiểm tra PIN bảo mật nhân sự (nếu có cấu hình trong Dim_Config key: staff_pin)
+      try {
+        const ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
+        const confSheet = ss.getSheetByName('Dim_Config');
+        let requiredPin = '';
+        if (confSheet) {
+          const cData = confSheet.getDataRange().getValues();
+          for (let c = 1; c < cData.length; c++) {
+            if ((cData[c][0] || '').toString().trim().toLowerCase() === 'staff_pin') {
+              requiredPin = (cData[c][1] || '').toString().trim();
+              break;
+            }
+          }
+        }
+        if (requiredPin && providedPin !== requiredPin) {
+          return { error: 'Mã PIN bảo mật nhân sự không chính xác.' };
+        }
+      } catch (pinErr) {}
     } else {
       const url = 'https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent(idTokenStr);
       const resp = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
