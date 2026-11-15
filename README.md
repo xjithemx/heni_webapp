@@ -31,6 +31,17 @@
 
 ## 🕒 3. LỊCH SỬ CẬP NHẬT & NÂNG CẤP CHI TIẾT (DETAILED CHANGELOG)
 
+### [v2.8.1] — 2026-11-15: Cập Nhật Mã QR MoMo Mới, Hotline Liên Hệ (`0834983524`) & Chính Sách Giao Hàng Chi Tiết
+* **Thay thế ảnh mã QR MoMo mới ([`images/momo.jpg`](./images/momo.jpg), [`config.js`](./config.js), [`index.html`](./index.html))**:
+  - Tải ảnh QR MoMo VietQR mới (`IMG_20261115_121543.jpg`) từ Google Drive (`payment/`) và lưu đè chuẩn tên `images/momo.jpg` trên GitHub để tương thích 100% với cấu trúc hiện tại.
+  - Bổ sung tham số cache-busting `?v=2.8.1` vào đường dẫn ảnh và `config.js` để trình duyệt khách hàng tải ngay mã QR mới.
+* **Cập nhật thông tin liên hệ & Hotline ([`config.js`](./config.js), [`index.html`](./index.html))**:
+  - Bổ sung số điện thoại liên hệ chính thức **`0834983524`** vào `SOCIAL_LINKS.contactPhone` và hiển thị trực tiếp trong Tooltip **💬 Liên hệ** (kèm nút gọi nhanh `tel:`).
+* **Chi tiết hóa chính sách giao hàng ([`index.html`](./index.html))**:
+  - Cập nhật đồng bộ ở cả Tooltip **💬 Liên hệ** và Modal Giỏ hàng / Thanh toán: *"Giao hàng miễn phí 3km quanh Bcons City và Sonatus. Các đơn hàng trên 10 món cho khu vực xa hơn."*
+
+---
+
 ### [v2.8.0] — 2026-11-15: Tinh Gọn Đầu Trang (Unified Hero), Pop-up Bản Tin 3.5s & Cụm Hover Tooltip (`taste-v3`)
 * **Hợp nhất phần đầu trang & Xóa bỏ nội dung trùng lặp ([`index.html`](./index.html))**:
   - Loại bỏ khối chữ HTML lặp lại (`Góc Bếp Nhà Hení ~ Đong Đầy Yêu Thương ~`) phía trên ảnh `base.jpg`, giữ nguyên tiêu đề nghệ thuật có sẵn trong ảnh và hợp nhất cùng dải 3 cam kết chất lượng thành **1 khối Hero Card thống nhất**, giúp đẩy **Menu Sáng Mai** lên ngay tầm mắt đầu tiên.

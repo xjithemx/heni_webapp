@@ -34,7 +34,7 @@ window.HENI_CONFIG = {
   SOCIAL_LINKS: {
     facebookUrl: 'https://www.facebook.com/profile.php?id=61595353216988',
     facebookName: 'Góc Bếp Nhà Hení',
-    contactPhone: '', // Để trống hoặc điền số Hotline công khai (hoặc cấu hình trong Dim_Config key: contact_phone)
+    contactPhone: '0834983524',
     popupDurationMs: 3500
   },
 
@@ -42,7 +42,7 @@ window.HENI_CONFIG = {
   PAYMENT_DEFAULT: {
     momo: '',
     vcb: 'Updating',
-    momoQr: './images/momo.jpg',
+    momoQr: './images/momo.jpg?v=2.8.1',
     vcbQr: ''
   },
 

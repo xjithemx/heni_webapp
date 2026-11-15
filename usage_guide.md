@@ -1,7 +1,7 @@
 # TÀI LIỆU HƯỚNG DẪN VẬN HÀNH & QUẢN TRỊ (USAGE GUIDE) — GÓC BẾP NHÀ HENÍ
 
 > **Dành cho:** Chủ tiệm / Người quản lý bếp & vận hành (Mô hình doanh nghiệp 1 người — Không cần biết lập trình).  
-> **Cập nhật lần cuối:** 2026-11-08  
+> **Cập nhật lần cuối:** 2026-11-15  
 > **Link Web App Chính Thức (GitHub CDN):** [https://xjithemx.github.io/heni_webapp/](https://xjithemx.github.io/heni_webapp/)  
 > **Link Google Sheets Quản Trị:** [Mở Bảng Tính heni_webapp](https://docs.google.com/spreadsheets/d/1sjkxZS37_g-R3JowKI99AkaNTCb_HjhcAgrDAInrgb8/edit)
 
@@ -12,7 +12,7 @@
 Với hệ thống mới đã được tự động hóa, công việc mỗi ngày của bạn được rút gọn tối đa:
 
 ### 🌞 Ban ngày (Khách tự đặt hàng & Tra cứu)
-1. Khách mở link web, nhận thông báo bản tin tuần dạng **Pop-up tự động tắt sau 3.5 giây** (có nút **`✕`** đóng nhanh hoặc nút **`💌 Bản tin`** ở góc trên để xem lại). Trên thanh đầu trang còn có cụm nút tiện ích **Facebook**, **Mã QR thanh toán** và **Liên hệ** (rê chuột qua để xem nhanh).
+1. Khách mở link web, nhận thông báo bản tin tuần dạng **Pop-up tự động tắt sau 3.5 giây** (có nút **`✕`** đóng nhanh hoặc nút **`💌 Bản tin`** ở góc trên để xem lại). Trên thanh đầu trang còn có cụm nút tiện ích **Facebook**, **Mã QR thanh toán** (`images/momo.jpg` đã cập nhật bản mới) và **Liên hệ** (Hotline **`0834983524`** & chính sách giao hàng: *Miễn phí 3km quanh Bcons City và Sonatus; các đơn trên 10 món cho khu vực xa hơn* — rê chuột qua để xem nhanh).
 2. Khách chọn món cho **Sáng Mai** hoặc **Đặt Trước Cả Tuần**, chọn **Độ ngọt** mong muốn ngay trên từng món (`🍯 Bình thường`, `🌿 Ít ngọt`, hoặc `🥥 Không ngọt` — mặc định là `Bình thường`) và bấm **Xác nhận đơn hàng**.
 3. Hệ thống tự động:
    - Ghi đơn tổng vào tab **`Orders_Master`** (trạng thái mặc định: `Đã tiếp nhận`).

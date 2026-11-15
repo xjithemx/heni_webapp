@@ -8,7 +8,7 @@
     <link rel="icon" type="image/jpeg" href="./images/logo-only.jpg">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <script src="./config.js?v=2.5.0"></script>
+    <script src="./config.js?v=2.8.1"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=DM+Sans:wght@400;500;600&display=swap"
@@ -1230,7 +1230,7 @@
                                 <label class="block text-sm font-semibold text-brand-dark mb-1.5">Địa chỉ nhận
                                     hàng</label>
                                 <textarea v-model="form.address" required rows="2"
-                                    placeholder="Freeship Bcons City & Bán kính dưới 3km"
+                                    placeholder="VD: Tòa A Bcons City / Sonatus... (Miễn phí 3km quanh Bcons City & Sonatus)"
                                     class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 focus:outline-none focus:border-brand-green focus:ring-1 focus:ring-brand-green text-sm resize-none transition-shadow"></textarea>
                             </div>
                             <div>
@@ -1247,8 +1247,7 @@
                                 </div>
                                 <div class="flex justify-between items-center mb-6">
                                     <span class="text-gray-500 text-sm">Phí giao hàng</span>
-                                    <span class="text-xs text-right text-gray-400">Shop sẽ báo sau nếu > 3km
-                                        (5k/km)</span>
+                                    <span class="text-xs text-right text-gray-400">Miễn phí 3km quanh Bcons City &amp; Sonatus · Đơn &gt; 10 món cho khu vực xa hơn</span>
                                 </div>
                                 <button type="submit" :disabled="isSubmitting"
                                     class="w-full py-4 rounded-2xl bg-brand-green text-white font-bold text-lg hover:bg-brand-dark transition-colors disabled:opacity-50 flex justify-center items-center shadow-md active:scale-[0.98]">
@@ -1427,7 +1426,7 @@
                 const paymentInfo = ref(cfg.PAYMENT_DEFAULT || {
                     momo: '',
                     vcb: 'Updating',
-                    momoQr: `${IMAGE_BASE_URL}momo.jpg`,
+                    momoQr: `${IMAGE_BASE_URL}momo.jpg?v=2.8.1`,
                     vcbQr: ''
                 });
 
@@ -1444,7 +1443,7 @@
                 const socialLinks = ref({
                     facebookUrl: (cfg.SOCIAL_LINKS && cfg.SOCIAL_LINKS.facebookUrl) || 'https://www.facebook.com/profile.php?id=61595353216988',
                     facebookName: (cfg.SOCIAL_LINKS && cfg.SOCIAL_LINKS.facebookName) || 'Góc Bếp Nhà Hení',
-                    contactPhone: (cfg.SOCIAL_LINKS && cfg.SOCIAL_LINKS.contactPhone) || '',
+                    contactPhone: (cfg.SOCIAL_LINKS && cfg.SOCIAL_LINKS.contactPhone) || '0834983524',
                     popupDurationMs: (cfg.SOCIAL_LINKS && Number(cfg.SOCIAL_LINKS.popupDurationMs)) || 3500
                 });
 
