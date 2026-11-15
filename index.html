@@ -520,18 +520,35 @@
                         <div class="flex flex-wrap items-start justify-between gap-2 border-b border-gray-100 pb-3">
                             <div>
                                 <span class="font-bold text-base text-brand-dark font-mono">#{{ order.orderId }}</span>
-                                <span class="text-xs text-gray-400 ml-2">{{ order.customerName }}</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <!-- Trạng thái Giao hàng -->
-                                <span :class="order.deliveryStatus === 'Đã giao' ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600'"
-                                    class="text-[11px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap">
-                                    {{ order.deliveryStatus === 'Đã giao' ? '✅ Đã giao' : '🚚 Chưa giao' }}
+                                <span class="text-xs text-gray-500 ml-2 font-medium">{{ order.customerName }}</span>
+                                <span v-if="order.isMultiDay" class="ml-2 text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-md">
+                                    🗓️ Đơn tuần ({{ (order.schedule?.daysList || []).filter(d => d.isDelivered).length }}/{{ order.schedule?.totalDays || 1 }} ngày)
                                 </span>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <!-- Trạng thái Giao hàng -->
+                                <template v-if="staffSelectedDate">
+                                    <span v-if="order.todayIsEarly" class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-purple-100 text-purple-800">
+                                        ⚡ Đã giao sớm ({{ order.todayEarlyNote }})
+                                    </span>
+                                    <span v-else-if="order.todayIsDelivered" class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800">
+                                        ✅ Đã giao ca này
+                                    </span>
+                                    <span v-else class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-600">
+                                        🚚 Chưa giao
+                                    </span>
+                                </template>
+                                <template v-else>
+                                    <span :class="order.deliveryStatus && (order.deliveryStatus.includes('Hoàn tất') || order.deliveryStatus === 'Đã giao') ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'"
+                                        class="text-[11px] font-bold px-2.5 py-1 rounded-full">
+                                        {{ order.deliveryStatus || '🚚 Chưa giao' }}
+                                    </span>
+                                </template>
+
                                 <!-- Trạng thái Thanh toán -->
-                                <span :class="order.status === 'Paid' ? 'bg-brand-green/10 text-brand-green' : 'bg-amber-100 text-amber-800'"
-                                    class="text-[11px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap">
-                                    {{ order.status === 'Paid' ? '💰 Đã thanh toán' : '💵 Chưa thu tiền' }}
+                                <span :class="order.status === 'Paid' ? 'bg-brand-green/10 text-brand-green' : (order.status.includes('Đã thu') ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800')"
+                                    class="text-[11px] font-bold px-2.5 py-1 rounded-full">
+                                    {{ order.status === 'Paid' ? '💰 Đã thanh toán' : (order.status || '💵 Chưa thu tiền') }}
                                 </span>
                             </div>
                         </div>
@@ -560,15 +577,90 @@
                             </div>
                         </div>
 
-                        <!-- Items List -->
-                        <div class="bg-brand-bone rounded-xl p-3 space-y-1.5 text-xs">
-                            <div v-for="(it, idx) in order.items" :key="idx" class="flex justify-between items-center">
-                                <span class="text-brand-dark">🥛 <b>{{ it.name }}</b> <span class="text-gray-500">({{ it.deliveryDate }})</span></span>
+                        <!-- Items List for Selected Day -->
+                        <div class="bg-brand-bone rounded-xl p-3 space-y-2 text-xs">
+                            <div class="font-bold text-gray-700 flex justify-between items-center pb-1 border-b border-gray-200/60">
+                                <span>🥛 Món giao ca hôm nay ({{ order.todayBottles }} chai):</span>
+                                <span class="text-brand-green font-bold">{{ formatPrice(order.todaySubtotal) }}</span>
+                            </div>
+                            <div v-for="(it, idx) in order.todayItems" :key="idx" class="flex justify-between items-center pl-2">
+                                <span class="text-brand-dark">· <b>{{ it.name }}</b> <span class="text-gray-500 text-[11px]">({{ it.deliveryDate }})</span></span>
                                 <span class="font-bold text-brand-green text-sm">x{{ it.quantity }}</span>
                             </div>
-                            <div class="border-t border-gray-200 pt-2 mt-2 flex justify-between items-center">
-                                <span class="font-medium text-gray-600">Tổng tiền thu:</span>
-                                <span class="font-bold text-base text-brand-dark">{{ formatPrice(order.total) }}</span>
+
+                            <!-- Smart Combined Drop Picker (Giao gộp ca tiếp theo) -->
+                            <div v-if="staffSelectedDate && order.availableFutureDays && order.availableFutureDays.length > 0"
+                                class="mt-2 pt-2 border-t border-dashed border-gray-300 space-y-2">
+                                <p class="text-brand-dark font-bold text-[11px] flex items-center gap-1 text-amber-900">
+                                    <span>📦</span> Khách muốn giao gộp thêm ca tiếp theo vào hôm nay?
+                                </p>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                                    <button v-for="fDay in order.availableFutureDays" :key="fDay.dateToken"
+                                        type="button"
+                                        @click="toggleCombinedDrop(order.orderId, fDay.dateToken)"
+                                        :class="isCombinedSelected(order.orderId, fDay.dateToken) ? 'bg-amber-100 border-amber-400 text-amber-900 font-bold' : 'bg-white border-gray-200 text-gray-600 hover:border-amber-300'"
+                                        class="p-2 rounded-lg border text-left transition-all flex items-center justify-between text-[11px]">
+                                        <div class="flex items-center gap-1.5">
+                                            <span>{{ isCombinedSelected(order.orderId, fDay.dateToken) ? '☑️' : '◻️' }}</span>
+                                            <span>Gộp <b>{{ fDay.dateLabel }}</b> ({{ fDay.bottleCount }} chai)</span>
+                                        </div>
+                                        <span class="text-brand-green font-semibold">+{{ formatPrice(fDay.subtotal) }}</span>
+                                    </button>
+                                </div>
+
+                                <!-- Danh sách món của ca được chọn gộp -->
+                                <div v-if="getCombinedDays(order).length > 0" class="p-2.5 bg-amber-50/80 rounded-lg space-y-1 border border-amber-200">
+                                    <p class="font-bold text-amber-900 text-[11px]">⚡ Món gộp mang theo hôm nay:</p>
+                                    <div v-for="cDay in getCombinedDays(order)" :key="cDay.dateToken">
+                                        <div v-for="(cIt, cIdx) in cDay.items" :key="cIdx" class="flex justify-between items-center text-[11px] pl-2 text-amber-800">
+                                            <span>+ {{ cIt.name }} ({{ cDay.dateLabel }})</span>
+                                            <span class="font-bold">x{{ cIt.quantity }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Total Collection Amount -->
+                            <div class="border-t border-gray-200 pt-2 flex flex-wrap justify-between items-center gap-1">
+                                <div>
+                                    <span class="font-bold text-gray-700">
+                                        Tiền thu ca hôm nay {{ getCombinedDays(order).length > 0 ? '(đã gồm ca gộp)' : '' }}:
+                                    </span>
+                                    <span v-if="order.isMultiDay" class="text-[11px] text-gray-400 block">
+                                        (Tổng trị giá cả đơn tuần: {{ formatPrice(order.total) }})
+                                    </span>
+                                </div>
+                                <span class="font-bold text-lg text-brand-dark">
+                                    {{ staffSelectedDate ? formatPrice(getDueTodayAmount(order)) : formatPrice(order.total) }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Lịch Trình Chi Tiết Các Ngày (Xem Trong Chế Độ Tất Cả Đơn) -->
+                        <div v-if="!staffSelectedDate && order.isMultiDay" class="border border-gray-100 rounded-xl p-3 bg-gray-50/50 space-y-2 text-xs">
+                            <button @click="toggleScheduleExpand(order.orderId)" class="w-full flex items-center justify-between font-bold text-gray-700 text-left">
+                                <span>🗓️ Lịch trình chi tiết {{ order.schedule?.totalDays }} ngày giao:</span>
+                                <span class="text-brand-green">{{ expandedScheduleOrders[order.orderId] ? 'Thu gọn ▲' : 'Xem chi tiết ▼' }}</span>
+                            </button>
+                            <div v-if="expandedScheduleOrders[order.orderId]" class="space-y-1.5 pt-2 border-t border-gray-200/60">
+                                <div v-for="(day, dIdx) in (order.schedule?.daysList || [])" :key="dIdx"
+                                    class="p-2 rounded-lg bg-white border border-gray-200 flex flex-wrap items-center justify-between gap-2">
+                                    <div>
+                                        <span class="font-bold text-brand-dark">📅 {{ day.dateLabel }}</span>
+                                        <span class="text-gray-500 ml-2">({{ day.bottleCount }} chai · {{ formatPrice(day.subtotal) }})</span>
+                                    </div>
+                                    <div>
+                                        <span v-if="day.isEarly" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800">
+                                            ⚡ Giao sớm ({{ day.earlyNote }}) - {{ day.deliveredAt || '' }}
+                                        </span>
+                                        <span v-else-if="day.isDelivered" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                                            ✅ Đã giao {{ day.deliveredAt || '' }}
+                                        </span>
+                                        <span v-else class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
+                                            ⏳ Chờ giao
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -580,25 +672,39 @@
                                     class="px-4 py-2.5 rounded-xl bg-amber-500 text-white font-bold text-xs hover:bg-amber-600 transition-all flex items-center gap-1.5 animate-pulse shadow-md">
                                     <span>↩️</span> Hoàn tác ({{ recentUndoSeconds[order.orderId] }}s)
                                 </button>
-                                <button v-else-if="order.deliveryStatus !== 'Đã giao'" @click="markDelivered(order.orderId, true)"
+                                <button v-else-if="staffSelectedDate ? !order.todayIsDelivered : (order.deliveryStatus !== 'Đã giao' && !order.deliveryStatus.includes('Hoàn tất'))"
+                                    @click="markDelivered(order, true)"
                                     class="px-4 py-2.5 rounded-xl bg-brand-green text-white font-bold text-xs hover:bg-brand-dark transition-colors shadow-sm flex items-center gap-1.5 active:scale-95">
-                                    <span>🚚</span> Đã giao xong
+                                    <span>🚚</span> Đã giao xong {{ getCombinedDays(order).length > 0 ? '(Gộp ' + (1 + getCombinedDays(order).length) + ' ca)' : '' }}
                                 </button>
                                 <div v-else class="text-xs text-gray-500 flex items-center gap-2">
                                     <span>✅ Đã giao lúc {{ order.deliveredAt || '—' }} ({{ order.deliveredBy || 'Shipper' }})</span>
-                                    <button @click="markDelivered(order.orderId, false)" class="text-gray-400 hover:text-red-500 underline">Sửa</button>
+                                    <button @click="markDelivered(order, false)" class="text-gray-400 hover:text-red-500 underline">Sửa</button>
                                 </div>
                             </div>
 
                             <!-- Nút Thu Tiền Mặt -->
                             <div>
-                                <button v-if="order.status !== 'Paid'" @click="markPaid(order.orderId, true)"
-                                    class="px-4 py-2.5 rounded-xl bg-amber-600 text-white font-bold text-xs hover:bg-amber-700 transition-colors shadow-sm flex items-center gap-1.5 active:scale-95">
-                                    <span>💵</span> Đã thu tiền mặt
-                                </button>
-                                <div v-else class="text-xs text-brand-green font-semibold flex items-center gap-2">
+                                <div v-if="order.status === 'Paid'" class="text-xs text-brand-green font-semibold flex items-center gap-2">
                                     <span>💰 Đã thanh toán (Paid)</span>
                                     <button @click="markPaid(order.orderId, false)" class="text-gray-400 hover:text-red-500 underline">Sửa</button>
+                                </div>
+                                <div v-else-if="staffSelectedDate && order.isMultiDay" class="flex items-center gap-2">
+                                    <button @click="markPaid(order.orderId, true, 'partial', getDueTodayAmount(order), getTodayPlusCombinedTokens(order))"
+                                        class="px-3 py-2 rounded-xl bg-amber-600 text-white font-bold text-xs hover:bg-amber-700 transition-colors shadow-sm flex items-center gap-1 active:scale-95">
+                                        <span>💵</span> Thu ca này ({{ formatPrice(getDueTodayAmount(order)) }})
+                                    </button>
+                                    <button @click="markPaid(order.orderId, true, 'full', order.total)"
+                                        class="px-3 py-2 rounded-xl bg-brand-green text-white font-bold text-xs hover:bg-brand-dark transition-colors shadow-sm flex items-center gap-1 active:scale-95"
+                                        title="Khách trả trọn gói cho toàn bộ đơn tuần">
+                                        <span>💰</span> Trả trọn đơn
+                                    </button>
+                                </div>
+                                <div v-else>
+                                    <button @click="markPaid(order.orderId, true, 'full', order.total)"
+                                        class="px-4 py-2.5 rounded-xl bg-amber-600 text-white font-bold text-xs hover:bg-amber-700 transition-colors shadow-sm flex items-center gap-1.5 active:scale-95">
+                                        <span>💵</span> Đã thu {{ formatPrice(order.total) }}
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -1628,6 +1734,8 @@
                 const staffActionError = ref('');
                 const recentUndoDeliveries = ref({});
                 const recentUndoSeconds = ref({});
+                const selectedCombinedDrops = ref({}); // { orderId: ['17-11', ...] }
+                const expandedScheduleOrders = ref({}); // { orderId: true/false }
 
                 const closureForm = ref({
                     dateFrom: 'Thứ 6',
@@ -1899,17 +2007,76 @@
                     return staffSelectedDate.value === `${tmr.getFullYear()}-${pad(tmr.getMonth() + 1)}-${pad(tmr.getDate())}`;
                 });
 
-                // Đánh dấu Đã Giao (có 10 giây Hoàn tác)
-                const markDelivered = (orderId, delivered = true) => {
-                    const target = staffDeliveries.value.find(o => o.orderId === orderId);
+                // Helper giao gộp ca & tính toán thời gian thực (v2.6.0)
+                const toggleCombinedDrop = (orderId, dateToken) => {
+                    if (!selectedCombinedDrops.value[orderId]) {
+                        selectedCombinedDrops.value[orderId] = [];
+                    }
+                    const idx = selectedCombinedDrops.value[orderId].indexOf(dateToken);
+                    if (idx === -1) {
+                        selectedCombinedDrops.value[orderId].push(dateToken);
+                    } else {
+                        selectedCombinedDrops.value[orderId].splice(idx, 1);
+                    }
+                };
+
+                const isCombinedSelected = (orderId, dateToken) => {
+                    return (selectedCombinedDrops.value[orderId] || []).includes(dateToken);
+                };
+
+                const getCombinedDays = (order) => {
+                    const tokens = selectedCombinedDrops.value[order.orderId] || [];
+                    return (order.availableFutureDays || []).filter(d => tokens.includes(d.dateToken));
+                };
+
+                const getDueTodayAmount = (order) => {
+                    let amt = Number(order.todaySubtotal) || 0;
+                    const cDays = getCombinedDays(order);
+                    cDays.forEach(d => { amt += (Number(d.subtotal) || 0); });
+                    return amt;
+                };
+
+                const getDueTodayBottles = (order) => {
+                    let b = Number(order.todayBottles) || 0;
+                    const cDays = getCombinedDays(order);
+                    cDays.forEach(d => { b += (Number(d.bottleCount) || 0); });
+                    return b;
+                };
+
+                const getTodayPlusCombinedTokens = (order) => {
+                    const toks = (order.todayDays || []).map(d => d.dateToken);
+                    const cTokens = selectedCombinedDrops.value[order.orderId] || [];
+                    cTokens.forEach(t => { if (!toks.includes(t)) toks.push(t); });
+                    return toks;
+                };
+
+                const toggleScheduleExpand = (orderId) => {
+                    expandedScheduleOrders.value[orderId] = !expandedScheduleOrders.value[orderId];
+                };
+
+                // Đánh dấu Đã Giao (có 10 giây Hoàn tác, hỗ trợ giao đơn ngày & giao gộp ca)
+                const markDelivered = (order, delivered = true) => {
+                    const orderId = order.orderId;
+                    const target = staffDeliveries.value.find(o => o.orderId === orderId) || order;
                     if (!target) return;
 
-                    const prevStatus = target.deliveryStatus;
+                    const prevDeliveryStatus = target.deliveryStatus;
                     const prevDeliveredAt = target.deliveredAt;
                     const prevDeliveredBy = target.deliveredBy;
+                    const prevTodayIsDelivered = target.todayIsDelivered;
+
+                    const combinedToks = selectedCombinedDrops.value[orderId] || [];
+                    const todayToks = (target.todayDays || []).map(d => d.dateToken);
+                    const allToks = [...todayToks, ...combinedToks];
+                    const execTok = todayToks[0] || (target.schedule?.daysList?.[0]?.dateToken) || staffSelectedDate.value || '';
 
                     if (delivered) {
-                        target.deliveryStatus = 'Đã giao';
+                        target.todayIsDelivered = true;
+                        if (target.isMultiDay && allToks.length < (target.schedule?.totalDays || 1)) {
+                            target.deliveryStatus = `Đang giao (${allToks.length}/${target.schedule?.totalDays || 1} ngày)`;
+                        } else {
+                            target.deliveryStatus = 'Đã giao';
+                        }
                         target.deliveredAt = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
                         target.deliveredBy = staffUser.value?.name || staffUser.value?.email || 'Shipper';
 
@@ -1934,21 +2101,22 @@
                                 clearInterval(interval);
                                 delete recentUndoDeliveries.value[orderId];
                                 delete recentUndoSeconds.value[orderId];
-                                target.deliveryStatus = prevStatus;
+                                target.deliveryStatus = prevDeliveryStatus;
                                 target.deliveredAt = prevDeliveredAt;
                                 target.deliveredBy = prevDeliveredBy;
-                                // Gửi lệnh hủy lên server
-                                sendDeliveredToServer(orderId, false);
+                                target.todayIsDelivered = prevTodayIsDelivered;
+                                sendDeliveredToServer(orderId, false, allToks, execTok);
                             }
                         };
 
-                        sendDeliveredToServer(orderId, true);
+                        sendDeliveredToServer(orderId, true, allToks, execTok);
                     } else {
                         // Bỏ đánh dấu đã giao
+                        target.todayIsDelivered = false;
                         target.deliveryStatus = 'Chưa giao';
                         target.deliveredAt = '';
                         target.deliveredBy = '';
-                        sendDeliveredToServer(orderId, false);
+                        sendDeliveredToServer(orderId, false, allToks, execTok);
                     }
                 };
 
@@ -1960,11 +2128,13 @@
                     }
                 };
 
-                const sendDeliveredToServer = (orderId, delivered) => {
+                const sendDeliveredToServer = (orderId, delivered, deliveryDates = [], executedDate = '') => {
                     const payload = {
                         idToken: staffToken.value,
                         orderId: orderId,
-                        delivered: delivered
+                        delivered: delivered,
+                        deliveryDates: deliveryDates,
+                        executedDate: executedDate
                     };
                     if (isInsideGAS) {
                         google.script.run.staffMarkDelivered(payload);
@@ -1977,23 +2147,37 @@
                     }
                 };
 
-                // Đánh dấu Đã Thu Tiền (Cột K Status = 'Paid')
-                const markPaid = (orderId, paid = true) => {
+                // Đánh dấu Đã Thu Tiền (v2.6.0: Hỗ trợ thu trọn đơn hoặc thu từng ca / ca gộp)
+                const markPaid = (orderId, paid = true, scope = 'full', amount = 0, daysPaid = []) => {
                     const target = staffDeliveries.value.find(o => o.orderId === orderId);
                     if (!target) return;
 
-                    target.status = paid ? 'Paid' : 'Chưa thanh toán';
+                    const prevStatus = target.status;
+                    if (!paid) {
+                        target.status = 'Chưa thanh toán';
+                    } else if (scope === 'full') {
+                        target.status = 'Paid';
+                    } else {
+                        const amtStr = Number(amount).toLocaleString('vi-VN') + 'đ';
+                        const totalStr = Number(target.total).toLocaleString('vi-VN') + 'đ';
+                        target.status = `Đã thu ${amtStr}/${totalStr}`;
+                    }
 
                     const payload = {
                         idToken: staffToken.value,
                         orderId: orderId,
-                        paid: paid
+                        paid: paid,
+                        scope: scope,
+                        amount: amount,
+                        daysPaid: daysPaid
                     };
 
                     const onPaidDone = (res) => {
                         if (res && res.success) {
-                            showToast(paid ? `Đã xác nhận thu tiền đơn #${orderId}! 💰` : `Đã hủy xác nhận thanh toán #${orderId}`);
+                            target.status = res.status || (paid ? 'Paid' : 'Chưa thanh toán');
+                            showToast(paid ? `Đã lưu thanh toán đơn #${orderId}! 💰` : `Đã hủy xác nhận thanh toán #${orderId}`);
                         } else {
+                            target.status = prevStatus;
                             showToast((res && res.message) || 'Lỗi cập nhật thanh toán');
                         }
                     };
@@ -2010,7 +2194,10 @@
                         })
                             .then(r => r.json())
                             .then(onPaidDone)
-                            .catch(err => showToast('Lỗi kết nối GAS: ' + err.message));
+                            .catch(err => {
+                                target.status = prevStatus;
+                                showToast('Lỗi kết nối GAS: ' + err.message);
+                            });
                     }
                 };
 
@@ -2089,25 +2276,45 @@
                     }
                 };
 
-                // Computed Staff KPIs
+                // Computed Staff KPIs (v2.6.0: Nhận biết grain ca theo ngày vs toàn bộ đơn)
                 const filteredStaffDeliveries = computed(() => {
                     if (staffFilter.value === 'pending') {
-                        return staffDeliveries.value.filter(o => o.deliveryStatus !== 'Đã giao');
+                        return staffDeliveries.value.filter(o => {
+                            if (staffSelectedDate.value) {
+                                return !o.todayIsDelivered;
+                            }
+                            return !o.deliveryStatus.includes('Hoàn tất') && o.deliveryStatus !== 'Đã giao';
+                        });
                     }
                     if (staffFilter.value === 'delivered') {
-                        return staffDeliveries.value.filter(o => o.deliveryStatus === 'Đã giao');
+                        return staffDeliveries.value.filter(o => {
+                            if (staffSelectedDate.value) {
+                                return o.todayIsDelivered;
+                            }
+                            return o.deliveryStatus.includes('Hoàn tất') || o.deliveryStatus === 'Đã giao';
+                        });
                     }
                     return staffDeliveries.value;
                 });
 
-                const deliveredCount = computed(() => staffDeliveries.value.filter(o => o.deliveryStatus === 'Đã giao').length);
+                const deliveredCount = computed(() => {
+                    return staffDeliveries.value.filter(o => {
+                        if (staffSelectedDate.value) return o.todayIsDelivered;
+                        return o.deliveryStatus.includes('Hoàn tất') || o.deliveryStatus === 'Đã giao';
+                    }).length;
+                });
+
                 const paidCount = computed(() => staffDeliveries.value.filter(o => o.status === 'Paid').length);
+
                 const totalBottlesForDelivery = computed(() => {
                     return staffDeliveries.value.reduce((acc, o) => {
-                        const itemsCount = (o.items || []).reduce((sum, it) => sum + (Number(it.quantity) || 0), 0);
-                        return acc + itemsCount;
+                        if (staffSelectedDate.value) {
+                            return acc + (Number(o.todayBottles) || 0);
+                        }
+                        return acc + (Number(o.schedule?.totalOrderBottles) || (o.items || []).reduce((sum, it) => sum + (Number(it.quantity) || 0), 0));
                     }, 0);
                 });
+
 
                 const searchOrder = () => {
                     const q = (searchQuery.value || '').trim();
@@ -2182,7 +2389,11 @@
                     isSavingClosure, doTestEmailLogin, doStaffLogout, loadStaffDeliveries, setStaffDateQuick,
                     isStaffDateToday, isStaffDateTomorrow, markDelivered, undoDelivery, markPaid,
                     saveClosure, deleteClosure, filteredStaffDeliveries, deliveredCount, paidCount,
-                    totalBottlesForDelivery
+                    totalBottlesForDelivery,
+                    // V2.6.0 Multi-Day & Combined Drop Helpers:
+                    selectedCombinedDrops, expandedScheduleOrders, toggleCombinedDrop, isCombinedSelected,
+                    getCombinedDays, getDueTodayAmount, getDueTodayBottles, getTodayPlusCombinedTokens,
+                    toggleScheduleExpand
                 }
             }
         }).mount('#app');

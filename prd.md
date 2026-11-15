@@ -1,7 +1,7 @@
 # PRODUCT REQUIREMENTS DOCUMENT (PRD) — GÓC BẾP NHÀ HENÍ (`heni_webapp`)
 
-> **Phiên bản tài liệu:** v2.5.0  
-> **Cập nhật lần cuối:** 2026-11-09  
+> **Phiên bản tài liệu:** v2.6.0  
+> **Cập nhật lần cuối:** 2026-11-10  
 > **Mô hình vận hành mục tiêu:** Doanh nghiệp 1 người (Solo-Founder / Micro D2C Healthy Kitchen)  
 > **Live Production URL:** [https://xjithemx.github.io/heni_webapp/](https://xjithemx.github.io/heni_webapp/)
 
@@ -90,10 +90,10 @@
 | **H** | `Tổng Tiền` | Tổng giá trị đơn hàng (VNĐ) |
 | **I** | `Ghi chú` | Lời nhắn của khách cho bếp (VD: ít ngọt, giữ chai...) |
 | **J** | `owner note` | Ghi chú riêng của chủ tiệm / bếp |
-| **K** | `Status` (**Cột chuẩn gạch nợ**) | Cột ưu tiên số 1 để kiểm tra thanh toán: `Paid` / `Đã thanh toán` (hiển thị nhãn xanh **Đã thanh toán**), `Cancelled` / `Đã hủy` (hiển thị nhãn xám **Đã hủy**), hoặc để trống (hiển thị nhãn cam **Chưa thanh toán**) |
-| **L** | `delivery_status ` | Trạng thái giao hàng của shipper: `Đã giao` hoặc để trống (chưa giao) |
-| **M** | `delivered_at` | Thời gian shipper bấm xác nhận đã giao |
-| **N** | `delivered_by` | Email shipper đã xác nhận giao đơn |
+| **K** | `Status` (**Cột chuẩn gạch nợ**) | Kiểm tra thanh toán: `Paid` (đã trả đủ cả đơn); `Đã thu X/Y (tokens)` (thu tiền mặt từng ca hoặc ca gộp, VD: `Đã thu 100.000đ/230.000đ (16-11+17-11)`); `Cancelled` / `Đã hủy`; hoặc để trống (`Chưa thanh toán`) |
+| **L** | `delivery_status ` | Trạng thái giao hàng theo tiến độ: Đơn 1 ngày: `Đã giao` hoặc để trống; Đơn tuần nhiều ngày: `Đang giao (X/Y ngày: tokens)` (VD: `Đang giao (2/4 ngày: 16-11, 17-11-gộp16-11)`) hoặc `Đã giao (Hoàn tất Y/Y ngày)` |
+| **M** | `delivered_at` | Nhật ký thời gian từng ca giao: Đơn 1 ngày: `DD/MM/YYYY HH:mm`; Đơn tuần: `tok1: time1 | tok2: time2 (gộp tok1)` |
+| **N** | `delivered_by` | Người xác nhận giao từng ca: Đơn 1 ngày: `email/tên`; Đơn tuần: `tok1: tên1 | tok2: tên2 (gộp tok1)` |
 | **O** | `delivery_iso ` | Ngày giao chuẩn `yyyy-MM-dd` để lọc đơn trong ngày |
 
 ### 3.3. Tab `Fact_Order_Items` (Bảng Phẳng Chi Tiết Từng Món Để Nấu Sữa)

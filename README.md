@@ -31,6 +31,24 @@
 
 ## 🕒 3. LỊCH SỬ CẬP NHẬT & NÂNG CẤP CHI TIẾT (DETAILED CHANGELOG)
 
+### [v2.6.0] — 2026-11-10: Nâng cấp Toàn Diện Đơn Tuần Đa Ngày (Multi-Day), Giải quyết Grain Mismatch & Hỗ trợ Giao Gộp Ca Sớm (Combined Drop)
+* **Bối cảnh & Vấn đề nghiệp vụ (Grain Mismatch)**:
+  - Khách hàng thường đặt combo cả tuần (Weekly Pre-order, ví dụ: Thứ 2, Thứ 3, Thứ 4).
+  - Trước đây, khi Shipper bấm "Đã giao" hoặc "Đã thu tiền" cho ngày Thứ 2, hệ thống ghi đè toàn bộ đơn thành `Đã giao` hoặc `Paid` trên `Orders_Master`. Hậu quả: Sang ngày Thứ 3, Bếp và Shipper khác tưởng đơn đã xong hoặc tiền đã thu đủ $\rightarrow$ Nguy cơ giao sót món, thất thoát doanh thu hoặc giao lặp.
+  - Khách muốn giao luôn món Thứ 3 vào sáng Thứ 2 (Giao gộp ca sớm): Shipper không có cách nào đánh dấu giao trước món Thứ 3, dẫn đến sáng Thứ 3 Bếp vẫn nấu dư và Shipper mang đi giao lần 2.
+* **Giải pháp Kỹ thuật & Data Contract Chuẩn hóa**:
+  - Bảo toàn nguyên vẹn cấu trúc 15 cột trên `Orders_Master` của Google Sheets (không tạo thêm cột thừa).
+  - Chuẩn hóa cấu trúc chuỗi tự mô tả tiến độ (Self-describing Progress String):
+    - **Cột L (`delivery_status`)**: Phản ánh chính xác tiến độ: `Đang giao (2/4 ngày: 16-11, 17-11-gộp16-11)` $\rightarrow$ `Đã giao (Hoàn tất 4/4 ngày)`.
+    - **Cột M (`delivered_at`)**: Nhật ký thời gian từng ca: `16-11: 16/11 06:45 | 17-11: 16/11 06:45 (gộp 16-11)`.
+    - **Cột N (`delivered_by`)**: Nhật ký người giao từng ca: `16-11: Hoàng | 17-11: Hoàng (gộp 16-11)`.
+    - **Cột K (`Status`)**: Hỗ trợ thu tiền linh hoạt: `Paid` (nếu chuyển khoản trước trọn đơn) hoặc `Đã thu 100.000đ/230.000đ (16-11+17-11)` (nếu thu tiền mặt từng ca).
+* **Cải tiến Trải nghiệm Rider App (`?view=staff`)**:
+  - Khung thông minh **Giao gộp ca tiếp theo**: Shipper có thể chọn gộp ca tương lai (Thứ 3, Thứ 4) vào sáng hôm nay; danh sách món và số tiền thu tự động cộng dồn theo thời gian thực.
+  - Nút thu tiền linh hoạt: Cho phép chọn **Thu ca hôm nay (XX.XXXđ)** hoặc **Khách trả trọn đơn (YY.YYYđ)**.
+  - Tự động nhận biết ca đã giao sớm: Khi mở app vào ngày hôm sau, món đã được giao gộp từ hôm trước sẽ tự động nằm ở tab "Đã giao" với huy hiệu tím `⚡ Đã giao sớm (gộp ca)` $\rightarrow$ Bếp không nấu dư, Shipper không giao lặp!
+  - Chế độ **Tất cả đơn**: Gom nhóm gọn gàng 1 thẻ duy nhất cho mỗi đơn hàng kèm thanh tiến độ và danh sách mở rộng lịch trình từng ngày.
+
 ### [v2.5.2] — 2026-11-09: Sửa lỗi Lọc Ngày Giao Hàng Shipper (Khớp YYYY-MM-DD với nhãn Thứ x DD-MM)
 * **Nguyên nhân không hiển thị đơn hôm nay**:
   - Ô chọn ngày gửi định dạng `YYYY-MM-DD` (ví dụ: `2026-11-10`), trong khi cột `Raw_JSON_Items` trên Google Sheets lưu ngày giao dạng chuỗi `Thứ 3 (10-11)`.

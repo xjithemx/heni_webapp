@@ -813,7 +813,118 @@ function staffWhoAmI(payload) {
   return { success: true, staff: staff };
 }
 
-// Lấy danh sách đơn hàng cần giao theo ngày cho Shipper
+// ==========================================
+// 6. MODULE SHIPPER & QUẢN LÝ GIAO HÀNG (v2.6.0 MULTI-DAY & COMBINED DROPS)
+// ==========================================
+
+// Helper trích xuất mã ngày ngắn gọn (VD: "Thứ 2 (16-11)" -> "16-11", "2026-11-16" -> "16-11")
+function extractDateToken(dateStr) {
+  if (!dateStr) return '';
+  const s = dateStr.toString().trim();
+  const m = s.match(/(\d{1,2})[-/](\d{1,2})/);
+  if (m) {
+    const dd = m[1].padStart(2, '0');
+    const mm = m[2].padStart(2, '0');
+    return `${dd}-${mm}`;
+  }
+  return s.toLowerCase();
+}
+
+// Helper phân rã danh sách món theo từng ngày giao (Grain phân rã lịch trình)
+function parseOrderSchedule(items) {
+  const daysMap = {};
+  const dayOrder = [];
+  let totalBottles = 0;
+  let totalAmount = 0;
+
+  (items || []).forEach(function(it) {
+    const rawDate = (it.deliveryDate || 'Không xác định').toString().trim();
+    const qty = Number(it.quantity) || 1;
+    const price = Number(it.price) || 0;
+    const lineTotal = price * qty;
+    totalBottles += qty;
+    totalAmount += lineTotal;
+
+    if (!daysMap[rawDate]) {
+      const tok = extractDateToken(rawDate);
+      daysMap[rawDate] = {
+        dateLabel: rawDate,
+        dateToken: tok,
+        items: [],
+        bottleCount: 0,
+        subtotal: 0
+      };
+      dayOrder.push(rawDate);
+    }
+    daysMap[rawDate].items.push(it);
+    daysMap[rawDate].bottleCount += qty;
+    daysMap[rawDate].subtotal += lineTotal;
+  });
+
+  return {
+    daysList: dayOrder.map(function(k) { return daysMap[k]; }),
+    totalDays: dayOrder.length,
+    totalOrderBottles: totalBottles,
+    totalOrderAmount: totalAmount
+  };
+}
+
+// Helper phân tích Cột L (delivery_status) thành trạng thái giao từng ngày
+function parseDeliveryStatus(colL, totalDays, daysList) {
+  const s = (colL || '').toString().trim();
+  const delivMap = {};
+
+  if (!s || s === 'Chưa giao') return delivMap;
+
+  if (s === 'Đã giao' || s.indexOf('Hoàn tất') !== -1) {
+    (daysList || []).forEach(function(d) {
+      delivMap[d.dateToken] = { token: d.dateToken, isEarly: false, earlyNote: '', raw: d.dateToken };
+    });
+    return delivMap;
+  }
+
+  const mColon = s.match(/:\s*([^)]+)\)?$/);
+  if (mColon) {
+    const parts = mColon[1].split(',');
+    parts.forEach(function(p) {
+      const cleanP = p.trim();
+      if (!cleanP) return;
+      if (cleanP.indexOf('-gộp') !== -1) {
+        const sub = cleanP.split('-gộp');
+        const schedTok = sub[0].trim();
+        const execTok = sub[1].trim();
+        delivMap[schedTok] = { token: schedTok, isEarly: true, earlyNote: 'gộp ' + execTok, raw: cleanP };
+      } else {
+        delivMap[cleanP] = { token: cleanP, isEarly: false, earlyNote: '', raw: cleanP };
+      }
+    });
+  }
+  return delivMap;
+}
+
+// Helper phân tích nhật ký key-value (Cột M, Cột N) dạng "16-11: val | 17-11: val"
+function parseKeyedLogs(str) {
+  const map = {};
+  if (!str) return map;
+  const parts = str.toString().split('|');
+  parts.forEach(function(p) {
+    const clean = p.trim();
+    if (!clean) return;
+    const colonIdx = clean.indexOf(':');
+    if (colonIdx !== -1) {
+      const k = clean.substring(0, colonIdx).trim();
+      const v = clean.substring(colonIdx + 1).trim();
+      map[k] = v;
+    }
+  });
+  return map;
+}
+
+function buildKeyedLogs(map) {
+  return Object.keys(map).map(function(k) { return k + ': ' + map[k]; }).join(' | ');
+}
+
+// Lấy danh sách đơn hàng cần giao theo ngày cho Shipper (v2.6.0 hỗ trợ đơn tuần & giao gộp)
 function staffGetDeliveries(payload) {
   const staff = verifyStaffToken(payload && payload.idToken);
   if (!staff || staff.error) {
@@ -831,7 +942,7 @@ function staffGetDeliveries(payload) {
 
     // Chuẩn bị các biến thể định dạng ngày từ targetDate (YYYY-MM-DD -> DD-MM, DD/MM...)
     const searchTokens = [];
-    if (targetDate) {
+    if (targetDate && targetDate !== 'all') {
       searchTokens.push(targetDate.toLowerCase());
       const mIso = targetDate.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
       if (mIso) {
@@ -854,27 +965,76 @@ function staffGetDeliveries(payload) {
 
       const statusK = (r[10] || '').toString().trim();
       const deliveryStatus = (r[11] || '').toString().trim();
-      const deliveredAt = r[12] instanceof Date ? Utilities.formatDate(r[12], Session.getScriptTimeZone() || 'Asia/Ho_Chi_Minh', 'dd/MM/yyyy HH:mm:ss') : (r[12] || '').toString().trim();
+      const deliveredAt = r[12] instanceof Date ? Utilities.formatDate(r[12], Session.getScriptTimeZone() || 'Asia/Ho_Chi_Minh', 'dd/MM/yyyy HH:mm') : (r[12] || '').toString().trim();
       const deliveredBy = (r[13] || '').toString().trim();
       const deliveryIso = (r[14] || '').toString().trim();
 
-      // Kiểm tra xem đơn có món giao trong ngày targetDate hay không
+      const sched = parseOrderSchedule(items);
+      const delivMap = parseDeliveryStatus(deliveryStatus, sched.totalDays, sched.daysList);
+      const timeLogs = parseKeyedLogs(deliveredAt);
+      const staffLogs = parseKeyedLogs(deliveredBy);
+
+      // Điền thông tin giao hàng chi tiết cho từng ngày trong schedule
+      sched.daysList.forEach(function(d) {
+        const dInfo = delivMap[d.dateToken];
+        d.isDelivered = !!dInfo;
+        d.isEarly = !!(dInfo && dInfo.isEarly);
+        d.earlyNote = (dInfo && dInfo.earlyNote) || '';
+        d.deliveredAt = timeLogs[d.dateToken] || (sched.totalDays === 1 ? deliveredAt : '');
+        d.deliveredBy = staffLogs[d.dateToken] || (sched.totalDays === 1 ? deliveredBy : '');
+      });
+
       let matchDate = false;
-      let matchedItems = [];
+      let todayDays = [];
+      let todayItems = [];
+      let todayBottles = 0;
+      let todaySubtotal = 0;
+      let todayIsDelivered = false;
+      let todayIsEarly = false;
+      let todayEarlyNote = '';
+      let availableFutureDays = [];
 
       if (!targetDate || targetDate === 'all') {
         matchDate = true;
-        matchedItems = items;
+        todayDays = sched.daysList;
+        todayItems = items;
+        todayBottles = sched.totalOrderBottles;
+        todaySubtotal = sched.totalOrderAmount;
+        todayIsDelivered = sched.totalDays === 1 ? (deliveryStatus === 'Đã giao') : (sched.daysList.length > 0 && sched.daysList.every(function(d) { return d.isDelivered; }));
+        todayIsEarly = false;
+        todayEarlyNote = '';
+        availableFutureDays = [];
       } else {
-        matchedItems = items.filter(it => {
-          const dLabel = (it.deliveryDate || '').toString().toLowerCase();
-          const matchLabel = searchTokens.some(tok => dLabel.includes(tok));
-          const matchIso = deliveryIso && searchTokens.includes(deliveryIso.toLowerCase());
+        const matchingDays = sched.daysList.filter(function(d) {
+          const matchLabel = searchTokens.some(function(tok) { return d.dateLabel.toLowerCase().indexOf(tok) !== -1 || d.dateToken.toLowerCase() === tok; });
+          const matchIso = deliveryIso && searchTokens.indexOf(deliveryIso.toLowerCase()) !== -1;
           return matchLabel || matchIso;
         });
-        const matchColIso = deliveryIso && searchTokens.includes(deliveryIso.toLowerCase());
-        if (matchedItems.length > 0 || matchColIso) {
+
+        if (matchingDays.length > 0) {
           matchDate = true;
+          todayDays = matchingDays;
+          matchingDays.forEach(function(d) {
+            todayItems = todayItems.concat(d.items);
+            todayBottles += d.bottleCount;
+            todaySubtotal += d.subtotal;
+          });
+          todayIsDelivered = matchingDays.every(function(d) { return d.isDelivered; });
+          todayIsEarly = matchingDays.some(function(d) { return d.isEarly; });
+          todayEarlyNote = matchingDays.filter(function(d) { return d.isEarly; }).map(function(d) { return d.earlyNote; }).join('; ');
+
+          // Các ngày kế tiếp chưa giao mà Shipper có thể giao gộp hôm nay
+          availableFutureDays = sched.daysList.filter(function(d) {
+            return matchingDays.indexOf(d) === -1 && !d.isDelivered;
+          });
+        } else if (deliveryIso && searchTokens.indexOf(deliveryIso.toLowerCase()) !== -1) {
+          matchDate = true;
+          todayDays = sched.daysList;
+          todayItems = items;
+          todayBottles = sched.totalOrderBottles;
+          todaySubtotal = sched.totalOrderAmount;
+          todayIsDelivered = (deliveryStatus === 'Đã giao');
+          availableFutureDays = [];
         }
       }
 
@@ -889,18 +1049,28 @@ function staffGetDeliveries(payload) {
           address: (r[5] || '').toString().trim(),
           note: (r[8] || '').toString().trim(),
           ownerNote: (r[9] || '').toString().trim(),
-          total: Number(rawTotal) || 0,
+          total: Number(rawTotal) || sched.totalOrderAmount || 0,
           status: statusK || 'Chưa thanh toán',
           deliveryStatus: deliveryStatus || 'Chưa giao',
           deliveredAt: deliveredAt,
           deliveredBy: deliveredBy,
           deliveryIso: deliveryIso,
-          items: matchedItems.length > 0 ? matchedItems : items
+          // v2.6.0 Thông tin mở rộng đa ngày
+          isMultiDay: sched.totalDays > 1,
+          schedule: sched,
+          todayDays: todayDays,
+          todayItems: todayItems.length > 0 ? todayItems : items,
+          todayBottles: todayBottles,
+          todaySubtotal: todaySubtotal,
+          todayIsDelivered: todayIsDelivered,
+          todayIsEarly: todayIsEarly,
+          todayEarlyNote: todayEarlyNote,
+          availableFutureDays: availableFutureDays
         });
       }
     }
 
-    deliveries.sort((a, b) => b.orderId.localeCompare(a.orderId));
+    deliveries.sort(function(a, b) { return b.orderId.localeCompare(a.orderId); });
     return {
       success: true,
       deliveries: deliveries,
@@ -911,7 +1081,7 @@ function staffGetDeliveries(payload) {
   }
 }
 
-// Đánh dấu Đã Giao (Cột L delivery_status, Cột M delivered_at, Cột N delivered_by)
+// Đánh dấu Đã Giao (v2.6.0: Hỗ trợ giao đơn ngày, giao gộp ca sớm và hoàn tác chi tiết)
 function staffMarkDelivered(payload) {
   const staff = verifyStaffToken(payload && payload.idToken);
   if (!staff || staff.error) {
@@ -920,6 +1090,8 @@ function staffMarkDelivered(payload) {
 
   const orderId = (payload && payload.orderId) ? payload.orderId.toString().trim() : '';
   const isDelivered = payload && payload.delivered !== false; // true: Đã giao, false: Hủy đánh dấu
+  const deliveryDates = (payload && payload.deliveryDates && Array.isArray(payload.deliveryDates)) ? payload.deliveryDates : [];
+  const executedDate = (payload && payload.executedDate) ? payload.executedDate.toString().trim() : '';
 
   if (!orderId) return { success: false, message: 'Thiếu mã đơn hàng' };
 
@@ -940,17 +1112,94 @@ function staffMarkDelivered(payload) {
       if ((data[i][0] || '').toString().trim() === orderId) {
         const rowNum = i + 1;
         const now = new Date();
-        if (isDelivered) {
-          sheet.getRange(rowNum, 12).setValue('Đã giao'); // Cột L
-          sheet.getRange(rowNum, 13).setValue(now); // Cột M
-          sheet.getRange(rowNum, 14).setValue(staff.email); // Cột N
+        const nowFormatted = Utilities.formatDate(now, Session.getScriptTimeZone() || 'Asia/Ho_Chi_Minh', 'dd/MM HH:mm');
+        const staffName = staff.name || (staff.email ? staff.email.split('@')[0] : 'Shipper');
+
+        let items = [];
+        try { items = JSON.parse(data[i][6]) || []; } catch (e) { items = []; }
+        const sched = parseOrderSchedule(items);
+
+        let newColL = '';
+        let newColM = '';
+        let newColN = '';
+
+        if (sched.totalDays <= 1) {
+          // Đơn 1 ngày tiêu chuẩn
+          if (isDelivered) {
+            newColL = 'Đã giao';
+            newColM = nowFormatted;
+            newColN = staffName;
+          } else {
+            newColL = '';
+            newColM = '';
+            newColN = '';
+          }
+          sheet.getRange(rowNum, 12).setValue(newColL);
+          sheet.getRange(rowNum, 13).setValue(isDelivered ? now : '');
+          sheet.getRange(rowNum, 14).setValue(newColN);
         } else {
-          sheet.getRange(rowNum, 12).setValue(''); // Hủy giao
-          sheet.getRange(rowNum, 13).setValue('');
-          sheet.getRange(rowNum, 14).setValue('');
+          // Đơn tuần nhiều ngày (Multi-day Order)
+          const colL = (data[i][11] || '').toString().trim();
+          const colM = (data[i][12] || '').toString().trim();
+          const colN = (data[i][13] || '').toString().trim();
+
+          const delivMap = parseDeliveryStatus(colL, sched.totalDays, sched.daysList);
+          const timeLogs = parseKeyedLogs(colM);
+          const staffLogs = parseKeyedLogs(colN);
+
+          const execTok = extractDateToken(executedDate) || (deliveryDates.length > 0 ? extractDateToken(deliveryDates[0]) : (sched.daysList[0] ? sched.daysList[0].dateToken : ''));
+
+          const targetTokens = deliveryDates.length > 0 ? deliveryDates.map(extractDateToken).filter(Boolean) : (execTok ? [execTok] : []);
+
+          if (isDelivered) {
+            targetTokens.forEach(function(tok) {
+              if (tok !== execTok) {
+                // Ca giao sớm gộp vào ngày hôm nay
+                delivMap[tok] = { token: tok, isEarly: true, earlyNote: 'gộp ' + execTok, raw: `${tok}-gộp${execTok}` };
+                timeLogs[tok] = `${nowFormatted} (gộp ${execTok})`;
+                staffLogs[tok] = `${staffName} (gộp ${execTok})`;
+              } else {
+                delivMap[tok] = { token: tok, isEarly: false, earlyNote: '', raw: tok };
+                timeLogs[tok] = nowFormatted;
+                staffLogs[tok] = staffName;
+              }
+            });
+          } else {
+            // Hủy/Hoàn tác
+            targetTokens.forEach(function(tok) {
+              delete delivMap[tok];
+              delete timeLogs[tok];
+              delete staffLogs[tok];
+            });
+          }
+
+          const completedCount = Object.keys(delivMap).length;
+          if (completedCount === sched.totalDays) {
+            newColL = `Đã giao (Hoàn tất ${sched.totalDays}/${sched.totalDays} ngày)`;
+          } else if (completedCount > 0) {
+            const rawTokens = Object.keys(delivMap).map(function(k) { return delivMap[k].raw; }).join(', ');
+            newColL = `Đang giao (${completedCount}/${sched.totalDays} ngày: ${rawTokens})`;
+          } else {
+            newColL = '';
+          }
+
+          newColM = buildKeyedLogs(timeLogs);
+          newColN = buildKeyedLogs(staffLogs);
+
+          sheet.getRange(rowNum, 12).setValue(newColL);
+          sheet.getRange(rowNum, 13).setValue(newColM);
+          sheet.getRange(rowNum, 14).setValue(newColN);
         }
-        logTracking({ action: 'staff_mark_delivered', details: `${staff.email} -> ${orderId}: ${isDelivered ? 'Đã giao' : 'Hủy'}` });
-        return { success: true, orderId: orderId, delivered: isDelivered };
+
+        logTracking({ action: 'staff_mark_delivered', details: `${staff.email} -> ${orderId}: ${isDelivered ? 'Đã giao' : 'Hủy'} [${newColL}]` });
+        return {
+          success: true,
+          orderId: orderId,
+          delivered: isDelivered,
+          deliveryStatus: newColL,
+          deliveredAt: newColM,
+          deliveredBy: newColN
+        };
       }
     }
     return { success: false, message: 'Không tìm thấy đơn ' + orderId };
@@ -961,7 +1210,7 @@ function staffMarkDelivered(payload) {
   }
 }
 
-// Đánh dấu Đã Thu Tiền (Cột K Status = 'Paid')
+// Đánh dấu Đã Thu Tiền (v2.6.0: Hỗ trợ thu trọn đơn hoặc thu từng ca / ca gộp)
 function staffMarkPaid(payload) {
   const staff = verifyStaffToken(payload && payload.idToken);
   if (!staff || staff.error) {
@@ -969,7 +1218,10 @@ function staffMarkPaid(payload) {
   }
 
   const orderId = (payload && payload.orderId) ? payload.orderId.toString().trim() : '';
-  const isPaid = payload && payload.paid !== false; // true: Paid, false: để trống
+  const isPaid = payload && payload.paid !== false; // true: Paid / Đã thu, false: để trống
+  const scope = (payload && payload.scope) ? payload.scope.toString().trim() : 'full'; // 'full' hoặc 'partial'
+  const amount = Number(payload && payload.amount) || 0;
+  const daysPaid = (payload && payload.daysPaid && Array.isArray(payload.daysPaid)) ? payload.daysPaid : [];
 
   if (!orderId) return { success: false, message: 'Thiếu mã đơn hàng' };
 
@@ -989,9 +1241,28 @@ function staffMarkPaid(payload) {
     for (let i = 1; i < data.length; i++) {
       if ((data[i][0] || '').toString().trim() === orderId) {
         const rowNum = i + 1;
-        sheet.getRange(rowNum, 11).setValue(isPaid ? 'Paid' : ''); // Cột K = index 11
-        logTracking({ action: 'staff_mark_paid', details: `${staff.email} -> ${orderId}: ${isPaid ? 'Paid' : 'Unpaid'}` });
-        return { success: true, orderId: orderId, paid: isPaid };
+        let newStatus = '';
+
+        if (!isPaid) {
+          newStatus = '';
+        } else if (scope === 'full') {
+          newStatus = 'Paid';
+        } else {
+          // Thu từng phần (partial)
+          const rawTotal = data[i][7] !== undefined && data[i][7] !== null ? Number(data[i][7].toString().replace(/[^\d.-]/g, '')) || 0 : 0;
+          const daysStr = daysPaid.map(extractDateToken).filter(Boolean).join('+');
+          const amtStr = amount.toLocaleString('vi-VN') + 'đ';
+          const totalStr = rawTotal.toLocaleString('vi-VN') + 'đ';
+          if (amount >= rawTotal && rawTotal > 0) {
+            newStatus = 'Paid';
+          } else {
+            newStatus = `Đã thu ${amtStr}/${totalStr}${daysStr ? ' (' + daysStr + ')' : ''}`;
+          }
+        }
+
+        sheet.getRange(rowNum, 11).setValue(newStatus); // Cột K = index 11
+        logTracking({ action: 'staff_mark_paid', details: `${staff.email} -> ${orderId}: [${newStatus}]` });
+        return { success: true, orderId: orderId, paid: isPaid, status: newStatus };
       }
     }
     return { success: false, message: 'Không tìm thấy đơn ' + orderId };
@@ -1001,6 +1272,7 @@ function staffMarkPaid(payload) {
     lock.releaseLock();
   }
 }
+
 
 // Lưu lịch nghỉ mới vào Dim_Closures (Chỉ dành cho Owner)
 function staffSaveClosure(payload) {

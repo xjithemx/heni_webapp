@@ -131,49 +131,35 @@ Mặc định báo cáo nấu sữa 20h00 luôn gửi về **`ll.huyhoang.1412@g
 
 ---
 
-## 8. 🚧 SẮP RA MẮT (v2.5.0) — CHƯA HOẠT ĐỘNG, ĐANG CHỜ DUYỆT
-
-> Phần này mô tả cách bạn **sẽ** dùng 2 tính năng mới. Hiện tại **chưa dùng được**.
-
-### 8.1. Trang dành cho Shipper (Giao hàng & Thu tiền)
-1. **Thêm shipper (1 lần)**: Mở Google Sheets → tab **`Staff`** → thêm 1 dòng: email Gmail của shipper | `shipper` | `TRUE` | tên. Muốn khóa quyền → đổi `TRUE` thành `FALSE`.
-2. **Shipper mở link**: `https://xjithemx.github.io/heni_webapp/?view=staff` → bấm **Đăng nhập bằng Google** → thấy ngay danh sách đơn cần giao **hôm nay**.
-3. **Khi giao xong**: bấm **✅ Đã giao**. **Khi khách trả tiền**: bấm **💰 Đã thu tiền** (Cột K trên Sheet tự chuyển thành `Paid`). Bấm nhầm → bấm **Hoàn tác** trong 10 giây.
-4. Email không có trong tab `Staff` sẽ bị chặn, không xem được bất kỳ thông tin khách nào.
-5. Mọi lần bấm đều được ghi lại trong tab **`Tracking`** (ai bấm, lúc nào, đơn nào).
-
-### 8.2. Tạm nghỉ & Hẹn ngày mở lại Menu
-**Cách 1 — Trên app (bạn đăng nhập bằng email chủ tiệm):**
-1. Mở `?view=staff` → mục **Lịch nghỉ**.
-2. Gạt công tắc ngày muốn nghỉ sang **Nghỉ**, hoặc bấm **Tạm nghỉ từ… đến…** (VD: từ Thứ 6 đến Thứ 7 → Thứ 2 tự mở lại).
-3. Nếu ngày đó đã có đơn, app hiện danh sách khách + SĐT để bạn nhắn báo nghỉ.
-4. Muốn mở lại sớm → bấm **Mở lại ngay**.
-
-**Cách 2 — Trên Google Sheets (tab `Dim_Closures`):** thêm 1 dòng: ngày bắt đầu nghỉ | ngày kết thúc nghỉ (để trống nếu chưa biết ngày mở lại) | lời nhắn | để trống | để trống | `TRUE`.
-
-**Khách sẽ thấy**: ngày nghỉ vẫn hiện trên menu nhưng món bị làm mờ, không thêm vào giỏ được, kèm thông báo **"🌿 Ngày này quán tạm nghỉ"**.
-
-
----
-
 ## 🛵 7. HƯỚNG DẪN SỬ DỤNG BÀN GIAO HÀNG CHO SHIPPER (`?view=staff`)
 
 ### 7.1. Cách Shipper mở bàn giao hàng
 1. Mở link: **`https://xjithemx.github.io/heni_webapp/?view=staff`** (hoặc cuộn xuống cuối trang web app và bấm dòng **"🛵 Bàn Giao Hàng Cho Shipper & Bếp"**).
-2. Nhập email của shipper (ví dụ: `ll.huyhoang.1412@gmail.com`) hoặc bấm nút Đăng nhập bằng Google.
+2. Nhập email của shipper (ví dụ: `ll.huyhoang.1412@gmail.com`) hoặc bấm nút **Đăng nhập bằng Google**.
 3. Khi vào giao diện, hệ thống hiển thị ngay:
-   - Tổng số đơn cần giao hôm nay.
-   - Tổng số chai sữa cần giao.
-   - Danh sách từng khách hàng, địa chỉ, số điện thoại, ghi chú và số tiền cần thu.
+   - **Hôm nay**: Chỉ hiển thị đúng các đơn và số chai sữa cần giao trong ca sáng hôm nay.
+   - **Ngày mai**: Xem trước danh sách đơn để Bếp và Shipper chuẩn bị.
+   - **Tất cả đơn**: Gom nhóm gọn gàng 1 thẻ cho mỗi đơn hàng để tra cứu toàn bộ tiến độ.
 
-### 7.2. Các thao tác giao hàng thực tế
-* **Gọi điện thoại cho khách**: Bấm nút **📞 Gọi** để gọi ngay trên điện thoại.
-* **Nhắn tin Zalo**: Bấm nút **💬 Zalo** để mở ngay khung chat Zalo với khách mà không cần lưu danh bạ.
-* **Chỉ đường**: Bấm vào địa chỉ khách hàng để mở Google Maps dẫn đường.
-* **Khi đã giao xong chai sữa**: Bấm nút **🚚 Đã giao xong**. 
-  - Hệ thống sẽ ghi nhận giờ giao và tên người giao.
-  - Có nút **↩️ Hoàn tác (10s)** nếu shipper lỡ tay bấm nhầm.
-* **Khi đã thu tiền mặt của khách**: Bấm nút **💵 Đã thu tiền mặt**. Hệ thống sẽ tự động gạch nợ thành công và chuyển trạng thái sang **💰 Đã thanh toán (Paid)** trên Google Sheets.
+### 7.2. Các thao tác giao hàng thông minh (Đã nâng cấp v2.6.0)
+* **Liên hệ khách 1 chạm**:
+  - Bấm nút **📞 Gọi** để gọi điện thoại trực tiếp.
+  - Bấm nút **💬 Zalo** để mở ngay khung chat Zalo với khách (không cần lưu danh bạ).
+  - Bấm vào địa chỉ khách để mở Google Maps dẫn đường.
+* **Giao đơn tuần & Giao gộp ca tiếp theo (Combined Drop)**:
+  - Nếu khách đặt nhiều ngày trong tuần (VD: Thứ 2, Thứ 3, Thứ 4):
+    - Mặc định, app chỉ hiện món và số tiền thu của ca hôm nay.
+    - **Khi khách nhờ: "Giao luôn món Thứ 3 vào sáng Thứ 2 giúp mình"**:
+      1. Shipper nhìn vào khung vàng: `📦 Khách muốn giao gộp thêm ca tiếp theo vào hôm nay?`.
+      2. Bấm chọn **☑️ Gộp Thứ 3**.
+      3. Danh sách kiểm đếm tức thì mở rộng hiện cả món hôm nay + món ngày mai. Tiền thu ca hôm nay tự động cộng dồn (VD: 50k + 50k = 100k).
+      4. Bấm **🚚 Đã giao xong (Gộp 2 ca)**.
+  - **Sáng mai (Thứ 3) mở app**: Đơn này tự động nằm trong tab **Đã giao** với nhãn `⚡ Đã giao sớm (gộp 16-11)`. Bếp biết không nấu dư và Shipper không mang đi giao lại!
+* **Thu tiền mặt linh hoạt**:
+  - Nếu khách trả từng ca: Bấm **💵 Thu ca này (XX.XXXđ)** $\rightarrow$ Sheet ghi rõ `Đã thu 50.000đ/130.000đ (16-11)`.
+  - Nếu khách trả hết cả tuần: Bấm **💰 Trả trọn đơn** $\rightarrow$ Sheet tự động gạch nợ thành **`Paid`**.
+  - Nếu bấm nhầm: Luôn có đồng hồ đếm ngược **↩️ Hoàn tác (10s)** để khôi phục trạng thái ban đầu.
+
 
 ---
 
