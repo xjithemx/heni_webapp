@@ -1,6 +1,6 @@
 # PRODUCT REQUIREMENTS DOCUMENT (PRD) — GÓC BẾP NHÀ HENÍ (`heni_webapp`)
 
-> **Phiên bản tài liệu:** v2.9.0  
+> **Phiên bản tài liệu:** v2.9.1  
 > **Cập nhật lần cuối:** 2026-11-21  
 > **Mô hình vận hành mục tiêu:** Doanh nghiệp 1 người (Solo-Founder / Micro D2C Healthy Kitchen)  
 > **Live Production URL:** [https://xjithemx.github.io/heni_webapp/](https://xjithemx.github.io/heni_webapp/)
@@ -128,7 +128,7 @@
 * **Cụm Hover Tooltip Tiện Ích (`taste-v3`)**:
   - **`📘 Facebook`**: Rê chuột hiển thị thẻ xem trước Fanpage [Góc Bếp Nhà Hení](https://www.facebook.com/profile.php?id=61595353216988) và bấm mở trực tiếp.
   - **`💳 Mã QR`**: Rê chuột hiển thị ngay mã QR MoMo/Ngân hàng (`images/momo.jpg?v=2.8.1`) kèm nút Copy nhanh để thanh toán hóa đơn tuần tức thì.
-  - **`💬 Liên hệ`**: Rê chuột hiển thị giờ chốt đơn (`21h00`), Hotline **`0834983524`**, chính sách giao hàng chi tiết (*Freeship 100% tòa nhà Sonatus, Saigon Trade Center và Bcons City kèm bán kính 3km quanh Bcons City; khu vực khác giao theo phí app thực tế và Freeship ngay cho đơn từ 10 chai tính trong cùng 1 ngày*) và nút nhắn tin Facebook / Tra cứu đơn.
+  - **`💬 Liên hệ`**: Rê chuột hiển thị giờ chốt đơn (`21h00`), Hotline **`0834983524`**, chính sách giao hàng 3 tầng (*Freeship mọi đơn tại tòa nhà Sonatus & Saigon Trade Center; Freeship từ 2 chai tại Bcons City & bán kính 3km quanh Bcons City; khu vực khác giao theo phí app thực tế và Freeship từ 10 chai/ngày tại Q.1, 2, 3, 4, 5, Bình Thạnh, Phú Nhuận, Thủ Đức & Đông Hòa, Dĩ An - Bình Dương, kèm link Zalo `0834983524`*) và nút nhắn tin Facebook / Tra cứu đơn.
 * **Weekly Banner Pop-up (3.5 giây)**: Thông báo tuần hiển thị dạng Pop-up tinh tế khi vừa mở trang, tự động tắt sau **3.5 giây** kèm thanh tiến trình đếm ngược (tạm dừng khi rê chuột vào đọc), nút **`✕`** đóng rõ ràng và nút **`💌 Bản tin`** trên thanh đầu trang để mở xem lại.
 
 ### 4.2. Logic Lịch Đặt Sữa Thông Minh (Cut-off 21h00 & Bỏ qua Chủ Nhật)

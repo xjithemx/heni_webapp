@@ -590,7 +590,7 @@ function sendOrderEmail(orderData, orderId) {
       </div>
       <div style="padding: 30px;">
         <p style="font-size: 16px;">Chào <b>${orderData.name}</b>,</p>
-        <p style="line-height: 1.6; color: #4b5563;">Cảm ơn bạn đã tin tưởng đặt sữa hạt tại nhà Hení. Đơn hàng của bạn đã được hệ thống ghi nhận. Tiệm sẽ sớm liên hệ lại qua SĐT/Zalo (<b>${orderData.phone}</b>) để thông báo phí giao hàng trước khi chốt đơn và nhận thanh toán nhé!</p>
+        <p style="line-height: 1.6; color: #4b5563;">Cảm ơn bạn đã tin tưởng đặt sữa hạt tại nhà Hení. Đơn hàng của bạn đã được hệ thống ghi nhận. Tiệm sẽ sớm liên hệ lại qua SĐT/Zalo (<b>${orderData.phone}</b>) để thông báo phí giao hàng (nếu có) trước khi chốt đơn và nhận thanh toán nhé! Nếu cần kiểm tra nhanh khu vực Freeship, bạn có thể nhắn Zalo nhà Hení: <b>0834983524</b>.</p>
         
         <h3 style="border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; margin-top: 30px; font-size: 18px;">Chi tiết đơn hàng #${orderId}</h3>
         <ul style="padding-left: 20px; line-height: 1.6;">

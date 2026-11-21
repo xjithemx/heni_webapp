@@ -12,7 +12,7 @@
 Với hệ thống mới đã được tự động hóa, công việc mỗi ngày của bạn được rút gọn tối đa:
 
 ### 🌞 Ban ngày (Khách tự đặt hàng & Tra cứu)
-1. Khách mở link web, nhận thông báo bản tin tuần dạng **Pop-up tự động tắt sau 3.5 giây** (có nút **`✕`** đóng nhanh hoặc nút **`💌 Bản tin`** ở góc trên để xem lại). Trên thanh đầu trang còn có cụm nút tiện ích **Facebook**, **Mã QR thanh toán** (`images/momo.jpg` đã cập nhật bản mới) và **Liên hệ** (Hotline **`0834983524`**, giờ chốt đơn **21h00**, & chính sách giao hàng: *Freeship 100% tòa nhà Sonatus, Saigon Trade Center và Bcons City kèm bán kính 3km quanh Bcons City; khu vực khác giao theo phí app thực tế và Freeship ngay cho đơn từ 10 chai tính trong cùng 1 ngày*).
+1. Khách mở link web, nhận thông báo bản tin tuần dạng **Pop-up tự động tắt sau 3.5 giây** (có nút **`✕`** đóng nhanh hoặc nút **`💌 Bản tin`** ở góc trên để xem lại). Trên thanh đầu trang còn có cụm nút tiện ích **Facebook**, **Mã QR thanh toán** (`images/momo.jpg` đã cập nhật bản mới) và **Liên hệ** (Hotline/Zalo **`0834983524`**, giờ chốt đơn **21h00**, & chính sách giao hàng 3 tầng: *Freeship mọi đơn tại tòa nhà Sonatus & Saigon Trade Center; Freeship từ 2 chai tại Bcons City & bán kính 3km quanh Bcons City; khu vực khác giao theo phí app thực tế và Freeship từ 10 chai/ngày tại Q.1, 2, 3, 4, 5, Bình Thạnh, Phú Nhuận, Thủ Đức & Đông Hòa, Dĩ An - Bình Dương*).
 2. Khách chọn món cho **Sáng Mai** hoặc **Đặt Trước Cả Tuần**, chọn **Độ ngọt** mong muốn ngay trên từng món (`🍯 Bình thường`, `🌿 Ít đường`, hoặc `🥥 Không đường` — mặc định là `Bình thường`) và bấm **Xác nhận đơn hàng**.
 3. Hệ thống tự động:
    - Ghi đơn tổng vào tab **`Orders_Master`** (trạng thái mặc định: `Đã tiếp nhận`).

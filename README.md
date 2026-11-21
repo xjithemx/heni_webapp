@@ -31,6 +31,15 @@
 
 ## 🕒 3. LỊCH SỬ CẬP NHẬT & NÂNG CẤP CHI TIẾT (DETAILED CHANGELOG)
 
+### [v2.9.1] — 2026-11-21: Tái Cấu Trúc Chính Sách Giao Hàng 3 Tầng (Marketing & Sales Tuning)
+* **Đồng bộ Chính sách Giao hàng 3 tầng trên toàn Web App & Email ([`index.html`](./index.html), [`code.gs`](./code.gs))**:
+  - **Tầng 1 — Freeship mọi đơn**: Tòa nhà **Sonatus** & **Saigon Trade Center**.
+  - **Tầng 2 — Freeship từ 2 chai**: **Bcons City** & bán kính **3km** quanh Bcons City.
+  - **Tầng 3 — Khu vực khác**: Giao theo **phí app thực tế** · **Freeship từ 10 chai/ngày** *(tính theo số lượng giao trong cùng 1 ngày)* tại **Q.1, 2, 3, 4, 5, Bình Thạnh, Phú Nhuận, Thủ Đức** & **Đông Hòa, Dĩ An (Bình Dương)**.
+  - Bổ sung link mở nhanh **Zalo [`0834983524`](https://zalo.me/0834983524)** trong Tooltip Liên hệ (`sm:w-96`), Checkout Modal và Email xác nhận đơn hàng để khách kiểm tra nhanh khu vực giao hàng.
+
+---
+
 ### [v2.9.0] — 2026-11-21: Cập Nhật Slogan "Mỗi Ngày", Chốt Đơn 21h00 (A $\rightarrow$ Z) & Chính Sách Freeship Chuẩn Marketing/Sales
 * **Tinh chỉnh thông điệp sản phẩm ("Mỗi sáng" $\rightarrow$ "Mỗi ngày") ([`index.html`](./index.html), [`config.js`](./config.js), [`code.gs`](./code.gs))**:
   - Cập nhật đồng bộ ở Header Tagline, `alt` ảnh Hero, mô tả Lịch Đặt Trước Cả Tuần, footer Weekly Banner và footer Email xác nhận đơn hàng. Giữ nguyên nhãn *"Menu Sáng Mai"* và *"Giao sáng Thứ 2 – Thứ 7"*.
