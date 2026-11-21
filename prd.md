@@ -1,6 +1,6 @@
 # PRODUCT REQUIREMENTS DOCUMENT (PRD) — GÓC BẾP NHÀ HENÍ (`heni_webapp`)
 
-> **Phiên bản tài liệu:** v2.9.1  
+> **Phiên bản tài liệu:** v3.0.0  
 > **Cập nhật lần cuối:** 2026-11-21  
 > **Mô hình vận hành mục tiêu:** Doanh nghiệp 1 người (Solo-Founder / Micro D2C Healthy Kitchen)  
 > **Live Production URL:** [https://xjithemx.github.io/heni_webapp/](https://xjithemx.github.io/heni_webapp/)
@@ -50,6 +50,7 @@
                                       │  - payment_method  (MoMo / VCB)   │
                                       │  - Orders_Master   (Đơn tổng)     │
                                       │  - Fact_Order_Items(Chi tiết món) │
+                                      │  - ExtraOrder_Log  (Khay bán thêm)│
                                       │  - Tracking        (Log hệ thống) │
                                       └───────────────────────────────────┘
 ```
@@ -112,6 +113,11 @@
   - `weekly_content`: Nội dung chi tiết thông báo tuần.
   - `weekly_footer`: Dòng nhấn mạnh dưới chân khung thông báo tuần.
   - `kitchen_emails`: Danh sách email nhận báo cáo bếp 21h00 (ngoài các email trong `config.js`).
+
+### 3.6. Tab `ExtraOrder_Log` (Nhật ký Nhận Sữa Bán Thêm — `v3.0.0`)
+* **Tự động khởi tạo** bởi `code.gs` nếu chưa có; Grain chuẩn: `date_iso (YYYY-MM-DD) × sku_id` (khay chung của tiệm trong ngày).
+* **Cấu trúc 8 cột (A -> H)**: `date_iso` | `sku_id` | `dish_name` | `price` | `qty_received` | `updated_at` | `updated_by` | `history_log`.
+* Kết hợp với các dòng `EXTRA_ORDER` hợp lệ (không `Cancelled`) trong `Orders_Master` để tính thời gian thực: **Còn lại = Nhận − Đã bán**.
 
 ---
 
@@ -216,3 +222,16 @@
 
 ### 5.3. Lộ trình
 `P1 GAS_API_URL` → `P3 gỡ dữ liệu khách` → `Lịch nghỉ (phía khách + Sheet)` → `P2 OAuth + Tab Staff` → `Bật/tắt menu trên app` → `Tài liệu & kiểm thử`.
+
+---
+
+## 6. 🥛 TÍNH NĂNG SỮA BÁN THÊM CHO SHIPPER — `v3.0.0` (`ExtraOrder_Log`)
+
+* **Mục tiêu**: Quản lý 3–10 chai sữa bếp nấu dư mỗi ngày mang theo bán thêm dọc đường; tránh nhầm món/giá tiền và giúp chủ tiệm đối soát chính xác số chai **Nhận · Đã bán · Còn lại · Đã thu**.
+* **Cờ cấu hình (`config.js`)**: `EXTRA_ORDER_ENABLED: true`.
+* **Luồng dữ liệu & Bảo vệ phía Server (`code.gs`)**:
+  1. **Nhận chai (`staffSaveExtraIntake`)**: Upsert vào tab `ExtraOrder_Log` theo khóa `date_iso × sku_id`, tự tra tên & giá từ `Dim_Menu`, chặn chỉnh số nhận thấp hơn số chai đã bán trong ngày.
+  2. **Tạo đơn bán (`staffCreateExtraOrder`)**: Kiểm tra tồn khay (`remaining >= qty`), chống bấm đúp qua `requestId` (`Orders_Master.J = EXTRA_ORDER|<requestId>`), tự tra giá từ `Dim_Menu`, ép ngày giao = hôm nay (`Asia/Ho_Chi_Minh`), sinh mã đơn duy nhất qua `generateUniqueOrderId(masterSheet)`, ghi đồng bộ `Orders_Master` + `Fact_Order_Items` (`Col I = ExtraOrder`) + `Tracking`.
+  3. **Hủy đơn nhầm (`staffCancelExtraOrder`)**: Chỉ áp dụng cho đơn `EXTRA_ORDER` chưa thanh toán (`status !== 'Paid'`); đánh dấu `Cancelled` trên `Orders_Master` và `ExtraOrder_Cancelled` trên `Fact_Order_Items` để hoàn chai về khay.
+  4. **Cô lập báo cáo & tra cứu**: `sendDailyKitchenReport()` bỏ qua `ExtraOrder` / `ExtraOrder_Cancelled`; `searchOrders()` ẩn đơn `EXTRA_ORDER` trừ khi tra chính xác mã đơn `HN-xxxxxx`; `staffGetDeliveries()` loại bỏ đơn `Cancelled` và trả kèm `extraTray` trong 1 lần gọi.
+

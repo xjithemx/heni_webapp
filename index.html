@@ -8,7 +8,7 @@
     <link rel="icon" type="image/jpeg" href="./images/logo-only.jpg">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <script src="./config.js?v=2.9.0"></script>
+    <script src="./config.js?v=3.0.0"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=DM+Sans:wght@400;500;600&display=swap"
@@ -719,6 +719,127 @@
                 </div>
             </div>
 
+            <!-- v3.0.0: Khay Sữa Bán Thêm Hôm Nay (ExtraOrder_Log) -->
+            <div v-if="extraOrderEnabled" class="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-brand-green/20 space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xl">🥛</span>
+                        <div>
+                            <h3 class="text-base md:text-lg font-serif font-bold text-brand-dark">Khay Sữa Bán Thêm Hôm Nay</h3>
+                            <p class="text-[11px] text-gray-500">Nhập số chai bếp đưa thêm · Giá tự động theo Menu · Tạo đơn &amp; thu tiền như thường</p>
+                        </div>
+                    </div>
+                    <button @click="showExtraTrayPanel = !showExtraTrayPanel" type="button"
+                        class="px-3 py-1.5 rounded-xl bg-brand-bone text-brand-dark text-xs font-bold hover:bg-gray-200 transition-colors">
+                        {{ showExtraTrayPanel ? 'Thu gọn ▲' : 'Mở rộng ▼' }}
+                    </button>
+                </div>
+
+                <!-- Dải KPI riêng cho Sữa Bán Thêm -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center">
+                    <div class="bg-brand-bone rounded-xl p-2.5">
+                        <p class="text-[11px] text-gray-500">Đã nhận</p>
+                        <p class="text-lg font-bold text-brand-dark">{{ extraTray.totalReceived || 0 }} chai</p>
+                    </div>
+                    <div class="bg-emerald-50 rounded-xl p-2.5">
+                        <p class="text-[11px] text-emerald-700">Đã bán</p>
+                        <p class="text-lg font-bold text-emerald-700">{{ extraTray.totalSold || 0 }} chai</p>
+                    </div>
+                    <div class="bg-amber-50 rounded-xl p-2.5">
+                        <p class="text-[11px] text-amber-800">Còn lại</p>
+                        <p class="text-lg font-bold text-amber-800">{{ extraTray.totalRemaining || 0 }} chai</p>
+                    </div>
+                    <div class="bg-brand-green/10 rounded-xl p-2.5">
+                        <p class="text-[11px] text-brand-green">Đã thu (Paid)</p>
+                        <p class="text-lg font-bold text-brand-green">{{ formatPrice(extraTray.totalCollected || 0) }}</p>
+                    </div>
+                </div>
+
+                <div v-if="extraApiNotDeployed" class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900">
+                    ⚠️ Hệ thống Google Apps Script chưa được deploy phiên bản mới cho tính năng <b>ExtraOrder_Log</b>. Vui lòng báo chủ tiệm deploy lại Apps Script (New version).
+                </div>
+
+                <div v-if="showExtraTrayPanel" class="space-y-4 pt-2 border-t border-gray-100">
+                    <!-- Form Nhận / Cập nhật số chai dư -->
+                    <div class="bg-brand-bone/60 rounded-xl p-3.5 space-y-2.5">
+                        <p class="text-xs font-bold text-brand-dark">1. Nhận / Cập nhật số chai mang theo hôm nay</p>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <select v-model="extraIntakeSku" @change="onIntakeSkuChange"
+                                class="flex-1 bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-medium text-brand-dark focus:outline-none focus:border-brand-green">
+                                <option value="" disabled>-- Chọn món sữa trong Menu --</option>
+                                <option v-for="m in extraMenuOptions" :key="m.id" :value="m.id">
+                                    {{ m.name }} — {{ formatPrice(m.price) }}
+                                </option>
+                            </select>
+                            <div class="flex items-center gap-1.5">
+                                <button type="button" @click="extraIntakeQty = Math.max(0, (Number(extraIntakeQty) || 0) - 1)"
+                                    class="w-9 h-9 rounded-xl bg-white border border-gray-200 font-bold text-brand-dark hover:bg-gray-100">−</button>
+                                <input type="number" min="0" max="200" v-model.number="extraIntakeQty"
+                                    class="w-16 h-9 text-center bg-white border border-gray-200 rounded-xl text-sm font-bold text-brand-dark focus:outline-none focus:border-brand-green">
+                                <button type="button" @click="extraIntakeQty = Math.min(200, (Number(extraIntakeQty) || 0) + 1)"
+                                    class="w-9 h-9 rounded-xl bg-white border border-gray-200 font-bold text-brand-dark hover:bg-gray-100">+</button>
+                                <button type="button" @click="saveExtraIntake" :disabled="isSavingExtra || !extraIntakeSku"
+                                    class="px-4 h-9 rounded-xl bg-brand-green text-white text-xs font-bold hover:bg-brand-dark transition-colors disabled:opacity-50 whitespace-nowrap">
+                                    {{ isSavingExtra ? 'Đang lưu...' : 'Lưu số nhận' }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Danh sách món đang có trong Khay hôm nay -->
+                    <div v-if="!extraTray.items || extraTray.items.length === 0" class="text-center py-4 text-xs text-gray-400">
+                        Chưa có chai bán thêm nào được nhập cho hôm nay. Hãy chọn món ở trên để nhập số chai nhận!
+                    </div>
+                    <div v-else class="space-y-2.5">
+                        <p class="text-xs font-bold text-brand-dark">2. Khay sữa hiện có &amp; Tạo đơn khi có khách mua</p>
+                        <div v-for="item in extraTray.items" :key="item.skuId"
+                            class="border border-gray-200 rounded-xl p-3 bg-white flex flex-col gap-2.5">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <div>
+                                    <span class="font-bold text-sm text-brand-dark">{{ item.name }}</span>
+                                    <span class="ml-2 text-xs font-bold text-brand-green">{{ formatPrice(item.price) }}</span>
+                                    <button type="button" @click="selectIntakeSku(item.skuId, item.received)"
+                                        class="ml-2 text-[11px] text-gray-400 hover:text-brand-green underline">Sửa nhận</button>
+                                </div>
+                                <div class="flex items-center gap-2 text-[11px] font-bold">
+                                    <span class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">Nhận: {{ item.received }}</span>
+                                    <span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">Bán: {{ item.sold }}</span>
+                                    <span :class="item.remaining > 0 ? 'bg-amber-100 text-amber-900' : 'bg-gray-100 text-gray-400'"
+                                        class="px-2 py-0.5 rounded-full">Còn: {{ item.remaining }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Controls tạo đơn bán -->
+                            <div v-if="item.remaining > 0" class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-gray-100">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <div class="flex items-center gap-1">
+                                        <button type="button" @click="adjustSellQty(item.skuId, -1, item.remaining)"
+                                            class="w-7 h-7 rounded-lg bg-gray-100 font-bold text-xs hover:bg-gray-200">−</button>
+                                        <span class="w-7 text-center font-bold text-xs text-brand-dark">{{ getSellDraft(item.skuId).qty }}</span>
+                                        <button type="button" @click="adjustSellQty(item.skuId, 1, item.remaining)"
+                                            class="w-7 h-7 rounded-lg bg-gray-100 font-bold text-xs hover:bg-gray-200">+</button>
+                                    </div>
+                                    <select v-model="getSellDraft(item.skuId).sweetnessCode"
+                                        class="bg-brand-bone border border-gray-200 rounded-lg px-2 py-1 text-[11px] font-medium text-brand-dark">
+                                        <option value="normal">🍯 Bình thường</option>
+                                        <option value="less">🌿 Ít đường</option>
+                                        <option value="none">🥥 Không đường</option>
+                                    </select>
+                                    <label class="inline-flex items-center gap-1 text-[11px] text-gray-600 cursor-pointer select-none">
+                                        <input type="checkbox" v-model="getSellDraft(item.skuId).markPaidNow" class="rounded text-brand-green">
+                                        <span>Giao &amp; thu luôn</span>
+                                    </label>
+                                </div>
+                                <button type="button" @click="createExtraOrder(item.skuId)" :disabled="isSavingExtra"
+                                    class="px-3.5 py-1.5 rounded-xl bg-brand-gold text-white text-xs font-bold hover:bg-amber-600 transition-colors disabled:opacity-50 shadow-sm active:scale-95">
+                                    {{ isSavingExtra ? 'Đang tạo...' : '+ Tạo đơn bán (' + formatPrice(item.price * getSellDraft(item.skuId).qty) + ')' }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Delivery Orders List -->
             <div class="space-y-4">
                 <div class="flex items-center justify-between">
@@ -749,6 +870,9 @@
                             <div>
                                 <span class="font-bold text-base text-brand-dark font-mono">#{{ order.orderId }}</span>
                                 <span class="text-xs text-gray-500 ml-2 font-medium">{{ order.customerName }}</span>
+                                <span v-if="order.isExtraOrder" class="ml-2 text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-md">
+                                    🥛 Bán thêm
+                                </span>
                                 <span v-if="order.isMultiDay" class="ml-2 text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-md">
                                     🗓️ Đơn tuần ({{ (order.schedule?.daysList || []).filter(d => d.isDelivered).length }}/{{ order.schedule?.totalDays || 1 }} ngày)
                                 </span>
@@ -956,10 +1080,14 @@
                                         <span>💰</span> Trả trọn đơn
                                     </button>
                                 </div>
-                                <div v-else>
+                                <div v-else class="flex items-center gap-2">
                                     <button @click="markPaid(order.orderId, true, 'full', order.total)"
                                         class="px-4 py-2.5 rounded-xl bg-amber-600 text-white font-bold text-xs hover:bg-amber-700 transition-colors shadow-sm flex items-center gap-1.5 active:scale-95">
                                         <span>💵</span> Đã thu {{ formatPrice(order.total) }}
+                                    </button>
+                                    <button v-if="order.isExtraOrder" @click="cancelExtraOrder(order.orderId)" :disabled="isSavingExtra"
+                                        class="px-3 py-2.5 rounded-xl bg-red-50 text-red-600 border border-red-200 font-bold text-xs hover:bg-red-100 transition-colors disabled:opacity-50">
+                                        🗑️ Hủy
                                     </button>
                                 </div>
                             </div>
@@ -2061,6 +2189,24 @@
                 });
                 const isSavingClosure = ref(false);
 
+                // V3.0.0: ExtraOrder_Log (Sữa Bán Thêm) State
+                const extraOrderEnabled = ref(cfg.EXTRA_ORDER_ENABLED !== false);
+                const showExtraTrayPanel = ref(true);
+                const extraTray = ref({
+                    dateIso: '',
+                    items: [],
+                    menuItems: [],
+                    totalReceived: 0,
+                    totalSold: 0,
+                    totalRemaining: 0,
+                    totalCollected: 0
+                });
+                const extraIntakeSku = ref('');
+                const extraIntakeQty = ref(1);
+                const extraSellDrafts = ref({});
+                const isSavingExtra = ref(false);
+                const extraApiNotDeployed = ref(false);
+
                 // Mở/Đóng Staff View và đồng bộ URL query không reload
                 const openStaffView = () => {
                     isStaffView.value = true;
@@ -2252,6 +2398,8 @@
                         sessionStorage.removeItem('heni_staff_token');
                     } catch (e) {}
                     staffDeliveries.value = [];
+                    extraTray.value = { dateIso: '', items: [], menuItems: [], totalReceived: 0, totalSold: 0, totalRemaining: 0, totalCollected: 0 };
+                    extraApiNotDeployed.value = false;
                     showToast('Đã đăng xuất khỏi Bàn Giao Hàng.');
                     setTimeout(renderGisButton, 300);
                 };
@@ -2271,6 +2419,10 @@
                         isLoadingDeliveries.value = false;
                         if (res && res.success) {
                             staffDeliveries.value = res.deliveries || [];
+                            if (res.extraTray) {
+                                extraTray.value = res.extraTray;
+                                extraApiNotDeployed.value = false;
+                            }
                         } else {
                             staffActionError.value = (res && res.message) || 'Không thể lấy danh sách đơn giao.';
                             showToast(staffActionError.value);
@@ -2633,6 +2785,148 @@
                 });
 
 
+                // V3.0.0: ExtraOrder_Log (Sữa Bán Thêm) Helpers & Actions
+                const extraMenuOptions = computed(() => {
+                    if (extraTray.value.menuItems && extraTray.value.menuItems.length > 0) {
+                        return extraTray.value.menuItems;
+                    }
+                    return fullMenu.value || [];
+                });
+
+                const getSellDraft = (skuId) => {
+                    if (!extraSellDrafts.value[skuId]) {
+                        extraSellDrafts.value[skuId] = {
+                            qty: 1,
+                            sweetnessCode: 'normal',
+                            markPaidNow: false
+                        };
+                    }
+                    return extraSellDrafts.value[skuId];
+                };
+
+                const adjustSellQty = (skuId, delta, maxQty) => {
+                    const draft = getSellDraft(skuId);
+                    const next = (Number(draft.qty) || 1) + delta;
+                    draft.qty = Math.max(1, Math.min(maxQty || 1, next));
+                };
+
+                const selectIntakeSku = (skuId, currentReceived) => {
+                    extraIntakeSku.value = skuId;
+                    extraIntakeQty.value = Number(currentReceived) || 0;
+                    showExtraTrayPanel.value = true;
+                };
+
+                const onIntakeSkuChange = () => {
+                    const found = (extraTray.value.items || []).find(it => it.skuId === extraIntakeSku.value);
+                    extraIntakeQty.value = found ? Number(found.received) || 0 : 1;
+                };
+
+                const callExtraGas = (action, payload, onDone) => {
+                    if (isInsideGAS) {
+                        google.script.run
+                            .withSuccessHandler(onDone)
+                            .withFailureHandler(err => {
+                                isSavingExtra.value = false;
+                                showToast('Lỗi GAS: ' + err.message);
+                            })[action](payload);
+                    } else if (GAS_API_URL) {
+                        fetch(GAS_API_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                            body: JSON.stringify({ action, payload })
+                        })
+                            .then(r => r.json())
+                            .then(res => {
+                                if (res && !res.success && res.message && res.message.toLowerCase().includes('unknown action')) {
+                                    extraApiNotDeployed.value = true;
+                                }
+                                onDone(res);
+                            })
+                            .catch(err => {
+                                isSavingExtra.value = false;
+                                showToast('Lỗi kết nối GAS: ' + err.message);
+                            });
+                    } else {
+                        isSavingExtra.value = false;
+                        showToast('Chưa cấu hình GAS_API_URL trong config.js!');
+                    }
+                };
+
+                const saveExtraIntake = () => {
+                    if (!extraIntakeSku.value) {
+                        showToast('Vui lòng chọn món sữa!');
+                        return;
+                    }
+                    const qty = parseInt(extraIntakeQty.value, 10);
+                    if (isNaN(qty) || qty < 0) {
+                        showToast('Số chai nhận không hợp lệ!');
+                        return;
+                    }
+                    isSavingExtra.value = true;
+                    callExtraGas('staffSaveExtraIntake', {
+                        idToken: staffToken.value,
+                        skuId: extraIntakeSku.value,
+                        qtyReceived: qty
+                    }, (res) => {
+                        isSavingExtra.value = false;
+                        if (res && res.success) {
+                            if (res.extraTray) extraTray.value = res.extraTray;
+                            showToast('Đã cập nhật số chai nhận hôm nay! 🥛');
+                        } else {
+                            showToast((res && res.message) || 'Không thể lưu số chai nhận.');
+                        }
+                    });
+                };
+
+                const createExtraOrder = (skuId) => {
+                    if (isSavingExtra.value) return;
+                    const draft = getSellDraft(skuId);
+                    const qty = parseInt(draft.qty, 10) || 1;
+                    const requestId = `ex_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+
+                    isSavingExtra.value = true;
+                    callExtraGas('staffCreateExtraOrder', {
+                        idToken: staffToken.value,
+                        skuId: skuId,
+                        qty: qty,
+                        sweetnessCode: draft.sweetnessCode || 'normal',
+                        markPaidNow: !!draft.markPaidNow,
+                        requestId: requestId
+                    }, (res) => {
+                        isSavingExtra.value = false;
+                        if (res && res.success) {
+                            if (res.extraTray) extraTray.value = res.extraTray;
+                            draft.qty = 1;
+                            draft.sweetnessCode = 'normal';
+                            draft.markPaidNow = false;
+                            showToast(`Đã tạo đơn bán thêm #${res.orderId}! 🥛`);
+                            loadStaffDeliveries();
+                        } else {
+                            showToast((res && res.message) || 'Không thể tạo đơn bán thêm.');
+                        }
+                    });
+                };
+
+                const cancelExtraOrder = (orderId) => {
+                    if (isSavingExtra.value) return;
+                    if (!confirm(`Hủy đơn bán thêm #${orderId} và hoàn số chai về khay?`)) return;
+                    isSavingExtra.value = true;
+                    callExtraGas('staffCancelExtraOrder', {
+                        idToken: staffToken.value,
+                        orderId: orderId
+                    }, (res) => {
+                        isSavingExtra.value = false;
+                        if (res && res.success) {
+                            if (res.extraTray) extraTray.value = res.extraTray;
+                            showToast(`Đã hủy đơn #${orderId} và hoàn chai về khay! ↩️`);
+                            loadStaffDeliveries();
+                        } else {
+                            showToast((res && res.message) || 'Không thể hủy đơn.');
+                        }
+                    });
+                };
+
+
                 const searchOrder = () => {
                     const q = (searchQuery.value || '').trim();
                     if (!q) {
@@ -2710,7 +3004,11 @@
                     // V2.8.0 Unified Hero, Weekly Popup & Hover Tooltips:
                     socialLinks, activeTooltip, openTooltip, cancelCloseTooltip, scheduleCloseTooltip, toggleTooltip,
                     showWeeklyPopup, weeklyPopupPaused, weeklyPopupProgress, closeWeeklyPopup,
-                    pauseWeeklyPopup, resumeWeeklyPopup, reopenWeeklyPopup
+                    pauseWeeklyPopup, resumeWeeklyPopup, reopenWeeklyPopup,
+                    // V3.0.0 ExtraOrder_Log:
+                    extraOrderEnabled, showExtraTrayPanel, extraTray, extraIntakeSku, extraIntakeQty,
+                    extraMenuOptions, isSavingExtra, extraApiNotDeployed, getSellDraft, adjustSellQty,
+                    selectIntakeSku, onIntakeSkuChange, saveExtraIntake, createExtraOrder, cancelExtraOrder
                 }
             }
         }).mount('#app');

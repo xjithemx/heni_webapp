@@ -72,6 +72,9 @@ window.HENI_CONFIG = {
   // Tạo 1 lần trên Google Cloud Console (miễn phí) và dán vào đây:
   GOOGLE_CLIENT_ID: '',
 
+  // 8b. Bật/tắt tính năng Khay Sữa Bán Thêm (ExtraOrder) trên Bàn Giao Hàng Shipper
+  EXTRA_ORDER_ENABLED: true,
+
   // 9. Danh sách đơn fallback (chỉ giữ rỗng, dữ liệu đơn bảo mật 100% qua Apps Script)
   FALLBACK_ORDERS: []
 };

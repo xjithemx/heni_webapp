@@ -106,6 +106,12 @@ function doGet(e) {
     return jsonResponse(staffGetDeliveries({ idToken: token, date: date }));
   }
 
+  if (action === 'staffGetExtraTray') {
+    const token = (e && e.parameter && (e.parameter.token || e.parameter.idToken)) || '';
+    const date = (e && e.parameter && e.parameter.date) || '';
+    return jsonResponse(staffGetExtraTray({ idToken: token, date: date }));
+  }
+
   logTracking({ action: 'open_app', details: 'User loaded the web app' });
   return HtmlService.createHtmlOutputFromFile('index')
     .setTitle('Góc Bếp Nhà Hení')
@@ -133,6 +139,18 @@ function doPost(e) {
     }
     if (action === 'staffMarkPaid') {
       return jsonResponse(staffMarkPaid(payload));
+    }
+    if (action === 'staffGetExtraTray') {
+      return jsonResponse(staffGetExtraTray(payload));
+    }
+    if (action === 'staffSaveExtraIntake') {
+      return jsonResponse(staffSaveExtraIntake(payload));
+    }
+    if (action === 'staffCreateExtraOrder') {
+      return jsonResponse(staffCreateExtraOrder(payload));
+    }
+    if (action === 'staffCancelExtraOrder') {
+      return jsonResponse(staffCancelExtraOrder(payload));
     }
     if (action === 'staffSaveClosure') {
       return jsonResponse(staffSaveClosure(payload));
@@ -317,6 +335,11 @@ function searchOrders(rawQuery) {
       const orderId = (row[0] || '').toString().trim();
       if (!orderId) continue;
 
+      const ownerNote = (row[9] || '').toString().trim();
+      if (ownerNote.indexOf('EXTRA_ORDER') !== -1 && qClean !== orderId.toLowerCase()) {
+        continue;
+      }
+
       const custName = (row[2] || '').toString().trim();
       const custPhone = row[3];
       const custPhoneClean = cleanPhone(custPhone);
@@ -448,6 +471,29 @@ function resolveCurrentWeekCode(factSheet) {
   }
 }
 
+// Helper: Sinh mã đơn hàng HN-xxxxxx duy nhất (kiểm tra trùng trong Cột A của Orders_Master)
+function generateUniqueOrderId(masterSheet) {
+  const existing = {};
+  if (masterSheet) {
+    const lastRow = masterSheet.getLastRow();
+    if (lastRow > 1) {
+      const colA = masterSheet.getRange(2, 1, lastRow - 1, 1).getValues();
+      for (let i = 0; i < colA.length; i++) {
+        const val = (colA[i][0] || '').toString().trim();
+        if (val) existing[val] = true;
+      }
+    }
+  }
+  let candidate = 'HN-' + new Date().getTime().toString().slice(-6);
+  let attempts = 0;
+  while (existing[candidate] && attempts < 20) {
+    const rand = Math.floor(100000 + Math.random() * 900000);
+    candidate = 'HN-' + rand.toString();
+    attempts++;
+  }
+  return candidate;
+}
+
 // 5. Ghi Nhận Đơn Đặt Hàng (Chuẩn hóa 15 cột Orders_Master: A..O)
 function processOrder(orderData) {
   const lock = LockService.getScriptLock();
@@ -481,7 +527,7 @@ function processOrder(orderData) {
     }
 
     const timestamp = new Date();
-    const orderId = 'HN-' + timestamp.getTime().toString().slice(-6);
+    const orderId = generateUniqueOrderId(masterSheet);
 
     // Tính toán ngày giao ISO (cột O) từ món đầu tiên
     let firstDeliveryIso = '';
@@ -731,7 +777,7 @@ function sendDailyKitchenReport() {
 
       if (isMatch) {
         const statusFact = (row[8] || '').toString().trim().toLowerCase();
-        if (statusFact.indexOf('cancel') !== -1 || statusFact.indexOf('hủy') !== -1 || statusFact.indexOf('huỷ') !== -1) {
+        if (statusFact.indexOf('cancel') !== -1 || statusFact.indexOf('hủy') !== -1 || statusFact.indexOf('huỷ') !== -1 || statusFact.indexOf('extraorder') !== -1) {
           continue;
         }
         const orderId = (row[0] || '').toString().trim();
@@ -1093,6 +1139,10 @@ function staffGetDeliveries(payload) {
       });
 
       const statusK = (r[10] || '').toString().trim();
+      const statusKLower = statusK.toLowerCase();
+      if (statusKLower.indexOf('cancel') !== -1 || statusKLower.indexOf('hủy') !== -1 || statusKLower.indexOf('huỷ') !== -1) {
+        continue;
+      }
       const deliveryStatus = (r[11] || '').toString().trim();
       const deliveredAt = r[12] instanceof Date ? Utilities.formatDate(r[12], Session.getScriptTimeZone() || 'Asia/Ho_Chi_Minh', 'dd/MM/yyyy HH:mm') : (r[12] || '').toString().trim();
       const deliveredBy = (r[13] || '').toString().trim();
@@ -1178,6 +1228,7 @@ function staffGetDeliveries(payload) {
           address: (r[5] || '').toString().trim(),
           note: (r[8] || '').toString().trim(),
           ownerNote: (r[9] || '').toString().trim(),
+          isExtraOrder: (r[9] || '').toString().indexOf('EXTRA_ORDER') !== -1,
           total: Number(rawTotal) || sched.totalOrderAmount || 0,
           status: statusK || 'Chưa thanh toán',
           deliveryStatus: deliveryStatus || 'Chưa giao',
@@ -1203,6 +1254,7 @@ function staffGetDeliveries(payload) {
     return {
       success: true,
       deliveries: deliveries,
+      extraTray: getExtraTraySummary(ss, getTodayIsoVn()),
       staff: { name: staff.name, role: staff.role, email: staff.email }
     };
   } catch (err) {
@@ -1397,6 +1449,489 @@ function staffMarkPaid(payload) {
     return { success: false, message: 'Không tìm thấy đơn ' + orderId };
   } catch (err) {
     return { success: false, message: err.toString() };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// ==========================================
+// 6b. MODULE SỮA BÁN THÊM (v3.0.0 - ExtraOrder_Log)
+// ==========================================
+
+function getTodayIsoVn() {
+  const tz = Session.getScriptTimeZone() || 'Asia/Ho_Chi_Minh';
+  return Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
+}
+
+function getTodayLabelVn() {
+  const tz = Session.getScriptTimeZone() || 'Asia/Ho_Chi_Minh';
+  const now = new Date();
+  const dayNames = ['Chủ Nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+  const dStr = Utilities.formatDate(now, tz, 'dd-MM');
+  return `${dayNames[now.getDay()]} (${dStr})`;
+}
+
+function normalizeSheetDateIso(val) {
+  if (!val) return '';
+  if (val instanceof Date) {
+    const tz = Session.getScriptTimeZone() || 'Asia/Ho_Chi_Minh';
+    return Utilities.formatDate(val, tz, 'yyyy-MM-dd');
+  }
+  return val.toString().trim().slice(0, 10);
+}
+
+function getOrCreateExtraOrderSheet(ss) {
+  let sheet = ss.getSheetByName('ExtraOrder_Log');
+  if (!sheet) {
+    sheet = ss.insertSheet('ExtraOrder_Log');
+    sheet.appendRow(['date_iso', 'sku_id', 'dish_name', 'price', 'qty_received', 'updated_at', 'updated_by', 'history_log']);
+    sheet.getRange(1, 1, 1, 8).setFontWeight('bold');
+  }
+  return sheet;
+}
+
+function getDimMenuSkuMap(ss) {
+  const map = {};
+  const list = [];
+  const menuSheet = ss.getSheetByName('Dim_Menu');
+  if (!menuSheet) return { map: map, list: list };
+  const rows = menuSheet.getDataRange().getValues();
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    const id = (r[0] !== undefined && r[0] !== null ? r[0] : '').toString().trim();
+    const name = (r[1] !== undefined && r[1] !== null ? r[1] : '').toString().trim();
+    const price = Number(r[3]) || 0;
+    const status = (r[6] !== undefined && r[6] !== null ? r[6] : '').toString().trim().toLowerCase();
+    if (!id || !name) continue;
+    const item = { id: id, name: name, price: price, active: status === 'active' };
+    map[id] = item;
+    if (status === 'active') {
+      list.push(item);
+    }
+  }
+  return { map: map, list: list };
+}
+
+function getExtraTraySummary(ss, targetDateIso) {
+  const dateIso = targetDateIso || getTodayIsoVn();
+  const tz = Session.getScriptTimeZone() || 'Asia/Ho_Chi_Minh';
+  const menuInfo = getDimMenuSkuMap(ss);
+
+  const trayMap = {};
+  const skuOrder = [];
+  const extraSheet = ss.getSheetByName('ExtraOrder_Log');
+  if (extraSheet) {
+    const eRows = extraSheet.getDataRange().getValues();
+    for (let i = 1; i < eRows.length; i++) {
+      const r = eRows[i];
+      const rDate = normalizeSheetDateIso(r[0]);
+      const skuId = (r[1] !== undefined && r[1] !== null ? r[1] : '').toString().trim();
+      if (rDate !== dateIso || !skuId) continue;
+
+      const menuItem = menuInfo.map[skuId];
+      const dishName = (menuItem && menuItem.name) || (r[2] || '').toString().trim() || skuId;
+      const price = (menuItem && menuItem.price) || Number(r[3]) || 0;
+      const qtyReceived = Math.max(0, Number(r[4]) || 0);
+      const updatedAt = r[5] instanceof Date ? Utilities.formatDate(r[5], tz, 'HH:mm') : (r[5] || '').toString().trim();
+      const updatedBy = (r[6] || '').toString().trim();
+
+      if (!trayMap[skuId]) {
+        trayMap[skuId] = {
+          skuId: skuId,
+          name: dishName,
+          price: price,
+          received: 0,
+          sold: 0,
+          remaining: 0,
+          updatedAt: updatedAt,
+          updatedBy: updatedBy
+        };
+        skuOrder.push(skuId);
+      }
+      trayMap[skuId].received += qtyReceived;
+      if (updatedAt) trayMap[skuId].updatedAt = updatedAt;
+      if (updatedBy) trayMap[skuId].updatedBy = updatedBy;
+    }
+  }
+
+  let totalCollected = 0;
+  const masterSheet = ss.getSheetByName('Orders_Master');
+  if (masterSheet) {
+    const mRows = masterSheet.getDataRange().getValues();
+    for (let i = 1; i < mRows.length; i++) {
+      const r = mRows[i];
+      const ownerNote = (r[9] !== undefined && r[9] !== null ? r[9] : '').toString().trim();
+      if (ownerNote.indexOf('EXTRA_ORDER') === -1) continue;
+
+      const statusK = (r[10] !== undefined && r[10] !== null ? r[10] : '').toString().trim();
+      const statusLower = statusK.toLowerCase();
+      if (statusLower.indexOf('cancel') !== -1 || statusLower.indexOf('hủy') !== -1 || statusLower.indexOf('huỷ') !== -1) {
+        continue;
+      }
+
+      const dIso = normalizeSheetDateIso(r[14]);
+      if (dIso !== dateIso) continue;
+
+      let items = [];
+      try { items = JSON.parse(r[6]) || []; } catch (e) { items = []; }
+      items.forEach(function(it) {
+        const skuId = (it.id || '').toString().trim();
+        const qty = Math.max(0, Number(it.quantity) || 0);
+        if (!skuId || !qty) return;
+        if (!trayMap[skuId]) {
+          const menuItem = menuInfo.map[skuId];
+          trayMap[skuId] = {
+            skuId: skuId,
+            name: (menuItem && menuItem.name) || it.name || skuId,
+            price: (menuItem && menuItem.price) || Number(it.price) || 0,
+            received: 0,
+            sold: 0,
+            remaining: 0,
+            updatedAt: '',
+            updatedBy: ''
+          };
+          skuOrder.push(skuId);
+        }
+        trayMap[skuId].sold += qty;
+      });
+
+      if (statusK === 'Paid') {
+        const rawTotal = r[7] !== undefined && r[7] !== null ? r[7].toString().replace(/[^\d.-]/g, '') : '0';
+        totalCollected += Number(rawTotal) || 0;
+      }
+    }
+  }
+
+  let totalReceived = 0;
+  let totalSold = 0;
+  let totalRemaining = 0;
+  const items = skuOrder.map(function(skuId) {
+    const t = trayMap[skuId];
+    t.remaining = Math.max(0, t.received - t.sold);
+    totalReceived += t.received;
+    totalSold += t.sold;
+    totalRemaining += t.remaining;
+    return t;
+  });
+
+  return {
+    dateIso: dateIso,
+    items: items,
+    menuItems: menuInfo.list,
+    totalReceived: totalReceived,
+    totalSold: totalSold,
+    totalRemaining: totalRemaining,
+    totalCollected: totalCollected
+  };
+}
+
+function staffGetExtraTray(payload) {
+  const staff = verifyStaffToken(payload && payload.idToken);
+  if (!staff || staff.error) {
+    return { success: false, message: (staff && staff.error) || 'Từ chối: Chưa xác thực.' };
+  }
+  try {
+    const ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
+    return {
+      success: true,
+      extraTray: getExtraTraySummary(ss, getTodayIsoVn())
+    };
+  } catch (err) {
+    return { success: false, message: 'Lỗi tải khay sữa bán thêm: ' + err.toString() };
+  }
+}
+
+function staffSaveExtraIntake(payload) {
+  const staff = verifyStaffToken(payload && payload.idToken);
+  if (!staff || staff.error) {
+    return { success: false, message: (staff && staff.error) || 'Từ chối: Chưa xác thực.' };
+  }
+
+  const skuId = (payload && payload.skuId) ? payload.skuId.toString().trim() : '';
+  const qtyReceived = parseInt(payload && payload.qtyReceived, 10);
+  if (!skuId) return { success: false, message: 'Vui lòng chọn món sữa.' };
+  if (isNaN(qtyReceived) || qtyReceived < 0 || qtyReceived > 200) {
+    return { success: false, message: 'Số chai nhận không hợp lệ (0 - 200).' };
+  }
+
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(10000);
+  } catch (e) {
+    return { success: false, message: 'Hệ thống đang bận, vui lòng thử lại sau 2 giây.' };
+  }
+
+  try {
+    const ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
+    const menuInfo = getDimMenuSkuMap(ss);
+    const menuItem = menuInfo.map[skuId];
+    if (!menuItem) {
+      return { success: false, message: 'Không tìm thấy món trong Dim_Menu (' + skuId + ').' };
+    }
+
+    const todayIso = getTodayIsoVn();
+    const currentTray = getExtraTraySummary(ss, todayIso);
+    const existingEntry = currentTray.items.find(function(it) { return it.skuId === skuId; });
+    const soldToday = existingEntry ? existingEntry.sold : 0;
+
+    if (qtyReceived < soldToday) {
+      return {
+        success: false,
+        message: `Món "${menuItem.name}" đã bán ${soldToday} chai hôm nay, không thể chỉnh số nhận xuống ${qtyReceived}.`
+      };
+    }
+
+    const extraSheet = getOrCreateExtraOrderSheet(ss);
+    const rows = extraSheet.getDataRange().getValues();
+    const tz = Session.getScriptTimeZone() || 'Asia/Ho_Chi_Minh';
+    const now = new Date();
+    const nowTime = Utilities.formatDate(now, tz, 'HH:mm');
+    const actor = staff.name || staff.email || 'Staff';
+
+    let targetRow = -1;
+    let prevHistory = '';
+    for (let i = 1; i < rows.length; i++) {
+      const rDate = normalizeSheetDateIso(rows[i][0]);
+      const rSku = (rows[i][1] !== undefined && rows[i][1] !== null ? rows[i][1] : '').toString().trim();
+      if (rDate === todayIso && rSku === skuId) {
+        targetRow = i + 1;
+        prevHistory = (rows[i][7] || '').toString().trim();
+        break;
+      }
+    }
+
+    const logEntry = `${nowTime} ${actor}: ${qtyReceived} chai`;
+    const newHistory = prevHistory ? `${prevHistory} | ${logEntry}` : logEntry;
+
+    if (targetRow > 0) {
+      extraSheet.getRange(targetRow, 3, 1, 6).setValues([[
+        menuItem.name,
+        menuItem.price,
+        qtyReceived,
+        now,
+        staff.email || actor,
+        newHistory
+      ]]);
+    } else {
+      extraSheet.appendRow([
+        todayIso,
+        skuId,
+        menuItem.name,
+        menuItem.price,
+        qtyReceived,
+        now,
+        staff.email || actor,
+        newHistory
+      ]);
+    }
+
+    logTracking({ action: 'extra_intake_saved', details: `${staff.email} -> ${todayIso} | ${menuItem.name}: ${qtyReceived} chai` });
+    return {
+      success: true,
+      extraTray: getExtraTraySummary(ss, todayIso)
+    };
+  } catch (err) {
+    return { success: false, message: 'Lỗi lưu số nhận: ' + err.toString() };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function staffCreateExtraOrder(payload) {
+  const staff = verifyStaffToken(payload && payload.idToken);
+  if (!staff || staff.error) {
+    return { success: false, message: (staff && staff.error) || 'Từ chối: Chưa xác thực.' };
+  }
+
+  const skuId = (payload && payload.skuId) ? payload.skuId.toString().trim() : '';
+  const qty = parseInt(payload && payload.qty, 10);
+  const requestId = (payload && payload.requestId) ? payload.requestId.toString().trim() : '';
+  const markPaidNow = !!(payload && payload.markPaidNow);
+  const customerNote = (payload && payload.customerNote) ? payload.customerNote.toString().trim() : '';
+
+  if (!skuId) return { success: false, message: 'Thiếu mã món sữa.' };
+  if (isNaN(qty) || qty < 1 || qty > 50) return { success: false, message: 'Số lượng bán phải từ 1 đến 50.' };
+
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(10000);
+  } catch (e) {
+    return { success: false, message: 'Hệ thống đang bận, vui lòng thử lại sau 2 giây.' };
+  }
+
+  try {
+    const ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
+    const masterSheet = ss.getSheetByName('Orders_Master');
+    const factSheet = ss.getSheetByName('Fact_Order_Items');
+    if (!masterSheet || !factSheet) return { success: false, message: 'Thiếu tab Orders_Master hoặc Fact_Order_Items' };
+
+    const todayIso = getTodayIsoVn();
+
+    // Idempotency check via requestId stored in Orders_Master Col J (EXTRA_ORDER|<requestId>)
+    if (requestId) {
+      const mData = masterSheet.getDataRange().getValues();
+      for (let i = 1; i < mData.length; i++) {
+        const colJ = (mData[i][9] || '').toString().trim();
+        if (colJ === `EXTRA_ORDER|${requestId}`) {
+          return {
+            success: true,
+            duplicate: true,
+            orderId: (mData[i][0] || '').toString().trim(),
+            extraTray: getExtraTraySummary(ss, todayIso)
+          };
+        }
+      }
+    }
+
+    const menuInfo = getDimMenuSkuMap(ss);
+    const menuItem = menuInfo.map[skuId];
+    if (!menuItem) {
+      return { success: false, message: 'Không tìm thấy món trong Dim_Menu (' + skuId + ').' };
+    }
+
+    const tray = getExtraTraySummary(ss, todayIso);
+    const trayItem = tray.items.find(function(it) { return it.skuId === skuId; });
+    const remaining = trayItem ? trayItem.remaining : 0;
+    if (remaining < qty) {
+      return {
+        success: false,
+        message: `Khay chỉ còn ${remaining} chai "${menuItem.name}". Hãy cập nhật số nhận nếu bếp đưa thêm.`
+      };
+    }
+
+    const sw = normalizeSweetness(payload && payload.sweetness, payload && payload.sweetnessCode);
+    const deliveryDateLabel = getTodayLabelVn();
+    const orderId = generateUniqueOrderId(masterSheet);
+    const now = new Date();
+    const staffName = staff.name || (staff.email ? staff.email.split('@')[0] : 'Shipper');
+    const unitPrice = Number(menuItem.price) || 0;
+    const totalAmount = unitPrice * qty;
+
+    const itemObj = {
+      id: menuItem.id,
+      name: menuItem.name,
+      price: unitPrice,
+      quantity: qty,
+      deliveryDate: deliveryDateLabel,
+      deliveryIso: todayIso,
+      sweetness: sw.label,
+      sweetnessCode: sw.code,
+      source: 'extra_order'
+    };
+
+    const ownerTag = requestId ? `EXTRA_ORDER|${requestId}` : 'EXTRA_ORDER';
+    masterSheet.appendRow([
+      orderId,
+      now,
+      '[Bán thêm] Khách mua lẻ',
+      '',
+      '',
+      'Mua trực tiếp từ Shipper',
+      JSON.stringify([itemObj]),
+      totalAmount,
+      customerNote,
+      ownerTag,
+      markPaidNow ? 'Paid' : '',
+      markPaidNow ? 'Đã giao' : '',
+      markPaidNow ? now : '',
+      markPaidNow ? staffName : '',
+      todayIso
+    ]);
+
+    const currentWeek = resolveCurrentWeekCode(factSheet);
+    factSheet.appendRow([
+      orderId,
+      deliveryDateLabel,
+      menuItem.name,
+      menuItem.id,
+      qty,
+      '[Bán thêm] Khách mua lẻ',
+      '',
+      currentWeek,
+      'ExtraOrder',
+      '',
+      sw.label
+    ]);
+
+    logTracking({
+      action: 'extra_order_created',
+      details: `${staff.email} -> ${orderId}: ${qty}x ${menuItem.name} (${totalAmount}đ)${markPaidNow ? ' [Paid+Delivered]' : ''}`
+    });
+
+    return {
+      success: true,
+      orderId: orderId,
+      extraTray: getExtraTraySummary(ss, todayIso)
+    };
+  } catch (err) {
+    return { success: false, message: 'Lỗi tạo đơn bán thêm: ' + err.toString() };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function staffCancelExtraOrder(payload) {
+  const staff = verifyStaffToken(payload && payload.idToken);
+  if (!staff || staff.error) {
+    return { success: false, message: (staff && staff.error) || 'Từ chối: Chưa xác thực.' };
+  }
+
+  const orderId = (payload && payload.orderId) ? payload.orderId.toString().trim() : '';
+  if (!orderId) return { success: false, message: 'Thiếu mã đơn hàng.' };
+
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(10000);
+  } catch (e) {
+    return { success: false, message: 'Hệ thống đang bận, vui lòng thử lại sau 2 giây.' };
+  }
+
+  try {
+    const ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
+    const masterSheet = ss.getSheetByName('Orders_Master');
+    const factSheet = ss.getSheetByName('Fact_Order_Items');
+    if (!masterSheet) return { success: false, message: 'Thiếu tab Orders_Master' };
+
+    const mData = masterSheet.getDataRange().getValues();
+    let foundRow = -1;
+    for (let i = 1; i < mData.length; i++) {
+      if ((mData[i][0] || '').toString().trim() === orderId) {
+        const ownerNote = (mData[i][9] || '').toString().trim();
+        if (ownerNote.indexOf('EXTRA_ORDER') === -1) {
+          return { success: false, message: 'Chỉ được hủy đơn Sữa Bán Thêm tại đây.' };
+        }
+        const statusK = (mData[i][10] || '').toString().trim();
+        if (statusK === 'Paid') {
+          return { success: false, message: 'Đơn đã thu tiền (Paid). Hãy bấm "Sửa" thanh toán trước khi hủy.' };
+        }
+        foundRow = i + 1;
+        break;
+      }
+    }
+
+    if (foundRow === -1) {
+      return { success: false, message: 'Không tìm thấy đơn ' + orderId };
+    }
+
+    masterSheet.getRange(foundRow, 11).setValue('Cancelled');
+
+    if (factSheet) {
+      const fData = factSheet.getDataRange().getValues();
+      for (let j = 1; j < fData.length; j++) {
+        if ((fData[j][0] || '').toString().trim() === orderId) {
+          factSheet.getRange(j + 1, 9).setValue('ExtraOrder_Cancelled');
+        }
+      }
+    }
+
+    logTracking({ action: 'extra_order_cancelled', details: `${staff.email} -> ${orderId}` });
+    return {
+      success: true,
+      orderId: orderId,
+      extraTray: getExtraTraySummary(ss, getTodayIsoVn())
+    };
+  } catch (err) {
+    return { success: false, message: 'Lỗi hủy đơn: ' + err.toString() };
   } finally {
     lock.releaseLock();
   }

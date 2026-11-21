@@ -31,6 +31,20 @@
 
 ## 🕒 3. LỊCH SỬ CẬP NHẬT & NÂNG CẤP CHI TIẾT (DETAILED CHANGELOG)
 
+### [v3.0.0] — 2026-11-21: Luồng Sữa Bán Thêm cho Shipper (`ExtraOrder_Log`) & Chống Trùng Mã Đơn
+* **Nguyên nhân**: Mỗi ngày bếp nấu dư 3–10 chai ngẫu nhiên để shipper bán thêm dọc đường; chai không dán nhãn nên shipper dễ nhầm món/giá tiền, còn chủ tiệm không đối soát được số chai đã đưa — đã bán — còn lại cuối ngày.
+* **Giải pháp Backend ([`code.gs`](./code.gs))**:
+  - Tự động khởi tạo tab **`ExtraOrder_Log`** (Grain: `date_iso + sku_id`) lưu số lượng chai nhận trong ngày kèm lịch sử chỉnh sửa (`history_log`).
+  - Bổ sung 4 API bảo mật: `staffGetExtraTray`, `staffSaveExtraIntake` (upsert số nhận, chặn chỉnh thấp hơn số đã bán), `staffCreateExtraOrder` (tự tra giá chuẩn từ `Dim_Menu`, ép ngày giao = hôm nay, kiểm tra tồn khay, chống bấm đúp via `requestId`, ghi đủ `Orders_Master` + `Fact_Order_Items` + `Tracking`), và `staffCancelExtraOrder` (hủy đơn chưa thu tiền ở cả Master & `Fact_Order_Items` → `ExtraOrder_Cancelled` và hoàn chai về khay).
+  - Gộp `extraTray` vào phản hồi của `staffGetDeliveries` để tải 1 lần trên mạng 4G; loại bỏ đơn `Cancelled` khỏi danh sách giao & KPI.
+  - Bổ sung hàm `generateUniqueOrderId()` kiểm tra trùng cột A trong `LockService` cho cả đơn thường và đơn bán thêm.
+  - Tách biệt dữ liệu: `sendDailyKitchenReport()` bỏ qua `ExtraOrder` / `ExtraOrder_Cancelled`; `searchOrders()` ẩn đơn `EXTRA_ORDER` trừ khi tra chính xác mã đơn `HN-xxxxxx`.
+* **Giải pháp Frontend & Cấu hình ([`index.html`](./index.html), [`config.js`](./config.js))**:
+  - Bổ sung cờ bật/tắt `EXTRA_ORDER_ENABLED: true` trong `config.js` (cache-bust `?v=3.0.0`).
+  - Thêm khung **"🥛 Khay Sữa Bán Thêm Hôm Nay"** trong `?view=staff` (4 thẻ KPI riêng: *Đã nhận · Đã bán · Còn lại · Đã thu*, form nhận/sửa số chai, danh sách khay kèm nút `+ Tạo đơn bán`, badge `🥛 Bán thêm` và nút `🗑️ Hủy` trên thẻ đơn chưa thu tiền).
+
+---
+
 ### [v2.9.1] — 2026-11-21: Tái Cấu Trúc Chính Sách Giao Hàng 3 Tầng (Marketing & Sales Tuning)
 * **Đồng bộ Chính sách Giao hàng 3 tầng trên toàn Web App & Email ([`index.html`](./index.html), [`code.gs`](./code.gs))**:
   - **Tầng 1 — Freeship mọi đơn**: Tòa nhà **Sonatus** & **Saigon Trade Center**.
