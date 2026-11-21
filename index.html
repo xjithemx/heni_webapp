@@ -8,7 +8,7 @@
     <link rel="icon" type="image/jpeg" href="./images/logo-only.jpg">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <script src="./config.js?v=2.8.1"></script>
+    <script src="./config.js?v=2.9.0"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=DM+Sans:wght@400;500;600&display=swap"
@@ -149,7 +149,7 @@
                 </div>
                 <div>
                     <h1 class="text-lg sm:text-xl font-serif font-bold text-brand-dark leading-tight tracking-tight">Góc Bếp Nhà Hení</h1>
-                    <p class="text-[11px] text-gray-500">Sữa hạt tươi nấu mới mỗi sáng · Chốt đơn 20h00</p>
+                    <p class="text-[11px] text-gray-500">Sữa hạt tươi nấu mới mỗi ngày · Chốt đơn 21h00</p>
                 </div>
             </div>
 
@@ -238,15 +238,21 @@
                                 <span class="font-serif font-bold text-sm text-brand-dark">Thông Tin Bếp & Giao Hàng</span>
                                 <button type="button" @click="activeTooltip = null" class="sm:hidden text-gray-400 hover:text-gray-600 px-1.5 py-0.5 text-sm">✕</button>
                             </div>
-                            <div class="space-y-2 text-xs text-gray-600">
+                            <div class="space-y-2.5 text-xs text-gray-600 leading-relaxed">
                                 <p class="flex items-start gap-2">
-                                    <span class="shrink-0">🕗</span>
-                                    <span><b>Giờ nhận đơn:</b> Chốt mẻ nấu lúc <b>20h00</b> mỗi tối (Giao sáng Thứ 2 - Thứ 7).</span>
+                                    <span class="shrink-0">🕘</span>
+                                    <span><b>Giờ nhận đơn:</b> Chốt mẻ nấu lúc <b>21h00</b> mỗi tối <i>(Giao sáng Thứ 2 – Thứ 7)</i>.</span>
                                 </p>
-                                <p class="flex items-start gap-2">
+                                <div class="flex items-start gap-2">
                                     <span class="shrink-0">🛵</span>
-                                    <span><b>Phí giao hàng:</b> Freeship <b>Bcons City</b> & bán kính &lt; 3km.</span>
-                                </p>
+                                    <div class="space-y-1">
+                                        <p><b>Chính sách giao hàng:</b></p>
+                                        <ul class="list-disc pl-3.5 space-y-0.5 text-[11px] text-gray-600">
+                                            <li><b>Freeship 100%:</b> Tòa nhà <b>Sonatus</b>, <b>Saigon Trade Center</b> và <b>Bcons City</b> <i>(kèm bán kính 3km quanh Bcons City)</i>.</li>
+                                            <li><b>Khu vực khác:</b> Hỗ trợ đặt giao tận nơi theo <b>phí ứng dụng thực tế</b> — và <b>Freeship ngay cho đơn từ 10 chai</b> <i>(áp dụng cho đơn giao trong cùng 1 ngày)</i>.</li>
+                                        </ul>
+                                    </div>
+                                </div>
                                 <p v-if="socialLinks.contactPhone" class="flex items-center justify-between gap-2 bg-brand-bone p-2 rounded-xl">
                                     <span>📞 Hotline / Zalo: <b class="text-brand-dark">{{ socialLinks.contactPhone }}</b></span>
                                     <button type="button" @click="copyText(socialLinks.contactPhone, 'Hotline')" class="text-[11px] px-2 py-0.5 rounded-lg bg-brand-green/10 text-brand-green font-bold">Copy</button>
@@ -284,7 +290,7 @@
         <!-- Unified Hero Showcase (Gom hình ảnh thương hiệu + cam kết thành 1 thể thống nhất, bỏ text lặp) -->
         <section class="mb-10 rounded-3xl overflow-hidden shadow-md bg-white border border-gray-100">
             <div v-if="storeImages['base']" class="w-full h-[30vh] sm:h-[38vh] md:h-[42vh] relative bg-brand-bone">
-                <img :src="storeImages['base']" class="w-full h-full object-cover object-center" alt="Góc Bếp Nhà Hení - Sữa hạt tươi mỗi sáng">
+                <img :src="storeImages['base']" class="w-full h-full object-cover object-center" alt="Góc Bếp Nhà Hení - Sữa hạt tươi nấu mới mỗi ngày">
                 <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none"></div>
                 <div class="absolute bottom-4 left-5 right-5 flex items-end justify-between text-white">
                     <p class="font-serif italic text-lg sm:text-xl md:text-2xl drop-shadow-md">Mộc mạc, lành sạch mỗi ngày</p>
@@ -368,7 +374,7 @@
                     <p class="text-sm text-brand-green font-medium">Giao hàng: {{ nextDeliveryDate.label }}</p>
                 </div>
                 <div class="text-xs text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full inline-block w-fit">
-                    Nhận order trước 20h00
+                    Nhận order trước 21h00
                 </div>
             </div>
 
@@ -481,7 +487,7 @@
             <div class="mb-6 text-center">
                 <h2 class="text-3xl font-serif font-bold text-brand-dark mb-2">Lịch Đặt Trước Cả Tuần</h2>
                 <p class="text-sm text-gray-600 max-w-md mx-auto">Sắp xếp lịch uống sữa dinh dưỡng cho cả tuần. Tiệm nấu
-                    mới mỗi sáng theo đơn đặt trước.</p>
+                    mới mỗi ngày theo đơn đặt trước.</p>
             </div>
 
             <div class="flex overflow-x-auto snap-x hide-scrollbar gap-3 mb-8 pb-2 px-1">
@@ -1232,7 +1238,7 @@
                                 <label class="block text-sm font-semibold text-brand-dark mb-1.5">Địa chỉ nhận
                                     hàng</label>
                                 <textarea v-model="form.address" required rows="2"
-                                    placeholder="VD: Tòa A Bcons City / Sonatus... (Miễn phí 3km quanh Bcons City & Sonatus)"
+                                    placeholder="VD: Tòa nhà Sonatus / Saigon Trade Center / Bcons City (hoặc số nhà, tầng, phòng)..."
                                     class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 focus:outline-none focus:border-brand-green focus:ring-1 focus:ring-brand-green text-sm resize-none transition-shadow"></textarea>
                             </div>
                             <div>
@@ -1243,13 +1249,19 @@
                             </div>
 
                             <div class="border-t border-gray-200 pt-6 mt-8">
-                                <div class="flex justify-between items-center mb-2">
+                                <div class="flex justify-between items-center mb-3">
                                     <span class="text-gray-600 font-medium">Tổng đơn hàng</span>
                                     <span class="font-bold text-xl text-brand-dark">{{ formatPrice(totalPrice) }}</span>
                                 </div>
-                                <div class="flex justify-between items-center mb-6">
-                                    <span class="text-gray-500 text-sm">Phí giao hàng</span>
-                                    <span class="text-xs text-right text-gray-400">Miễn phí 3km quanh Bcons City &amp; Sonatus · Đơn &gt; 10 món cho khu vực xa hơn</span>
+                                <div class="bg-brand-bone/80 border border-brand-green/15 rounded-xl p-3.5 mb-6 text-xs text-gray-600 space-y-1.5 leading-relaxed">
+                                    <p class="font-bold text-brand-dark flex items-center gap-1.5">
+                                        <span>🛵</span>
+                                        <span>Chính sách giao hàng nhà Hení</span>
+                                    </p>
+                                    <ul class="list-disc pl-4 space-y-1 text-[11.5px]">
+                                        <li><b>Freeship 100%:</b> Tòa nhà <b>Sonatus</b>, <b>Saigon Trade Center</b> và <b>Bcons City</b> <i>(kèm bán kính 3km quanh Bcons City)</i>.</li>
+                                        <li><b>Khu vực khác:</b> Giao theo <b>phí app thực tế</b> · <b>Freeship ngay cho đơn từ 10 chai</b> <i>(tính theo số lượng giao trong cùng 1 ngày)</i>.</li>
+                                    </ul>
                                 </div>
                                 <button type="submit" :disabled="isSubmitting"
                                     class="w-full py-4 rounded-2xl bg-brand-green text-white font-bold text-lg hover:bg-brand-dark transition-colors disabled:opacity-50 flex justify-center items-center shadow-md active:scale-[0.98]">
@@ -1438,7 +1450,7 @@
                     badge: 'Tổng kết tuần 2',
                     title: 'Tiếp tục gửi tới khách hàng lời Cảm Ơn Chân Thành💚',
                     content: 'Menu được cập nhật mới liên tục và luôn nhận được những phản hồi tích cực của khách hàng, khen có góp ý cải thiện cũng có và luôn đi kèm những lời động viên chân thành!',
-                    footer: 'Sữa hạt vẫn luôn được nấu tươi mới mỗi sáng và sẽ tiếp tục được nghiên cứu để ra những sản phẩm mới tốt hơn.'
+                    footer: 'Sữa hạt vẫn luôn được nấu tươi mới mỗi ngày và sẽ tiếp tục được nghiên cứu để ra những sản phẩm mới tốt hơn.'
                 });
 
                 // v2.8.0: Thông tin liên hệ, Facebook & Hover Tooltips
@@ -1598,7 +1610,7 @@
                 // Xử lý ngày tháng từ v1
                 const now = new Date();
                 const currentHour = now.getHours();
-                const cutOffPassed = currentHour >= 20;
+                const cutOffPassed = currentHour >= 21;
 
                 let availableDates = [];
                 let daysAdded = 0;

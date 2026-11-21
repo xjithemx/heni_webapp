@@ -1,7 +1,7 @@
 # PRODUCT REQUIREMENTS DOCUMENT (PRD) — GÓC BẾP NHÀ HENÍ (`heni_webapp`)
 
-> **Phiên bản tài liệu:** v2.8.1  
-> **Cập nhật lần cuối:** 2026-11-15  
+> **Phiên bản tài liệu:** v2.9.0  
+> **Cập nhật lần cuối:** 2026-11-21  
 > **Mô hình vận hành mục tiêu:** Doanh nghiệp 1 người (Solo-Founder / Micro D2C Healthy Kitchen)  
 > **Live Production URL:** [https://xjithemx.github.io/heni_webapp/](https://xjithemx.github.io/heni_webapp/)
 
@@ -9,12 +9,12 @@
 
 ## 1. TỔNG QUAN SẢN PHẨM (PRODUCT VISION & BUSINESS MODEL)
 
-**Góc Bếp Nhà Hení** là ứng dụng đặt sữa hạt thủ công tươi mới mỗi sáng (không chất bảo quản, ngọt dịu từ chà là/thốt nốt, 100% màu tự nhiên), phục vụ tệp khách hàng văn phòng và cư dân đô thị (Sonatus Quận 1, Shopee/SPX Express, Bcons City...).
+**Góc Bếp Nhà Hení** là ứng dụng đặt sữa hạt thủ công tươi mới mỗi ngày (không chất bảo quản, ngọt dịu từ chà là/thốt nốt, 100% màu tự nhiên), phục vụ tệp khách hàng văn phòng và cư dân đô thị (Sonatus, Saigon Trade Center, Bcons City...).
 
 ### Đặc thù Mô hình Vận hành 1 Người (Solo-Operator Constraints):
-1. **Batch Kitchen Loop (Chốt mẻ nấu 20h00 mỗi tối)**:
+1. **Batch Kitchen Loop (Chốt mẻ nấu 21h00 mỗi tối)**:
    - Khách đặt trước (Pre-order) cho sáng hôm sau hoặc đặt lịch uống sữa cho cả tuần (Thứ 2 – Thứ 7, nghỉ Chủ Nhật).
-   - Đúng **20h00 mỗi tối**, hệ thống tự động khóa nhận đơn cho ca sáng mai (chuyển sang ngày kế tiếp) và tự động tổng hợp số lượng từng loại sữa + danh sách giao hàng gửi về email quản trị viên bếp cấu hình trong `Dim_Config` / `config.js` (hoặc tài khoản Google triển khai Web App).
+   - Đúng **21h00 mỗi tối**, hệ thống tự động khóa nhận đơn cho ca sáng mai (chuyển sang ngày kế tiếp) và tự động tổng hợp số lượng từng loại sữa + danh sách giao hàng gửi về email quản trị viên bếp cấu hình trong `Dim_Config` / `config.js` (hoặc tài khoản Google triển khai Web App).
 2. **Zero-Code Daily Maintenance (Quản trị không cần sửa code)**:
    - Chủ tiệm chỉ cần dùng **Google Sheets** (`heni_webapp`) và file cấu hình nhanh [`config.js`](./config.js) trên GitHub để cập nhật giá, bật/tắt món, đổi nội dung thông báo hàng tuần và thêm email nhận báo cáo bếp.
 3. **Privacy-First & Minimalist UX (Quyền riêng tư & Tối giản)**:
@@ -39,7 +39,7 @@
 │    logo-only.jpg, base.jpg,       │ │    Tra cứu theo Tên/SĐT/Mã đơn    │
 │    momo.jpg, t2_s1.png..t7_p1.png │ │  - doPost(action=processOrder):   │
 └───────────────────────────────────┘ │    Ghi Sheet + Gửi Bill Email     │
-                                      │  - Trigger 20h00: Báo cáo Bếp     │
+                                      │  - Trigger 21h00: Báo cáo Bếp     │
                                       └─────────────────┬─────────────────┘
                                                         │
                                                         ▼
@@ -111,29 +111,29 @@
   - `weekly_title`: Tiêu đề khung thông báo tuần (Xóa trống ô này sẽ tự động ẩn khung thông báo tuần).
   - `weekly_content`: Nội dung chi tiết thông báo tuần.
   - `weekly_footer`: Dòng nhấn mạnh dưới chân khung thông báo tuần.
-  - `kitchen_emails`: Danh sách email nhận báo cáo bếp 20h00 (ngoài các email trong `config.js`).
+  - `kitchen_emails`: Danh sách email nhận báo cáo bếp 21h00 (ngoài các email trong `config.js`).
 
 ---
 
 ## 4. ĐẶC TẢ CHI TIẾT CÁC TÍNH NĂNG (FUNCTIONAL SPECIFICATIONS)
 
-### 4.1. Giao diện, Nhận diện Thương hiệu & Trải nghiệm Đầu trang (`v2.8.0` Taste v3 Refinement)
+### 4.1. Giao diện, Nhận diện Thương hiệu & Trải nghiệm Đầu trang (`v2.9.0`)
 * **Bảng màu (Brand Tokens)**:
   - `brand-bone` (`#F9F8F6`): Nền kem ấm chủ đạo.
   - `brand-green` (`#4F6B4A`): Xanh lá thảo mộc chủ đạo.
   - `brand-gold` (`#C49A45`): Vàng đồng điểm nhấn dòng Cao Cấp (Premium).
   - `brand-dark` (`#2C3D29`): Xanh đen đậm cho chữ và thanh giỏ hàng nổi.
 * **Typography**: Tiêu đề dùng `Playfair Display` (Serif), nội dung dùng `DM Sans` (Sans-serif).
-* **Unified Hero Showcase**: Hợp nhất thanh nhận diện thương hiệu, hình ảnh `base.jpg` (chứa sẵn tiêu đề nghệ thuật) và dải 3 cam kết (`Không chất bảo quản`, `Ngọt dịu chà là, thốt nốt`, `100% màu tự nhiên`) thành một thể thống nhất, loại bỏ chữ tiêu đề trùng lặp để đẩy **Menu Sáng Mai** lên ngay tầm mắt đầu tiên.
+* **Unified Hero Showcase**: Hợp nhất thanh nhận diện thương hiệu (*"Sữa hạt tươi nấu mới mỗi ngày · Chốt đơn 21h00"*), hình ảnh `base.jpg` (chứa sẵn tiêu đề nghệ thuật) và dải 3 cam kết (`Không chất bảo quản`, `Ngọt dịu chà là, thốt nốt`, `100% màu tự nhiên`) thành một thể thống nhất.
 * **Cụm Hover Tooltip Tiện Ích (`taste-v3`)**:
   - **`📘 Facebook`**: Rê chuột hiển thị thẻ xem trước Fanpage [Góc Bếp Nhà Hení](https://www.facebook.com/profile.php?id=61595353216988) và bấm mở trực tiếp.
   - **`💳 Mã QR`**: Rê chuột hiển thị ngay mã QR MoMo/Ngân hàng (`images/momo.jpg?v=2.8.1`) kèm nút Copy nhanh để thanh toán hóa đơn tuần tức thì.
-  - **`💬 Liên hệ`**: Rê chuột hiển thị giờ chốt đơn (`20h00`), Hotline **`0834983524`**, chính sách giao hàng chi tiết (*Miễn phí 3km quanh Bcons City và Sonatus; các đơn trên 10 món cho khu vực xa hơn*) và nút nhắn tin Facebook / Tra cứu đơn.
+  - **`💬 Liên hệ`**: Rê chuột hiển thị giờ chốt đơn (`21h00`), Hotline **`0834983524`**, chính sách giao hàng chi tiết (*Freeship 100% tòa nhà Sonatus, Saigon Trade Center và Bcons City kèm bán kính 3km quanh Bcons City; khu vực khác giao theo phí app thực tế và Freeship ngay cho đơn từ 10 chai tính trong cùng 1 ngày*) và nút nhắn tin Facebook / Tra cứu đơn.
 * **Weekly Banner Pop-up (3.5 giây)**: Thông báo tuần hiển thị dạng Pop-up tinh tế khi vừa mở trang, tự động tắt sau **3.5 giây** kèm thanh tiến trình đếm ngược (tạm dừng khi rê chuột vào đọc), nút **`✕`** đóng rõ ràng và nút **`💌 Bản tin`** trên thanh đầu trang để mở xem lại.
 
-### 4.2. Logic Lịch Đặt Sữa Thông Minh (Cut-off 20h00 & Bỏ qua Chủ Nhật)
-* Nếu khách truy cập **trước 20h00**: Mục **"Menu Sáng Mai"** hiển thị thực đơn của ngày mai (`dayOffset = 1`).
-* Nếu khách truy cập **từ 20h00 trở đi**: Mẻ sữa sáng mai đã chốt, mục **"Menu Sáng Mai"** tự động nhảy sang ngày kế tiếp (`dayOffset = 2`).
+### 4.2. Logic Lịch Đặt Sữa Thông Minh (Cut-off 21h00 & Bỏ qua Chủ Nhật)
+* Nếu khách truy cập **trước 21h00**: Mục **"Menu Sáng Mai"** hiển thị thực đơn của ngày mai (`dayOffset = 1`).
+* Nếu khách truy cập **từ 21h00 trở đi**: Mẻ sữa sáng mai đã chốt, mục **"Menu Sáng Mai"** tự động nhảy sang ngày kế tiếp (`dayOffset = 2`).
 * Nếu ngày giao rơi vào **Chủ Nhật (`dayOfWeek === 0`)**: Tự động nhảy qua Thứ 2 tuần kế tiếp.
 * Mục **"Lịch Đặt Trước Cả Tuần"**: Hiển thị 5 ngày làm việc tiếp theo kèm chủ đề từng ngày (*Thứ 2: Năng lượng, Thứ 3: Thanh mát, Thứ 4: Dưỡng nhan, Thứ 5: Dưỡng chất, Thứ 6: Ấm bụng, Thứ 7: Thảnh thơi*).
 
@@ -163,8 +163,8 @@
   - Đơn hàng có Cột K là `Cancelled` hoặc `Đã hủy` hiển thị huy hiệu xám **`Đã hủy`**.
   - Đơn hàng **`Chưa thanh toán`** mới nhất sẽ tự động mở rộng (expand) danh sách món; nếu toàn bộ đơn của khách đều đã thanh toán thì tự động mở rộng đơn mới nhất để khách tiện đối chiếu.
 
-### 4.5. Tự Động Gửi Báo Cáo Nấu Sữa Lúc 20h00 Hàng Ngày (`sendDailyKitchenReport`)
-* Đúng **20h00 mỗi tối** (qua Time-driven Trigger `setupDaily20hTrigger`), hệ thống tự động:
+### 4.5. Tự Động Gửi Báo Cáo Nấu Sữa Lúc 21h00 Hàng Ngày (`sendDailyKitchenReport`)
+* Đúng **21h00 mỗi tối** (qua Time-driven Trigger `setupDaily21hTrigger`), hệ thống tự động:
   1. Xác định ngày giao hàng tiếp theo (nếu ngày mai là Chủ Nhật thì lấy Thứ 2).
   2. Quét bảng `Fact_Order_Items` (bỏ qua các dòng `Cancelled`/`Đã hủy`), đọc cột K (`Độ Ngọt`) và đối chiếu địa chỉ/ghi chú từ `Orders_Master`.
   3. Cộng tổng số lượng chai cần nấu cho từng món kèm **phân rã theo từng mức độ ngọt** (`🍯 Bình thường`, `🌿 Ít ngọt`, `🥥 Không ngọt`) và lập danh sách khách nhận kèm badge độ ngọt + ghi chú.
@@ -211,7 +211,7 @@
 * **Giao diện khách**: ngày nghỉ vẫn hiển thị trong "Menu Sáng Mai" và "Lịch Đặt Trước"; món làm mờ, nút thêm vào giỏ bị khóa, dải thông báo *"🌿 Ngày này quán tạm nghỉ"* + lời nhắn; nút ngày có nhãn "Nghỉ"; món của ngày nghỉ trong giỏ được cảnh báo và loại bỏ.
 * **Bảo vệ phía server**: `processOrder` từ chối món thuộc ngày nghỉ; `getDynamicMenu`/`init` trả kèm `closures`.
 * **Cảnh báo khi tắt ngày đã có đơn**: trả về số đơn/số chai và danh sách khách (tên, SĐT) cần báo nghỉ.
-* **Báo cáo bếp 20h00**: nếu ngày giao kế tiếp nghỉ → email ghi rõ "Ngày mai quán nghỉ".
+* **Báo cáo bếp 21h00**: nếu ngày giao kế tiếp nghỉ → email ghi rõ "Ngày mai quán nghỉ".
 * **Đơn mới lưu thêm `deliveryISO`** trong `Raw_JSON_Items` và `Fact_Order_Items.M` để so khớp ngày chính xác.
 
 ### 5.3. Lộ trình

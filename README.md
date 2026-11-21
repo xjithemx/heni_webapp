@@ -31,6 +31,17 @@
 
 ## 🕒 3. LỊCH SỬ CẬP NHẬT & NÂNG CẤP CHI TIẾT (DETAILED CHANGELOG)
 
+### [v2.9.0] — 2026-11-21: Cập Nhật Slogan "Mỗi Ngày", Chốt Đơn 21h00 (A $\rightarrow$ Z) & Chính Sách Freeship Chuẩn Marketing/Sales
+* **Tinh chỉnh thông điệp sản phẩm ("Mỗi sáng" $\rightarrow$ "Mỗi ngày") ([`index.html`](./index.html), [`config.js`](./config.js), [`code.gs`](./code.gs))**:
+  - Cập nhật đồng bộ ở Header Tagline, `alt` ảnh Hero, mô tả Lịch Đặt Trước Cả Tuần, footer Weekly Banner và footer Email xác nhận đơn hàng. Giữ nguyên nhãn *"Menu Sáng Mai"* và *"Giao sáng Thứ 2 – Thứ 7"*.
+* **Chuyển toàn bộ Logic & Workflow Chốt Đơn từ `20h00` $\rightarrow$ `21h00`**:
+  - **Frontend ([`index.html`](./index.html))**: Cập nhật `cutOffPassed = currentHour >= 21`, Header Tagline, Tooltip Liên hệ và Badge `Nhận order trước 21h00`.
+  - **Backend & Automation ([`code.gs`](./code.gs))**: Đổi tiêu đề/footer email báo cáo bếp sang `[Bếp Hení 21h00]`, tracking `kitchen_report_21h`, và nâng cấp trigger `setupDaily21hTrigger()` (`.atHour(21)` kèm alias tương thích ngược `setupDaily20hTrigger()`).
+* **Nâng cấp Copywriting Chính sách Giao hàng & Freeship ([`index.html`](./index.html))**:
+  - Cập nhật đồng bộ ở Tooltip **💬 Liên hệ**, Placeholder ô Địa chỉ nhận hàng và Khung Chính sách Giao hàng trong Checkout Modal: *Freeship 100% tòa nhà Sonatus, Saigon Trade Center và Bcons City (kèm bán kính 3km quanh Bcons City); khu vực khác giao theo phí app thực tế và Freeship ngay cho đơn từ 10 chai tính trong cùng 1 ngày*.
+
+---
+
 ### [v2.8.2] — 2026-11-15: Đồng Bộ Nhãn Độ Ngọt Frontend (`Bình thường`, `Ít đường`, `Không đường`) & Tối Ưu Hiển Thị Mobile
 * **Đồng bộ từ GitHub & Cập nhật nhãn Frontend ([`index.html`](./index.html))**:
   - Hợp nhất chỉnh sửa thủ công (`6151b07`) và chuẩn hóa 3 mức hiển thị độ ngọt trên giao diện khách hàng thành **`🍯 Bình thường`**, **`🌿 Ít đường`** (`Ít đường (Giảm đường)`), và **`🥥 Không đường`** (`Không đường (100% vị tự nhiên)`).

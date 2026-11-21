@@ -2,7 +2,7 @@
 // CẤU HÌNH NHANH CHO CHỦ TIỆM HENÍ (Sửa trực tiếp trên GitHub khi cần)
 // ============================================================================
 window.HENI_CONFIG = {
-  // 1. Danh sách Email nhận Báo cáo Nấu Sữa tự động lúc 20h00 mỗi tối
+  // 1. Danh sách Email nhận Báo cáo Nấu Sữa tự động lúc 21h00 mỗi tối
   // Khuyên dùng: Quản lý bảo mật tại tab Dim_Config (key: kitchen_emails) trên Google Sheets riêng tư.
   // Khi cần thêm nhanh trên GitHub, điền email vào mảng dưới đây:
   KITCHEN_REPORT_EMAILS: [
@@ -27,7 +27,7 @@ window.HENI_CONFIG = {
     badge: 'Tổng kết tuần 2',
     title: 'Tiếp tục gửi tới khách hàng lời Cảm Ơn Chân Thành💚',
     content: 'Menu được cập nhật mới liên tục và luôn nhận được những phản hồi tích cực của khách hàng, khen có góp ý cải thiện cũng có và luôn đi kèm những lời động viên chân thành!',
-    footer: 'Sữa hạt vẫn luôn được nấu tươi mới mỗi sáng và sẽ tiếp tục được nghiên cứu để ra những sản phẩm mới tốt hơn.'
+    footer: 'Sữa hạt vẫn luôn được nấu tươi mới mỗi ngày và sẽ tiếp tục được nghiên cứu để ra những sản phẩm mới tốt hơn.'
   },
 
   // 4b. Thông tin Liên hệ, Mạng xã hội & Thời lượng Pop-up

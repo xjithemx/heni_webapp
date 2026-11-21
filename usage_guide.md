@@ -1,7 +1,7 @@
 # TÀI LIỆU HƯỚNG DẪN VẬN HÀNH & QUẢN TRỊ (USAGE GUIDE) — GÓC BẾP NHÀ HENÍ
 
 > **Dành cho:** Chủ tiệm / Người quản lý bếp & vận hành (Mô hình doanh nghiệp 1 người — Không cần biết lập trình).  
-> **Cập nhật lần cuối:** 2026-11-15  
+> **Cập nhật lần cuối:** 2026-11-21  
 > **Link Web App Chính Thức (GitHub CDN):** [https://xjithemx.github.io/heni_webapp/](https://xjithemx.github.io/heni_webapp/)  
 > **Link Google Sheets Quản Trị:** [Mở Bảng Tính heni_webapp](https://docs.google.com/spreadsheets/d/1sjkxZS37_g-R3JowKI99AkaNTCb_HjhcAgrDAInrgb8/edit)
 
@@ -12,7 +12,7 @@
 Với hệ thống mới đã được tự động hóa, công việc mỗi ngày của bạn được rút gọn tối đa:
 
 ### 🌞 Ban ngày (Khách tự đặt hàng & Tra cứu)
-1. Khách mở link web, nhận thông báo bản tin tuần dạng **Pop-up tự động tắt sau 3.5 giây** (có nút **`✕`** đóng nhanh hoặc nút **`💌 Bản tin`** ở góc trên để xem lại). Trên thanh đầu trang còn có cụm nút tiện ích **Facebook**, **Mã QR thanh toán** (`images/momo.jpg` đã cập nhật bản mới) và **Liên hệ** (Hotline **`0834983524`** & chính sách giao hàng: *Miễn phí 3km quanh Bcons City và Sonatus; các đơn trên 10 món cho khu vực xa hơn* — rê chuột qua để xem nhanh).
+1. Khách mở link web, nhận thông báo bản tin tuần dạng **Pop-up tự động tắt sau 3.5 giây** (có nút **`✕`** đóng nhanh hoặc nút **`💌 Bản tin`** ở góc trên để xem lại). Trên thanh đầu trang còn có cụm nút tiện ích **Facebook**, **Mã QR thanh toán** (`images/momo.jpg` đã cập nhật bản mới) và **Liên hệ** (Hotline **`0834983524`**, giờ chốt đơn **21h00**, & chính sách giao hàng: *Freeship 100% tòa nhà Sonatus, Saigon Trade Center và Bcons City kèm bán kính 3km quanh Bcons City; khu vực khác giao theo phí app thực tế và Freeship ngay cho đơn từ 10 chai tính trong cùng 1 ngày*).
 2. Khách chọn món cho **Sáng Mai** hoặc **Đặt Trước Cả Tuần**, chọn **Độ ngọt** mong muốn ngay trên từng món (`🍯 Bình thường`, `🌿 Ít đường`, hoặc `🥥 Không đường` — mặc định là `Bình thường`) và bấm **Xác nhận đơn hàng**.
 3. Hệ thống tự động:
    - Ghi đơn tổng vào tab **`Orders_Master`** (trạng thái mặc định: `Đã tiếp nhận`).
@@ -20,10 +20,10 @@ Với hệ thống mới đã được tự động hóa, công việc mỗi ng�
    - Gửi ngay 1 email xác nhận đơn hàng chi tiết (kèm độ ngọt từng món) cho khách.
 4. Khách muốn xem lại lịch sử đơn hoặc kiểm tra tiền sữa chốt tuần chỉ cần mở mục **Tra cứu & Giải trí** (nút kính lúp góc dưới phải), nhập **Tên** (VD: `Lan Anh`, `Bình Minh`), **Số điện thoại** (VD: `0901234567`), hoặc **Mã đơn** (`HN-751646`). Thông tin khách sẽ được che giấu một phần (Incognito Masking) để bảo vệ quyền riêng tư.
 
-### 🌙 Đúng 20h00 Mỗi Tối (Chốt Mẻ Nấu Sữa Tự Động Cho Bếp)
-1. **Trên Web**: Đúng 20h00, web tự động khóa đặt món cho sáng ngày mai và chuyển sang nhận đơn cho ngày kế tiếp.
+### 🌙 Đúng 21h00 Mỗi Tối (Chốt Mẻ Nấu Sữa Tự Động Cho Bếp)
+1. **Trên Web**: Đúng 21h00, web tự động khóa đặt món cho sáng ngày mai và chuyển sang nhận đơn cho ngày kế tiếp.
 2. **Báo cáo Bếp tự động gửi về Email**:
-   - Đúng 20h00, hệ thống tự động gửi 1 email tiêu đề **`[Bếp Hení 20h00] Báo cáo nấu sữa giao Thứ ... — Tổng: XX chai`** về địa chỉ email quản trị bếp cấu hình trong tab `Dim_Config` hoặc `config.js` (và tài khoản Google triển khai Web App).
+   - Đúng 21h00, hệ thống tự động gửi 1 email tiêu đề **`[Bếp Hení 21h00] Báo cáo nấu sữa giao Thứ ... — Tổng: XX chai`** về địa chỉ email quản trị bếp cấu hình trong tab `Dim_Config` hoặc `config.js` (và tài khoản Google triển khai Web App).
    - Trong email có sẵn **2 bảng rõ ràng**:
      1. **Tổng hợp số lượng cần nấu**: Mỗi vị bao nhiêu chai kèm **phân rã số chai theo độ ngọt** (`🍯 Bình thường`, `🌿 Ít ngọt`, `🥥 Không ngọt`) để bạn múc riêng trước khi pha ngọt.
      2. **Chi tiết khách nhận & ghi chú giao hàng**: Tên khách, SĐT (đã chuẩn hóa số 0 đầu), **nhãn độ ngọt từng chai**, địa chỉ tòa nhà, và lời nhắn riêng (VD: *"ít ngọt"*, *"giữ chị 1 chai"*).
@@ -57,7 +57,7 @@ Mở tab **`Dim_Config`** trên Google Sheets, thêm hoặc sửa các dòng sau
 | `weekly_badge` | `Ưu đãi tuần mới` | Nhãn nhỏ màu vàng phía trên tiêu đề |
 | `weekly_title` | `Chân Thành Cảm Ơn 💚` | Tiêu đề lớn của khung thông báo *(Mẹo: Nếu bạn xóa trống ô này, toàn bộ khung thông báo tuần sẽ tự động ẩn đi)* |
 | `weekly_content` | `Chương trình ưu đãi tuần này tặng kèm 1 chai mini...` | Đoạn văn nội dung chi tiết |
-| `weekly_footer` | `Sữa hạt vẫn luôn được nấu tươi mới mỗi sáng` | Dòng chữ nền xanh lá dưới cùng |
+| `weekly_footer` | `Sữa hạt vẫn luôn được nấu tươi mới mỗi ngày` | Dòng chữ nền xanh lá dưới cùng |
 | `video_thu_gian` | `1S7qneg966XvP_X_OZikjMoR3aWH77jkn` | ID file video trên Google Drive hoặc link nhúng hiển thị ở mục "Góc Thư Giãn" trong Sidebar |
 
 ### Cách 2: Sửa nhanh trong file `config.js` trên GitHub
@@ -97,16 +97,16 @@ Mở file [`config.js`](./config.js) trên GitHub, tìm mục `WEEKLY_BANNER` (d
 
 ---
 
-## 6. CẬP NHẬT EMAIL NHẬN BÁO CÁO BẾP 20H00
+## 6. CẬP NHẬT EMAIL NHẬN BÁO CÁO BẾP 21H00
 
-Mặc định báo cáo nấu sữa 20h00 luôn gửi về tài khoản Google triển khai Web App. Khi bạn muốn thêm email của người phụ bếp hoặc email cá nhân khác:
+Mặc định báo cáo nấu sữa 21h00 luôn gửi về tài khoản Google triển khai Web App. Khi bạn muốn thêm email của người phụ bếp hoặc email cá nhân khác:
 
 ### Cách 1: Thêm trực tiếp trên Google Sheets (Khuyên dùng — Không lộ email trên Git)
 1. Mở file Google Sheets `heni_webapp` -> chọn tab **`Dim_Config`**.
 2. Thêm dòng cấu hình:
    - Cột A (`key`): `kitchen_emails`
    - Cột B (`value`): Danh sách email ngăn cách bằng dấu phẩy, ví dụ: `bep-phu@example.com, quanly@example.com`
-   - Cột C (`description`): `Danh sách email nhận báo cáo bếp 20h00`
+   - Cột C (`description`): `Danh sách email nhận báo cáo bếp 21h00`
 
 ### Cách 2: Thêm qua file `config.js` trên GitHub
 1. Mở file [`config.js`](./config.js) trên GitHub.
@@ -117,7 +117,7 @@ Mặc định báo cáo nấu sữa 20h00 luôn gửi về tài khoản Google t
      'bep-phu@example.com'
    ],
    ```
-3. Bấm **Commit changes**. Đúng 20h00 tối, Google Apps Script sẽ tự động đọc danh sách này và gửi báo cáo đầy đủ!
+3. Bấm **Commit changes**. Đúng 21h00 tối, Google Apps Script sẽ tự động đọc danh sách này và gửi báo cáo đầy đủ!
 
 ---
 
@@ -132,8 +132,8 @@ Mặc định báo cáo nấu sữa 20h00 luôn gửi về tài khoản Google t
 2. Xóa toàn bộ code cũ trong `Code.gs`, dán nội dung chuẩn từ file [`code.gs`](./code.gs) vào và bấm biểu tượng đĩa mềm **Lưu (Ctrl+S)**.
 3. **Cấp quyền & Kiểm tra**:
    - Trên thanh công cụ phía trên, chọn hàm **`clearCacheAndForceAuth`** -> bấm **Chạy (Run)**. Nếu Google hỏi quyền, chọn *Xem xét quyền > Chọn tài khoản > Nâng cao (Advanced) > Đi tới dự án (Unsafe) > Cho phép (Allow)*.
-4. **Kích hoạt hẹn giờ gửi Báo cáo Nấu Sữa 20h00 (Chỉ cần chạy 1 lần)**:
-   - Trên thanh công cụ, chọn hàm **`setupDaily20hTrigger`** -> bấm **Chạy (Run)**.
+4. **Kích hoạt hẹn giờ gửi Báo cáo Nấu Sữa 21h00 (Chỉ cần chạy 1 lần)**:
+   - Trên thanh công cụ, chọn hàm **`setupDaily21hTrigger`** -> bấm **Chạy (Run)**.
 5. **Lấy link API kết nối với GitHub Pages**:
    - Bấm nút **Triển khai (Deploy)** ở góc trên phải -> **Quản lý nội dung triển khai (Manage deployments)** -> Bấm biểu tượng cây bút **Chỉnh sửa (Edit)** -> Ở mục Phiên bản chọn **Phiên bản mới (New version)** -> Bấm **Triển khai (Deploy)**.
    - Copy đường link **URL ứng dụng web** (`https://script.google.com/macros/s/.../exec`) dán vào dòng `GAS_API_URL: '...'` trong file [`config.js`](./config.js) trên GitHub.

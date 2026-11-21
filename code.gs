@@ -607,7 +607,7 @@ function sendOrderEmail(orderData, orderId) {
         <p style="margin-top: 0;"><b>📝 Lời nhắn:</b> ${orderData.note || 'Không có'}</p>
       </div>
       <div style="background-color: #F9F8F6; padding: 20px; text-align: center; font-size: 13px; color: #6b7280; border-top: 1px solid #e5e7eb;">
-        <p style="margin: 0;">Sữa nấu mới mỗi sáng - 100% nguyên bản, không chất bảo quản</p>
+        <p style="margin: 0;">Sữa nấu mới mỗi ngày - 100% nguyên bản, không chất bảo quản</p>
       </div>
     </div>
   `;
@@ -621,7 +621,7 @@ function sendOrderEmail(orderData, orderId) {
 }
 
 // ============================================================================
-// 6b. BÁO CÁO NẤU SỮA 20H00 TỰ ĐỘNG CHO BẾP
+// 6b. BÁO CÁO NẤU SỮA 21H00 TỰ ĐỘNG CHO BẾP
 // ============================================================================
 function getKitchenRecipientEmails() {
   const emailSet = {};
@@ -692,7 +692,7 @@ function sendDailyKitchenReport() {
     if (!recipients) return { success: false, message: 'Chưa có email người nhận' };
 
     if (isTomorrowClosed) {
-      const subjectClosed = `[Bếp Hení 20h00] Ngày mai ${targetLabelDash} quán tạm nghỉ`;
+      const subjectClosed = `[Bếp Hení 21h00] Ngày mai ${targetLabelDash} quán tạm nghỉ`;
       const bodyClosed = `
         <div style="font-family: Arial, sans-serif; color: #2C3D29; max-width: 600px; padding: 20px; border: 1px solid #e5e7eb; border-radius: 12px;">
           <h2 style="color: #4F6B4A;">🌿 THÔNG BÁO BẾP: NGÀY MAI QUÁN TẠM NGHỈ</h2>
@@ -765,7 +765,7 @@ function sendDailyKitchenReport() {
       }
     }
 
-    const subject = `[Bếp Hení 20h00] Báo cáo nấu sữa giao ${targetLabelDash} — Tổng: ${totalBottles} chai`;
+    const subject = `[Bếp Hení 21h00] Báo cáo nấu sữa giao ${targetLabelDash} — Tổng: ${totalBottles} chai`;
 
     let dishRowsHtml = Object.keys(dishCounts).map(dish => {
       const dc = dishCounts[dish];
@@ -824,7 +824,7 @@ function sendDailyKitchenReport() {
           ${custRowsHtml ? `<ul style="padding-left: 18px;">${custRowsHtml}</ul>` : '<p style="color:#6b7280;font-size:14px;">Không có danh sách giao hàng.</p>'}
         </div>
         <div style="background-color: #F9F8F6; padding: 14px; text-align: center; font-size: 12px; color: #6b7280;">
-          Email tự động lúc 20h00 từ Hệ thống Vận hành Góc Bếp Nhà Hení
+          Email tự động lúc 21h00 từ Hệ thống Vận hành Góc Bếp Nhà Hení
         </div>
       </div>
     `;
@@ -836,7 +836,7 @@ function sendDailyKitchenReport() {
       name: 'Trợ Lý Bếp Hení'
     });
 
-    logTracking({ action: 'kitchen_report_20h', details: `Đã gửi báo cáo ${targetLabelDash} (${totalBottles} chai) tới: ${recipients}` });
+    logTracking({ action: 'kitchen_report_21h', details: `Đã gửi báo cáo ${targetLabelDash} (${totalBottles} chai) tới: ${recipients}` });
     return { success: true, date: targetLabelDash, totalBottles, recipients };
   } catch (err) {
     logTracking({ action: 'kitchen_report_error', details: err.toString() });
@@ -1462,7 +1462,7 @@ function staffDeleteClosure(payload) {
 }
 
 // 8. Triggers & Utilities
-function setupDaily20hTrigger() {
+function setupDaily21hTrigger() {
   const triggers = ScriptApp.getProjectTriggers();
   triggers.forEach(t => {
     if (t.getHandlerFunction() === 'sendDailyKitchenReport') {
@@ -1473,10 +1473,15 @@ function setupDaily20hTrigger() {
   ScriptApp.newTrigger('sendDailyKitchenReport')
     .timeBased()
     .everyDays(1)
-    .atHour(20)
+    .atHour(21)
     .create();
 
-  Logger.log('✅ Đã cài đặt tự động gửi Báo cáo Nấu Sữa lúc 20h00 hàng ngày về: ' + getKitchenRecipientEmails());
+  Logger.log('✅ Đã cài đặt tự động gửi Báo cáo Nấu Sữa lúc 21h00 hàng ngày về: ' + getKitchenRecipientEmails());
+}
+
+// Alias tương thích ngược nếu người dùng chạy tên hàm cũ
+function setupDaily20hTrigger() {
+  return setupDaily21hTrigger();
 }
 
 function logTracking(data) {
