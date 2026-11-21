@@ -8,7 +8,7 @@
     <link rel="icon" type="image/jpeg" href="./images/logo-only.jpg">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <script src="./config.js?v=3.0.0"></script>
+    <script src="./config.js?v=3.0.1"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=DM+Sans:wght@400;500;600&display=swap"
@@ -250,10 +250,10 @@
                                         <ul class="list-disc pl-3.5 space-y-1 text-[11px] text-gray-600">
                                             <li><b>Freeship mọi đơn:</b> Tòa nhà <b>Sonatus</b> &amp; <b>Saigon Trade Center</b>.</li>
                                             <li><b>Freeship từ 2 chai:</b> <b>Bcons City</b> &amp; bán kính <b>3km</b> quanh Bcons City.</li>
-                                            <li><b>Khu vực khác:</b> Giao theo <b>phí app thực tế</b> — và <b>Freeship từ 10 chai</b> <i>(tính trên cùng 1 ngày giao)</i> tại <b>Q.1, 2, 3, 4, 5, Bình Thạnh, Phú Nhuận, Thủ Đức</b> &amp; <b>Đông Hòa, Dĩ An (Bình Dương)</b>.</li>
+                                            <li><b>Khu vực khác:</b> Giao theo <b>phí app thực tế</b> · <b>Hỗ trợ phí ship: Giảm ngay 5% trên tổng bill</b> tại <b>Q.1, 2, 3, 4, 5, Bình Thạnh, Phú Nhuận, Thủ Đức</b> &amp; <b>Đông Hòa, Dĩ An (Bình Dương)</b>.</li>
                                         </ul>
                                         <p class="text-[11px] text-brand-green pt-0.5">
-                                            💬 Chưa rõ khu vực? Nhắn Zalo <a :href="'https://zalo.me/' + (socialLinks.contactPhone || '0834983524')" target="_blank" rel="noopener noreferrer" class="font-bold underline hover:text-brand-dark">{{ socialLinks.contactPhone || '0834983524' }}</a> để Hení kiểm tra nhanh nhé!
+                                            🎁 Nhắn trực tiếp qua Zalo <a :href="'https://zalo.me/' + (socialLinks.contactPhone || '0834983524')" target="_blank" rel="noopener noreferrer" class="font-bold underline hover:text-brand-dark">{{ socialLinks.contactPhone || '0834983524' }}</a> để Hení hỗ trợ kiểm tra phí ship và <b>nhận thêm nhiều ưu đãi hấp dẫn hơn</b> nhé!
                                         </p>
                                     </div>
                                 </div>
@@ -760,26 +760,82 @@
                 </div>
 
                 <div v-if="showExtraTrayPanel" class="space-y-4 pt-2 border-t border-gray-100">
-                    <!-- Form Nhận / Cập nhật số chai dư -->
+                    <!-- Form Nhận / Cập nhật số chai dư (taste-v3 Operate Picker) -->
                     <div class="bg-brand-bone/60 rounded-xl p-3.5 space-y-2.5">
                         <p class="text-xs font-bold text-brand-dark">1. Nhận / Cập nhật số chai mang theo hôm nay</p>
                         <div class="flex flex-col sm:flex-row gap-2">
-                            <select v-model="extraIntakeSku" @change="onIntakeSkuChange"
-                                class="flex-1 bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-medium text-brand-dark focus:outline-none focus:border-brand-green">
-                                <option value="" disabled>-- Chọn món sữa trong Menu --</option>
-                                <option v-for="m in extraMenuOptions" :key="m.id" :value="m.id">
-                                    {{ m.name }} — {{ formatPrice(m.price) }}
-                                </option>
-                            </select>
+                            <div class="relative flex-1">
+                                <button type="button" @click="showExtraDishPicker = !showExtraDishPicker"
+                                    class="w-full min-h-[44px] bg-white border border-gray-200 rounded-xl px-3.5 py-2 text-left flex items-center justify-between gap-2 hover:border-brand-green focus:outline-none focus:ring-2 focus:ring-brand-green/30 transition-colors">
+                                    <div v-if="selectedExtraMenuItem" class="flex items-center gap-2 min-w-0">
+                                        <span class="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md bg-brand-bone text-brand-dark border border-gray-200">
+                                            {{ selectedExtraMenuItem.dayLabel }}
+                                        </span>
+                                        <span class="text-xs font-semibold text-brand-dark truncate">{{ selectedExtraMenuItem.name }}</span>
+                                    </div>
+                                    <span v-else class="text-xs text-gray-500">Chọn món sữa trong Menu...</span>
+                                    <div class="flex items-center gap-2 shrink-0">
+                                        <span v-if="selectedExtraMenuItem"
+                                            :class="selectedExtraMenuItem.price >= 30000 ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-gray-100 text-gray-700 border-gray-200'"
+                                            class="text-[11px] font-bold px-2 py-0.5 rounded-md border tabular-nums">
+                                            {{ formatPrice(selectedExtraMenuItem.price) }}
+                                        </span>
+                                        <span class="text-gray-400 text-xs">{{ showExtraDishPicker ? '▲' : '▼' }}</span>
+                                    </div>
+                                </button>
+
+                                <!-- Popover danh sách món phân nhóm & sắp xếp -->
+                                <div v-if="showExtraDishPicker"
+                                    class="absolute left-0 right-0 mt-1.5 bg-white rounded-2xl shadow-xl border border-gray-200 z-40 overflow-hidden">
+                                    <div class="p-2.5 border-b border-gray-100 bg-brand-bone/40 flex items-center gap-2">
+                                        <input v-model="extraDishSearch" type="text"
+                                            placeholder="Tìm tên món hoặc thứ (VD: macca, cốm, t2)..."
+                                            class="w-full min-h-[38px] bg-white border border-gray-200 rounded-xl px-3 py-1.5 text-xs text-brand-dark focus:outline-none focus:border-brand-green">
+                                        <button type="button" @click="showExtraDishPicker = false"
+                                            class="shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-bold text-gray-500 hover:bg-gray-100">
+                                            Đóng
+                                        </button>
+                                    </div>
+                                    <div class="max-h-72 overflow-y-auto divide-y divide-gray-100">
+                                        <div v-if="groupedExtraMenuOptions.length === 0" class="p-4 text-center text-xs text-gray-400">
+                                            Không tìm thấy món nào khớp "{{ extraDishSearch }}".
+                                        </div>
+                                        <div v-for="grp in groupedExtraMenuOptions" :key="grp.key" class="py-1">
+                                            <div class="px-3 py-1.5 text-[11px] font-bold flex items-center justify-between sticky top-0"
+                                                :class="grp.isToday ? 'bg-emerald-50 text-emerald-800' : 'bg-brand-bone/80 text-gray-600'">
+                                                <span>{{ grp.label }}</span>
+                                                <span class="text-[10px] font-medium opacity-75">{{ grp.items.length }} món</span>
+                                            </div>
+                                            <button v-for="m in grp.items" :key="m.id" type="button"
+                                                @click="pickExtraMenuItem(m)"
+                                                :class="extraIntakeSku === m.id ? 'bg-brand-green/10' : 'hover:bg-brand-bone/60'"
+                                                class="w-full min-h-[44px] px-3 py-2 text-left flex items-center justify-between gap-2 transition-colors">
+                                                <div class="min-w-0 flex items-center gap-2">
+                                                    <span class="text-xs font-medium text-brand-dark truncate">{{ m.name }}</span>
+                                                    <span v-if="getTrayReceivedCount(m.id) > 0"
+                                                        class="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded bg-brand-green/15 text-brand-green tabular-nums">
+                                                        Đang có: {{ getTrayReceivedCount(m.id) }}
+                                                    </span>
+                                                </div>
+                                                <span :class="m.price >= 30000 ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-gray-100 text-gray-700 border-gray-200'"
+                                                    class="shrink-0 text-[11px] font-bold px-2 py-0.5 rounded-md border tabular-nums">
+                                                    {{ formatPrice(m.price) }}
+                                                </span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="flex items-center gap-1.5">
                                 <button type="button" @click="extraIntakeQty = Math.max(0, (Number(extraIntakeQty) || 0) - 1)"
-                                    class="w-9 h-9 rounded-xl bg-white border border-gray-200 font-bold text-brand-dark hover:bg-gray-100">−</button>
+                                    class="w-11 h-11 rounded-xl bg-white border border-gray-200 font-bold text-brand-dark hover:bg-gray-100 transition-colors">−</button>
                                 <input type="number" min="0" max="200" v-model.number="extraIntakeQty"
-                                    class="w-16 h-9 text-center bg-white border border-gray-200 rounded-xl text-sm font-bold text-brand-dark focus:outline-none focus:border-brand-green">
+                                    class="w-16 h-11 text-center bg-white border border-gray-200 rounded-xl text-sm font-bold text-brand-dark tabular-nums focus:outline-none focus:border-brand-green">
                                 <button type="button" @click="extraIntakeQty = Math.min(200, (Number(extraIntakeQty) || 0) + 1)"
-                                    class="w-9 h-9 rounded-xl bg-white border border-gray-200 font-bold text-brand-dark hover:bg-gray-100">+</button>
+                                    class="w-11 h-11 rounded-xl bg-white border border-gray-200 font-bold text-brand-dark hover:bg-gray-100 transition-colors">+</button>
                                 <button type="button" @click="saveExtraIntake" :disabled="isSavingExtra || !extraIntakeSku"
-                                    class="px-4 h-9 rounded-xl bg-brand-green text-white text-xs font-bold hover:bg-brand-dark transition-colors disabled:opacity-50 whitespace-nowrap">
+                                    class="px-4 h-11 rounded-xl bg-brand-green text-white text-xs font-bold hover:bg-brand-dark transition-colors disabled:opacity-50 whitespace-nowrap">
                                     {{ isSavingExtra ? 'Đang lưu...' : 'Lưu số nhận' }}
                                 </button>
                             </div>
@@ -795,13 +851,22 @@
                         <div v-for="item in extraTray.items" :key="item.skuId"
                             class="border border-gray-200 rounded-xl p-3 bg-white flex flex-col gap-2.5">
                             <div class="flex flex-wrap items-center justify-between gap-2">
-                                <div>
+                                <div class="flex flex-wrap items-center gap-2">
                                     <span class="font-bold text-sm text-brand-dark">{{ item.name }}</span>
-                                    <span class="ml-2 text-xs font-bold text-brand-green">{{ formatPrice(item.price) }}</span>
+                                    <span class="text-xs font-bold text-brand-green tabular-nums">{{ formatPrice(item.price) }}</span>
                                     <button type="button" @click="selectIntakeSku(item.skuId, item.received)"
-                                        class="ml-2 text-[11px] text-gray-400 hover:text-brand-green underline">Sửa nhận</button>
+                                        class="text-[11px] text-gray-500 hover:text-brand-green underline">Sửa nhận</button>
+                                    <button v-if="item.sold === 0" type="button" @click="removeExtraTrayItem(item)" :disabled="isSavingExtra"
+                                        class="text-[11px] font-bold px-2 py-0.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors disabled:opacity-50">
+                                        🗑️ Xóa món
+                                    </button>
+                                    <button v-else-if="item.remaining > 0" type="button" @click="closeExtraRemaining(item)" :disabled="isSavingExtra"
+                                        class="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors disabled:opacity-50"
+                                        title="Đưa số nhận bằng đúng số đã bán để đóng món này trong khay">
+                                        Chốt còn 0
+                                    </button>
                                 </div>
-                                <div class="flex items-center gap-2 text-[11px] font-bold">
+                                <div class="flex items-center gap-2 text-[11px] font-bold tabular-nums">
                                     <span class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">Nhận: {{ item.received }}</span>
                                     <span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">Bán: {{ item.sold }}</span>
                                     <span :class="item.remaining > 0 ? 'bg-amber-100 text-amber-900' : 'bg-gray-100 text-gray-400'"
@@ -1393,10 +1458,10 @@
                                     <ul class="list-disc pl-4 space-y-1 text-[11.5px]">
                                         <li><b>Freeship mọi đơn:</b> Tòa nhà <b>Sonatus</b> &amp; <b>Saigon Trade Center</b>.</li>
                                         <li><b>Freeship từ 2 chai:</b> <b>Bcons City</b> &amp; bán kính <b>3km</b> quanh Bcons City.</li>
-                                        <li><b>Khu vực khác:</b> Giao theo <b>phí app thực tế</b> · <b>Freeship từ 10 chai/ngày</b> <i>(tính theo số lượng giao trong cùng 1 ngày)</i> tại <b>Q.1, 2, 3, 4, 5, Bình Thạnh, Phú Nhuận, Thủ Đức</b> &amp; <b>Đông Hòa, Dĩ An (Bình Dương)</b>.</li>
+                                        <li><b>Khu vực khác:</b> Giao theo <b>phí app thực tế</b> · <b>Hỗ trợ phí ship: Giảm ngay 5% trên tổng bill</b> tại <b>Q.1, 2, 3, 4, 5, Bình Thạnh, Phú Nhuận, Thủ Đức</b> &amp; <b>Đông Hòa, Dĩ An (Bình Dương)</b>.</li>
                                     </ul>
                                     <p class="text-[11px] text-brand-green pt-0.5">
-                                        💬 Chưa chắc khu vực của bạn có được Freeship? Nhắn Zalo <a :href="'https://zalo.me/' + (socialLinks.contactPhone || '0834983524')" target="_blank" rel="noopener noreferrer" class="font-bold underline hover:text-brand-dark">{{ socialLinks.contactPhone || '0834983524' }}</a> để Hení hỗ trợ nhanh nhé!
+                                        🎁 Nhắn trực tiếp qua Zalo <a :href="'https://zalo.me/' + (socialLinks.contactPhone || '0834983524')" target="_blank" rel="noopener noreferrer" class="font-bold underline hover:text-brand-dark">{{ socialLinks.contactPhone || '0834983524' }}</a> để Hení hỗ trợ kiểm tra phí ship và <b>nhận thêm nhiều ưu đãi hấp dẫn hơn</b> nhé!
                                     </p>
                                 </div>
                                 <button type="submit" :disabled="isSubmitting"
@@ -2206,6 +2271,8 @@
                 const extraSellDrafts = ref({});
                 const isSavingExtra = ref(false);
                 const extraApiNotDeployed = ref(false);
+                const showExtraDishPicker = ref(false);
+                const extraDishSearch = ref('');
 
                 // Mở/Đóng Staff View và đồng bộ URL query không reload
                 const openStaffView = () => {
@@ -2787,11 +2854,71 @@
 
                 // V3.0.0: ExtraOrder_Log (Sữa Bán Thêm) Helpers & Actions
                 const extraMenuOptions = computed(() => {
-                    if (extraTray.value.menuItems && extraTray.value.menuItems.length > 0) {
-                        return extraTray.value.menuItems;
-                    }
-                    return fullMenu.value || [];
+                    const list = (extraTray.value.menuItems && extraTray.value.menuItems.length > 0)
+                        ? extraTray.value.menuItems
+                        : (fullMenu.value || []);
+                    const dayLabels = { 1: 'Thứ 2', 2: 'Thứ 3', 3: 'Thứ 4', 4: 'Thứ 5', 5: 'Thứ 6', 6: 'Thứ 7' };
+                    return list.map(m => ({
+                        ...m,
+                        dayOfWeek: Number(m.dayOfWeek) || 1,
+                        dayLabel: m.dayLabel || dayLabels[Number(m.dayOfWeek) || 1] || 'Thứ 2'
+                    }));
                 });
+
+                const selectedExtraMenuItem = computed(() => {
+                    if (!extraIntakeSku.value) return null;
+                    return extraMenuOptions.value.find(m => m.id === extraIntakeSku.value) || null;
+                });
+
+                const getTrayReceivedCount = (skuId) => {
+                    const found = (extraTray.value.items || []).find(it => it.skuId === skuId);
+                    return found ? (Number(found.received) || 0) : 0;
+                };
+
+                const groupedExtraMenuOptions = computed(() => {
+                    const q = (extraDishSearch.value || '').trim().toLowerCase();
+                    const norm = (s) => (s || '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd');
+                    const qNorm = norm(q);
+
+                    const filtered = extraMenuOptions.value.filter(m => {
+                        if (!qNorm) return true;
+                        const hay = norm(`${m.name} ${m.dayLabel} t${m.dayOfWeek + 1} ${m.price}`);
+                        return hay.indexOf(qNorm) !== -1;
+                    });
+
+                    const todayDay = new Date().getDay(); // 0=CN, 1=T2..6=T7
+                    const dayOrder = [1, 2, 3, 4, 5, 6];
+                    if (todayDay >= 1 && todayDay <= 6) {
+                        dayOrder.sort((a, b) => (a === todayDay ? -1 : b === todayDay ? 1 : a - b));
+                    }
+
+                    const dayLabels = { 1: 'Thứ 2', 2: 'Thứ 3', 3: 'Thứ 4', 4: 'Thứ 5', 5: 'Thứ 6', 6: 'Thứ 7' };
+                    const groups = [];
+                    dayOrder.forEach(d => {
+                        const items = filtered
+                            .filter(m => m.dayOfWeek === d)
+                            .sort((a, b) => (Number(a.price) - Number(b.price)) || a.name.localeCompare(b.name, 'vi'));
+                        if (items.length > 0) {
+                            const isToday = (d === todayDay);
+                            groups.push({
+                                key: 'd_' + d,
+                                day: d,
+                                isToday,
+                                label: isToday ? `🌟 Món nấu Hôm nay (${dayLabels[d]})` : `📅 ${dayLabels[d]}`,
+                                items
+                            });
+                        }
+                    });
+                    return groups;
+                });
+
+                const pickExtraMenuItem = (m) => {
+                    extraIntakeSku.value = m.id;
+                    const existing = getTrayReceivedCount(m.id);
+                    extraIntakeQty.value = existing > 0 ? existing : 1;
+                    showExtraDishPicker.value = false;
+                    extraDishSearch.value = '';
+                };
 
                 const getSellDraft = (skuId) => {
                     if (!extraSellDrafts.value[skuId]) {
@@ -2874,6 +3001,49 @@
                             showToast('Đã cập nhật số chai nhận hôm nay! 🥛');
                         } else {
                             showToast((res && res.message) || 'Không thể lưu số chai nhận.');
+                        }
+                    });
+                };
+
+                const removeExtraTrayItem = (item) => {
+                    if (isSavingExtra.value || !item) return;
+                    if (!confirm(`Xóa món "${item.name}" khỏi Khay sữa bán thêm hôm nay?`)) return;
+                    isSavingExtra.value = true;
+                    callExtraGas('staffSaveExtraIntake', {
+                        idToken: staffToken.value,
+                        skuId: item.skuId,
+                        qtyReceived: 0,
+                        remove: true
+                    }, (res) => {
+                        isSavingExtra.value = false;
+                        if (res && res.success) {
+                            if (res.extraTray) extraTray.value = res.extraTray;
+                            if (extraIntakeSku.value === item.skuId) {
+                                extraIntakeQty.value = 1;
+                            }
+                            showToast(`Đã xóa "${item.name}" khỏi khay! 🗑️`);
+                        } else {
+                            showToast((res && res.message) || 'Không thể xóa món khỏi khay.');
+                        }
+                    });
+                };
+
+                const closeExtraRemaining = (item) => {
+                    if (isSavingExtra.value || !item) return;
+                    const sold = Number(item.sold) || 0;
+                    if (!confirm(`Chốt số nhận của "${item.name}" về đúng ${sold} chai đã bán (Còn lại = 0)?`)) return;
+                    isSavingExtra.value = true;
+                    callExtraGas('staffSaveExtraIntake', {
+                        idToken: staffToken.value,
+                        skuId: item.skuId,
+                        qtyReceived: sold
+                    }, (res) => {
+                        isSavingExtra.value = false;
+                        if (res && res.success) {
+                            if (res.extraTray) extraTray.value = res.extraTray;
+                            showToast(`Đã chốt "${item.name}" còn 0 chai! ✅`);
+                        } else {
+                            showToast((res && res.message) || 'Không thể chốt số chai.');
                         }
                     });
                 };
@@ -3008,7 +3178,10 @@
                     // V3.0.0 ExtraOrder_Log:
                     extraOrderEnabled, showExtraTrayPanel, extraTray, extraIntakeSku, extraIntakeQty,
                     extraMenuOptions, isSavingExtra, extraApiNotDeployed, getSellDraft, adjustSellQty,
-                    selectIntakeSku, onIntakeSkuChange, saveExtraIntake, createExtraOrder, cancelExtraOrder
+                    selectIntakeSku, onIntakeSkuChange, saveExtraIntake, createExtraOrder, cancelExtraOrder,
+                    // V3.0.1 ExtraOrder Picker & Remove:
+                    showExtraDishPicker, extraDishSearch, selectedExtraMenuItem, groupedExtraMenuOptions,
+                    getTrayReceivedCount, pickExtraMenuItem, removeExtraTrayItem, closeExtraRemaining
                 }
             }
         }).mount('#app');

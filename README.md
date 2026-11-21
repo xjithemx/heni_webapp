@@ -31,6 +31,17 @@
 
 ## 🕒 3. LỊCH SỬ CẬP NHẬT & NÂNG CẤP CHI TIẾT (DETAILED CHANGELOG)
 
+### [v3.0.1] — 2026-11-21: Xóa Món Nhập Nhầm Khay Bán Thêm, Bộ Chọn Món `taste-v3` & Hỗ Trợ Ship Giảm 5% Tổng Bill
+* **Xóa món nhập nhầm khỏi Khay Sữa Bán Thêm ([`code.gs`](./code.gs), [`index.html`](./index.html))**:
+  - Cập nhật `staffSaveExtraIntake()` hỗ trợ xóa hẳn dòng trong `ExtraOrder_Log` (`deleteRow`) khi `qtyReceived = 0` và chưa bán chai nào (`sold = 0`).
+  - Bổ sung nút **`🗑️ Xóa món`** (khi chưa bán) và nút **`Chốt còn 0`** (khi đã có đơn bán) trên từng dòng của Khay để ngăn tạo đơn ảo do thao tác nhầm.
+* **Thiết kế lại Bộ chọn món Khay Sữa Bán Thêm chuẩn `taste-v3` (Operate Mode) ([`index.html`](./index.html), [`code.gs`](./code.gs))**:
+  - Thay `<select>` phẳng mặc định bằng **Custom Grouped Dish Picker**: có ô tìm kiếm nhanh, **tự động đưa nhóm *"🌟 Món nấu Hôm nay"* lên đầu**, các ngày còn lại xếp gọn `Thứ 2` $\rightarrow$ `Thứ 7`, sắp xếp theo giá (`25.000đ` / `30.000đ`) dạng `tabular-nums`, loại bỏ em-dash và đảm bảo vùng chạm `>= 44px`.
+* **Nâng cấp Chính sách Giao hàng "Khu vực khác" chuẩn Marketing & Sales ([`index.html`](./index.html), [`code.gs`](./code.gs), [`config.js`](./config.js))**:
+  - Chuyển từ *"Freeship từ 10 chai"* sang **"Hỗ trợ phí ship: Giảm ngay 5% trên tổng bill"** tại Q.1, 2, 3, 4, 5, Bình Thạnh, Phú Nhuận, Thủ Đức & Đông Hòa, Dĩ An (Bình Dương), kèm lời mời nhắn trực tiếp Zalo [`0834983524`](https://zalo.me/0834983524) để nhận thêm nhiều ưu đãi hấp dẫn hơn (đồng bộ ở Tooltip Liên hệ, Checkout Modal và Email xác nhận đơn).
+
+---
+
 ### [v3.0.0] — 2026-11-21: Luồng Sữa Bán Thêm cho Shipper (`ExtraOrder_Log`) & Chống Trùng Mã Đơn
 * **Nguyên nhân**: Mỗi ngày bếp nấu dư 3–10 chai ngẫu nhiên để shipper bán thêm dọc đường; chai không dán nhãn nên shipper dễ nhầm món/giá tiền, còn chủ tiệm không đối soát được số chai đã đưa — đã bán — còn lại cuối ngày.
 * **Giải pháp Backend ([`code.gs`](./code.gs))**:

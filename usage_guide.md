@@ -12,7 +12,7 @@
 Với hệ thống mới đã được tự động hóa, công việc mỗi ngày của bạn được rút gọn tối đa:
 
 ### 🌞 Ban ngày (Khách tự đặt hàng & Tra cứu)
-1. Khách mở link web, nhận thông báo bản tin tuần dạng **Pop-up tự động tắt sau 3.5 giây** (có nút **`✕`** đóng nhanh hoặc nút **`💌 Bản tin`** ở góc trên để xem lại). Trên thanh đầu trang còn có cụm nút tiện ích **Facebook**, **Mã QR thanh toán** (`images/momo.jpg` đã cập nhật bản mới) và **Liên hệ** (Hotline/Zalo **`0834983524`**, giờ chốt đơn **21h00**, & chính sách giao hàng 3 tầng: *Freeship mọi đơn tại tòa nhà Sonatus & Saigon Trade Center; Freeship từ 2 chai tại Bcons City & bán kính 3km quanh Bcons City; khu vực khác giao theo phí app thực tế và Freeship từ 10 chai/ngày tại Q.1, 2, 3, 4, 5, Bình Thạnh, Phú Nhuận, Thủ Đức & Đông Hòa, Dĩ An - Bình Dương*).
+1. Khách mở link web, nhận thông báo bản tin tuần dạng **Pop-up tự động tắt sau 3.5 giây** (có nút **`✕`** đóng nhanh hoặc nút **`💌 Bản tin`** ở góc trên để xem lại). Trên thanh đầu trang còn có cụm nút tiện ích **Facebook**, **Mã QR thanh toán** (`images/momo.jpg` đã cập nhật bản mới) và **Liên hệ** (Hotline/Zalo **`0834983524`**, giờ chốt đơn **21h00**, & chính sách giao hàng 3 tầng: *Freeship mọi đơn tại tòa nhà Sonatus & Saigon Trade Center; Freeship từ 2 chai tại Bcons City & bán kính 3km quanh Bcons City; khu vực khác giao theo phí app thực tế và hỗ trợ phí ship giảm ngay 5% tổng bill tại Q.1, 2, 3, 4, 5, Bình Thạnh, Phú Nhuận, Thủ Đức & Đông Hòa, Dĩ An - Bình Dương, nhắn Zalo `0834983524` để nhận thêm ưu đãi*).
 2. Khách chọn món cho **Sáng Mai** hoặc **Đặt Trước Cả Tuần**, chọn **Độ ngọt** mong muốn ngay trên từng món (`🍯 Bình thường`, `🌿 Ít đường`, hoặc `🥥 Không đường` — mặc định là `Bình thường`) và bấm **Xác nhận đơn hàng**.
 3. Hệ thống tự động:
    - Ghi đơn tổng vào tab **`Orders_Master`** (trạng thái mặc định: `Đã tiếp nhận`).
@@ -169,19 +169,23 @@ Mặc định báo cáo nấu sữa 21h00 luôn gửi về tài khoản Google t
   - Nếu khách trả hết cả tuần: Bấm **💰 Trả trọn đơn** $\rightarrow$ Sheet tự động gạch nợ thành **`Paid`**.
   - Nếu bấm nhầm: Luôn có đồng hồ đếm ngược **↩️ Hoàn tác (10s)** để khôi phục trạng thái ban đầu.
 
-### 7.3. Quản lý & Bán Sữa Dư (Khay Sữa Bán Thêm — `ExtraOrder_Log`, v3.0.0)
+### 7.3. Quản lý & Bán Sữa Dư (Khay Sữa Bán Thêm — `ExtraOrder_Log`, v3.0.1)
 Dành cho các chai sữa bếp nấu dư hàng ngày mang theo bán thêm dọc đường:
 1. **Nhập số chai nhận đầu ca** *(Chủ tiệm có thể nhập hộ ở nhà hoặc Shipper tự nhập khi nhận hàng)*:
    - Trên Bàn Giao Hàng (`?view=staff`), mở khung **"🥛 Khay Sữa Bán Thêm Hôm Nay"**.
-   - Chọn **Món sữa trong Menu** $\rightarrow$ bấm **`+` / `−`** chọn tổng số chai nhận hôm nay $\rightarrow$ bấm **Lưu số nhận**.
-   - Hệ thống tự tạo và lưu vào tab **`ExtraOrder_Log`** trên Google Sheet (có thể bấm **Sửa nhận** nếu nhập nhầm, miễn không thấp hơn số chai đã bán).
-2. **Khi có khách mua lẻ**:
+   - Bấm vào ô **Chọn món sữa trong Menu**: danh sách tự động **đưa các món nấu Hôm nay lên đầu**, bên dưới phân nhóm gọn theo **Thứ 2 $\rightarrow$ Thứ 7** và có ô **Tìm nhanh** + nhãn giá `25.000đ` / `30.000đ` rõ ràng.
+   - Bấm **`+` / `−`** chọn tổng số chai nhận hôm nay $\rightarrow$ bấm **Lưu số nhận**.
+   - Hệ thống tự lưu vào tab **`ExtraOrder_Log`** trên Google Sheet.
+2. **Xóa món nhập nhầm khỏi Khay**:
+   - Nếu lỡ bấm nhầm món **chưa bán chai nào (`Bán: 0`)**: Bấm nút **`🗑️ Xóa món`** ngay trên dòng đó để xóa sạch khỏi khay và khỏi Sheet.
+   - Nếu món **đã có đơn bán (`Bán > 0`)** nhưng trên xe đã hết: Bấm **`Chốt còn 0`** để khóa không cho tạo thêm đơn ảo.
+3. **Khi có khách mua lẻ**:
    - Tại dòng món trong Khay, chọn **Số chai** (mặc định 1) và **Độ ngọt** (mặc định `Bình thường`) $\rightarrow$ bấm **`+ Tạo đơn bán`**.
    - Giá tiền tự động lấy chuẩn theo `Dim_Menu`, không lo nhầm giá.
    - Đơn mới (`HN-xxxxxx`, nhãn **`🥛 Bán thêm`**) xuất hiện ngay trong danh sách bên dưới: Shipper bấm **🚚 Đã giao xong** và **💵 Đã thu tiền** y hệt đơn đặt trước (hoặc tick sẵn **Giao & thu luôn** nếu khách trả tiền ngay tại chỗ).
-3. **Nếu bấm nhầm đơn chưa thu tiền**:
+4. **Nếu bấm nhầm đơn chưa thu tiền**:
    - Bấm nút **🗑️ Hủy** ngay trên thẻ đơn bán thêm $\rightarrow$ đơn chuyển thành `Cancelled`, số chai tự động cộng trả lại vào Khay.
-4. **Cuối ngày đối soát**:
+5. **Cuối ngày đối soát**:
    - Nhìn vào 4 ô tổng kết đầu khung: **Đã nhận · Đã bán · Còn lại · Đã thu (Paid)** để bàn giao tiền và chai dư cho Chủ tiệm. *(Lưu ý: Sau khi cập nhật `code.gs`, nhớ **Triển khai Phiên bản mới (New version)** trên Apps Script để kích hoạt).*
 
 ---

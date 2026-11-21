@@ -636,7 +636,7 @@ function sendOrderEmail(orderData, orderId) {
       </div>
       <div style="padding: 30px;">
         <p style="font-size: 16px;">Chào <b>${orderData.name}</b>,</p>
-        <p style="line-height: 1.6; color: #4b5563;">Cảm ơn bạn đã tin tưởng đặt sữa hạt tại nhà Hení. Đơn hàng của bạn đã được hệ thống ghi nhận. Tiệm sẽ sớm liên hệ lại qua SĐT/Zalo (<b>${orderData.phone}</b>) để thông báo phí giao hàng (nếu có) trước khi chốt đơn và nhận thanh toán nhé! Nếu cần kiểm tra nhanh khu vực Freeship, bạn có thể nhắn Zalo nhà Hení: <b>0834983524</b>.</p>
+        <p style="line-height: 1.6; color: #4b5563;">Cảm ơn bạn đã tin tưởng đặt sữa hạt tại nhà Hení. Đơn hàng của bạn đã được hệ thống ghi nhận. Tiệm sẽ sớm liên hệ lại qua SĐT/Zalo (<b>${orderData.phone}</b>) để thông báo phí giao hàng và chính sách hỗ trợ phí ship (giảm 5% tổng bill cho khu vực giao app) trước khi chốt đơn nhé! Nhắn trực tiếp qua Zalo nhà Hení (<b>0834983524</b>) để được hỗ trợ nhanh và nhận thêm nhiều ưu đãi hấp dẫn hơn.</p>
         
         <h3 style="border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; margin-top: 30px; font-size: 18px;">Chi tiết đơn hàng #${orderId}</h3>
         <ul style="padding-left: 20px; line-height: 1.6;">
@@ -1496,14 +1496,36 @@ function getDimMenuSkuMap(ss) {
   const menuSheet = ss.getSheetByName('Dim_Menu');
   if (!menuSheet) return { map: map, list: list };
   const rows = menuSheet.getDataRange().getValues();
+  const parseDayNum = function(dayStr) {
+    const s = (dayStr || '').toString().toLowerCase().trim();
+    if (s.indexOf('2') !== -1) return 1;
+    if (s.indexOf('3') !== -1) return 2;
+    if (s.indexOf('4') !== -1) return 3;
+    if (s.indexOf('5') !== -1) return 4;
+    if (s.indexOf('6') !== -1) return 5;
+    if (s.indexOf('7') !== -1) return 6;
+    return 1;
+  };
+  const dayLabels = { 1: 'Thứ 2', 2: 'Thứ 3', 3: 'Thứ 4', 4: 'Thứ 5', 5: 'Thứ 6', 6: 'Thứ 7' };
+
   for (let i = 1; i < rows.length; i++) {
     const r = rows[i];
     const id = (r[0] !== undefined && r[0] !== null ? r[0] : '').toString().trim();
     const name = (r[1] !== undefined && r[1] !== null ? r[1] : '').toString().trim();
+    const phanLoai = (r[2] !== undefined && r[2] !== null ? r[2] : '').toString().trim().toLowerCase();
     const price = Number(r[3]) || 0;
+    const dayNum = parseDayNum(r[4]);
     const status = (r[6] !== undefined && r[6] !== null ? r[6] : '').toString().trim().toLowerCase();
     if (!id || !name) continue;
-    const item = { id: id, name: name, price: price, active: status === 'active' };
+    const item = {
+      id: id,
+      name: name,
+      price: price,
+      category: phanLoai.indexOf('cao cấp') !== -1 ? 'premium' : 'standard',
+      dayOfWeek: dayNum,
+      dayLabel: dayLabels[dayNum] || 'Thứ 2',
+      active: status === 'active'
+    };
     map[id] = item;
     if (status === 'active') {
       list.push(item);
@@ -1605,13 +1627,15 @@ function getExtraTraySummary(ss, targetDateIso) {
   let totalReceived = 0;
   let totalSold = 0;
   let totalRemaining = 0;
-  const items = skuOrder.map(function(skuId) {
+  const items = [];
+  skuOrder.forEach(function(skuId) {
     const t = trayMap[skuId];
+    if (t.received === 0 && t.sold === 0) return;
     t.remaining = Math.max(0, t.received - t.sold);
     totalReceived += t.received;
     totalSold += t.sold;
     totalRemaining += t.remaining;
-    return t;
+    items.push(t);
   });
 
   return {
@@ -1702,6 +1726,18 @@ function staffSaveExtraIntake(payload) {
 
     const logEntry = `${nowTime} ${actor}: ${qtyReceived} chai`;
     const newHistory = prevHistory ? `${prevHistory} | ${logEntry}` : logEntry;
+
+    if (qtyReceived === 0 && soldToday === 0) {
+      if (targetRow > 0) {
+        extraSheet.deleteRow(targetRow);
+      }
+      logTracking({ action: 'extra_intake_removed', details: `${staff.email} -> ${todayIso} | Xóa khỏi khay: ${menuItem.name}` });
+      return {
+        success: true,
+        removed: true,
+        extraTray: getExtraTraySummary(ss, todayIso)
+      };
+    }
 
     if (targetRow > 0) {
       extraSheet.getRange(targetRow, 3, 1, 6).setValues([[
